@@ -7,7 +7,7 @@ class YeuCauNhanLop extends Model
 {
     protected $table = 'yeucaunhanlop';
     protected $primaryKey = 'YeuCauID';
-    public $timestamps = false; // đã có NgayCapNhat manual
+    public $timestamps = false; 
 
     protected $fillable = [
         'LopYeuCauID','GiaSuID','NguoiGuiTaiKhoanID','VaiTroNguoiGui',

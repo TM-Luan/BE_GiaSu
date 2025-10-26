@@ -16,16 +16,16 @@ class AuthController extends Controller
         $fields = $request->validate([
             'HoTen' => 'required|string|max:255',
             'Email' => 'required|email|unique:TaiKhoan,Email',
-            'MatKhau' => 'required|min:6|confirmed', // Thêm xác nhận mật khẩu
+            'MatKhau' => 'required|min:6|confirmed',
             'SoDienThoai' => 'nullable|string|max:20|unique:TaiKhoan,SoDienThoai',
             'VaiTro' => 'required|in:1,2,3'
         ]);
 
         try {
             $tk = TaiKhoan::create([
-                'HoTen' => $request->HoTen, // Thêm Họ tên vào bảng TaiKhoan
+                'HoTen' => $request->HoTen,
                 'Email' => $request->Email,
-                'MatKhauHash' => Hash::make($request->MatKhau), // Sử dụng Hash::make thay vì bcrypt
+                'MatKhauHash' => Hash::make($request->MatKhau),
                 'SoDienThoai' => $request->SoDienThoai,
                 'TrangThai' => 1
             ]);
@@ -93,8 +93,7 @@ public function login(Request $request)
     $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
     $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
-    // Lấy Họ tên theo vai trò
-    $hoTen = $tk->HoTen; // Mặc định lấy từ TaiKhoan
+    $hoTen = $tk->HoTen; 
 
     if ($vaiTro == 2) { // Gia sư
         $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
