@@ -23,5 +23,9 @@ class NguoiHoc extends Model
     {
         return $this->belongsTo(TaiKhoan::class, 'TaiKhoanID','TaiKhoanID');
     }
+    public function lopHocYeuCau()
+    {
+        return $this->hasMany(LopHocYeuCau::class, 'NguoiHocID','NguoiHocID');
+    }
 }
 

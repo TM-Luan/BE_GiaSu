@@ -23,5 +23,13 @@ class GiaSu extends Model
     {
         return $this->belongsTo(TaiKhoan::class, 'TaiKhoanID','TaiKhoanID');
     }
+    public function yeuCauNhanLop()
+    {
+        return $this->hasMany(YeuCauNhanLop::class, 'GiaSuID', 'GiaSuID');
+    }
+    public function DanhGia()
+{
+    return $this->hasOne(DanhGia::class, 'TaiKhoanID', 'TaiKhoanID');
+}
 }
 
