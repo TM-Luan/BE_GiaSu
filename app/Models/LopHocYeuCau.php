@@ -14,7 +14,9 @@ class LopHocYeuCau extends Model
         'MonID','KhoiLopID','DoiTuongID','ThoiGianDayID','NgayTao'
     ];
 
-    protected $dates = ['NgayTao'];
+    protected $casts = [
+    'NgayTao' => 'datetime',
+    ];
 
     public function nguoiHoc()
     {

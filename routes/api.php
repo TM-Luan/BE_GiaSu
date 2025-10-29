@@ -7,6 +7,8 @@ use App\Http\Controllers\GiaSuController;
 use App\Http\Controllers\NguoiHocController;
 use App\Http\Controllers\LopHocYeuCauController;
 use App\Http\Controllers\YeuCauNhanLopController;
+use App\Http\Controllers\DropdownDataController;
+
 
 Route::post('/resetpassword', [AuthController::class, 'resetPassword']);
 Route::post('/giasu/guiyeucau', [YeuCauNhanLopController::class, 'giaSuGuiYeuCau']);
@@ -21,6 +23,11 @@ Route::resource('nguoihoc', NguoiHocController::class);
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::resource('lophocyeucau', LopHocYeuCauController::class);
+// === API MỚI CHO CÁC DROPDOWN ===
+Route::get('/monhoc', [DropdownDataController::class, 'getMonHocList']);
+Route::get('/khoilop', [DropdownDataController::class, 'getKhoiLopList']);
+Route::get('/doituong', [DropdownDataController::class, 'getDoiTuongList']);
+Route::get('/thoigianday', [DropdownDataController::class, 'getThoiGianDayList']);
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/profile', [AuthController::class, 'getProfile']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
