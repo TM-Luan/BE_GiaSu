@@ -42,7 +42,7 @@ class LopHocYeuCauController extends Controller
     public function store(LopHocYeuCauRequest $request)
     {
         $validatedData = $request->validated();
-        $validatedData['TrangThai'] = 'ChoDuyet';
+        $validatedData['TrangThai'] = 'TimGiaSu';
 
         $lopHoc = LopHocYeuCau::create($validatedData);
         

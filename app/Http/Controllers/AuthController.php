@@ -67,78 +67,6 @@ class AuthController extends Controller
         }
     }
 
-    // public function login(Request $request)
-    // {
-    //     $request->validate([
-    //         'Email' => 'required|email',
-    //         'MatKhau' => 'required'
-    //     ]);
-
-    //     $tk = TaiKhoan::where('Email', $request->Email)->first();
-
-    //     if (!$tk || !Hash::check($request->MatKhau, $tk->MatKhauHash)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Email hoặc mật khẩu không đúng'
-    //         ], 401);
-    //     }
-
-    //     if ($tk->TrangThai === 0) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Tài khoản của bạn đã bị khóa'
-    //         ], 403);
-    //     }
-
-    //     $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
-    //     $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
-
-    //     $hoTen = $tk->HoTen;
-
-    //     if ($vaiTro == 2) { // Gia sư
-    //         $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
-    //         if ($giaSu && $giaSu->HoTen) {
-    //             $hoTen = $giaSu->HoTen;
-    //         }
-    //     } elseif ($vaiTro == 3) { // Người học
-    //         $nguoiHoc = NguoiHoc::where('TaiKhoanID', $tk->TaiKhoanID)->first();
-    //         if ($nguoiHoc && $nguoiHoc->HoTen) {
-    //             $hoTen = $nguoiHoc->HoTen;
-    //         }
-    //     }
-
-    //     $token = $tk->createToken($request->Email);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'message' => 'Đăng nhập thành công',
-    //         'data' => [
-    //             'TaiKhoanID' => $tk->TaiKhoanID,
-    //             'Email' => $tk->Email,
-    //             'HoTen' => $hoTen, // Sử dụng Họ tên đã được xác định theo vai trò
-    //             'SoDienThoai' => $tk->SoDienThoai,
-    //             'VaiTro' => $vaiTro,
-    //         ],
-    //         'token' => $token->plainTextToken,
-    //     ], 200);
-    // }
-    // public function logout(Request $request)
-    // {
-    //     try {
-    //         $request->user()->currentAccessToken()->delete();
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Đã đăng xuất thành công'
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Đăng xuất thất bại'
-    //         ], 500);
-    //     }
-    // }
     public function login(Request $request)
     {
         $request->validate([
@@ -165,60 +93,53 @@ class AuthController extends Controller
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
-        // === BẮT ĐẦU CHUẨN BỊ DỮ LIỆU TRẢ VỀ ===
-        $responseData = [
-            'TaiKhoanID' => $tk->TaiKhoanID,
-            'Email' => $tk->Email,
-            'HoTen' => $tk->HoTen, // Lấy HoTen mặc định từ TaiKhoan trước
-            'SoDienThoai' => $tk->SoDienThoai,
-            'VaiTro' => $vaiTro,
-            // Thêm các trường null ban đầu để đảm bảo cấu trúc JSON nhất quán
-            'NguoiHocID' => null, 
-            'GiaSuID' => null, 
-            // Bạn có thể thêm các trường khác từ NguoiHoc/GiaSu nếu cần
-             'DiaChi' => null, 
-             'GioiTinh' => null, 
-             'NgaySinh' => null, 
-             // ...
-        ];
-        // === KẾT THÚC CHUẨN BỊ ===
+        $hoTen = $tk->HoTen;
 
         if ($vaiTro == 2) { // Gia sư
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
-            if ($giaSu) {
-                // Cập nhật HoTen và các thông tin khác từ GiaSu
-                $responseData['HoTen'] = $giaSu->HoTen ?? $responseData['HoTen']; // Giữ lại HoTen gốc nếu null
-                $responseData['GiaSuID'] = $giaSu->GiaSuID;
-                $responseData['DiaChi'] = $giaSu->DiaChi;
-                $responseData['GioiTinh'] = $giaSu->GioiTinh;
-                $responseData['NgaySinh'] = $giaSu->NgaySinh;
-                // Thêm BangCap, KinhNghiem nếu cần
+            if ($giaSu && $giaSu->HoTen) {
+                $hoTen = $giaSu->HoTen;
             }
         } elseif ($vaiTro == 3) { // Người học
             $nguoiHoc = NguoiHoc::where('TaiKhoanID', $tk->TaiKhoanID)->first();
-            if ($nguoiHoc) {
-                // Cập nhật HoTen và thêm NguoiHocID
-                $responseData['HoTen'] = $nguoiHoc->HoTen ?? $responseData['HoTen'];
-                $responseData['NguoiHocID'] = $nguoiHoc->NguoiHocID; // <--- THÊM ID NGƯỜI HỌC
-                $responseData['DiaChi'] = $nguoiHoc->DiaChi;
-                $responseData['GioiTinh'] = $nguoiHoc->GioiTinh;
-                $responseData['NgaySinh'] = $nguoiHoc->NgaySinh;
+            if ($nguoiHoc && $nguoiHoc->HoTen) {
+                $hoTen = $nguoiHoc->HoTen;
             }
         }
 
-        // Tạo token
-        $token = $tk->createToken($request->Email)->plainTextToken;
+        $token = $tk->createToken($request->Email);
 
-        // Trả về response
         return response()->json([
             'success' => true,
             'message' => 'Đăng nhập thành công',
-            'data' => $responseData, // Trả về mảng data đã được điền đầy đủ
-            'token' => $token,
+            'data' => [
+                'TaiKhoanID' => $tk->TaiKhoanID,
+                'Email' => $tk->Email,
+                'HoTen' => $hoTen, // Sử dụng Họ tên đã được xác định theo vai trò
+                'SoDienThoai' => $tk->SoDienThoai,
+                'VaiTro' => $vaiTro,
+            ],
+            'token' => $token->plainTextToken,
         ], 200);
     }
+    public function logout(Request $request)
+    {
+        try {
+            $request->user()->currentAccessToken()->delete();
 
-    public function getProfile(Request $request)
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã đăng xuất thành công'
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Đăng xuất thất bại'
+            ], 500);
+        }
+    }
+      public function getProfile(Request $request)
     {
         try {
             $user = $request->user();
@@ -237,6 +158,7 @@ class AuthController extends Controller
                 $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($giaSu) {
                     $profileData = array_merge($profileData, [
+                        'GiaSuID'=>$giaSu->GiaSuID,
                         'HoTen' => $giaSu->HoTen,
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
@@ -250,6 +172,7 @@ class AuthController extends Controller
                 $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($nguoiHoc) {
                     $profileData = array_merge($profileData, [
+                        'NguoiHocID'=>$nguoiHoc->NguoiHocID,
                         'HoTen' => $nguoiHoc->HoTen,
                         'DiaChi' => $nguoiHoc->DiaChi,
                         'GioiTinh' => $nguoiHoc->GioiTinh,
