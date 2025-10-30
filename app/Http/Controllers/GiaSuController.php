@@ -5,10 +5,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\GiaSuRequest;
 use App\Http\Resources\GiaSuResource;
 use App\Models\GiaSu;
-use Illuminate\Http\Request;
+use Illuminate\Http\Request; // <-- Đảm bảo bạn đã import Request
+
+// === THÊM CÁC IMPORT CẦN THIẾT ===
+use App\Models\LopHocYeuCau;
+use App\Http\Resources\LopHocYeuCauResource;
+// === KẾT THÚC THÊM IMPORT ===
 
 class GiaSuController extends Controller
 {
+    // ... (Các hàm index, show, store, update, destroy của bạn giữ nguyên) ...
+
     public function index()
     {
         $tutors = GiaSu::with('taiKhoan')->get();
@@ -46,5 +53,51 @@ class GiaSuController extends Controller
         $tutor->delete();
 
         return response()->json(['message' => 'Đã xóa gia sư.']);
+    }
+
+
+    /**
+     * Lấy danh sách lớp đang dạy của gia sư đang đăng nhập.
+     * API: GET /giasu/lopdangday
+     */
+    // === SỬA HÀM NÀY ===
+    public function getLopDangDay(Request $request) // <-- Thêm 'Request $request'
+    {
+        try {
+            // 1. Lấy TaiKhoanID từ token (AN TOÀN HƠN)
+            $taiKhoanID = $request->user()->TaiKhoanID; // <-- Sửa từ auth()->user()
+
+            // 2. Tìm GiaSuID tương ứng
+            $giaSu = GiaSu::where('TaiKhoanID', $taiKhoanID)->first();
+
+            if (!$giaSu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Không tìm thấy thông tin gia sư cho tài khoản này.'
+                ], 404);
+            }
+
+            // 3. Truy vấn các lớp học
+            $lopHocList = LopHocYeuCau::where('GiaSuID', $giaSu->GiaSuID)
+                                    ->where('TrangThai', 'DangHoc')
+                                    ->with([
+                                        'nguoiHoc', 
+                                        'monHoc', 
+                                        'khoiLop', 
+                                        'doiTuong', 
+                                        'thoiGianDay'
+                                    ])
+                                    ->orderBy('NgayTao', 'desc')
+                                    ->get();
+
+            // 4. Trả về bằng Resource
+            return LopHocYeuCauResource::collection($lopHocList);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi máy chủ: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

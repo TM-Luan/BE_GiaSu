@@ -10,6 +10,10 @@ use App\Http\Controllers\YeuCauNhanLopController;
 use App\Http\Controllers\DropdownDataController;
 
 
+// === ĐẶT ĐOẠN NÀY Ở TRƯỚC Route::resource('giasu', ...) ===
+Route::get('/giasu/{giaSuID}/lop', [YeuCauNhanLopController::class, 'getLopCuaGiaSu']);
+
+
 Route::post('/resetpassword', [AuthController::class, 'resetPassword']);
 Route::post('/giasu/guiyeucau', [YeuCauNhanLopController::class, 'giaSuGuiYeuCau']);
 Route::post('/nguoihoc/moigiasu', [YeuCauNhanLopController::class, 'nguoiHocMoiGiaSu']);
@@ -33,4 +37,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
+
 });
