@@ -61,43 +61,43 @@ class GiaSuController extends Controller
      * API: GET /giasu/lopdangday
      */
     // === SỬA HÀM NÀY ===
-    public function getLopDangDay(Request $request) // <-- Thêm 'Request $request'
-    {
-        try {
-            // 1. Lấy TaiKhoanID từ token (AN TOÀN HƠN)
-            $taiKhoanID = $request->user()->TaiKhoanID; // <-- Sửa từ auth()->user()
+    // public function getLopDangDay(Request $request) // <-- Thêm 'Request $request'
+    // {
+    //     try {
+    //         // 1. Lấy TaiKhoanID từ token (AN TOÀN HƠN)
+    //         $taiKhoanID = $request->user()->TaiKhoanID; // <-- Sửa từ auth()->user()
 
-            // 2. Tìm GiaSuID tương ứng
-            $giaSu = GiaSu::where('TaiKhoanID', $taiKhoanID)->first();
+    //         // 2. Tìm GiaSuID tương ứng
+    //         $giaSu = GiaSu::where('TaiKhoanID', $taiKhoanID)->first();
 
-            if (!$giaSu) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Không tìm thấy thông tin gia sư cho tài khoản này.'
-                ], 404);
-            }
+    //         if (!$giaSu) {
+    //             return response()->json([
+    //                 'success' => false,
+    //                 'message' => 'Không tìm thấy thông tin gia sư cho tài khoản này.'
+    //             ], 404);
+    //         }
 
-            // 3. Truy vấn các lớp học
-            $lopHocList = LopHocYeuCau::where('GiaSuID', $giaSu->GiaSuID)
-                                    ->where('TrangThai', 'DangHoc')
-                                    ->with([
-                                        'nguoiHoc', 
-                                        'monHoc', 
-                                        'khoiLop', 
-                                        'doiTuong', 
-                                        'thoiGianDay'
-                                    ])
-                                    ->orderBy('NgayTao', 'desc')
-                                    ->get();
+    //         // 3. Truy vấn các lớp học
+    //         $lopHocList = LopHocYeuCau::where('GiaSuID', $giaSu->GiaSuID)
+    //                                 ->where('TrangThai', 'DangHoc')
+    //                                 ->with([
+    //                                     'nguoiHoc', 
+    //                                     'monHoc', 
+    //                                     'khoiLop', 
+    //                                     'doiTuong', 
+    //                                     'thoiGianDay'
+    //                                 ])
+    //                                 ->orderBy('NgayTao', 'desc')
+    //                                 ->get();
 
-            // 4. Trả về bằng Resource
-            return LopHocYeuCauResource::collection($lopHocList);
+    //         // 4. Trả về bằng Resource
+    //         return LopHocYeuCauResource::collection($lopHocList);
 
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi máy chủ: ' . $e->getMessage()
-            ], 500);
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'message' => 'Lỗi máy chủ: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
 }
