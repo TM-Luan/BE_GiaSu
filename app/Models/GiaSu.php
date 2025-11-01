@@ -9,7 +9,7 @@ class GiaSu extends Model
 {
     use HasFactory;
 
-    protected $table = 'GiaSu';
+    protected $table = 'giasu';
     protected $primaryKey = 'GiaSuID';
     public $timestamps = false; 
 
