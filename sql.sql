@@ -1,5 +1,3 @@
-CREATE DATABASE  IF NOT EXISTS `giasu` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `giasu`;
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
 -- Host: 127.0.0.1    Database: giasu
@@ -61,7 +59,7 @@ CREATE TABLE `doituong` (
   `TenDoiTuong` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`DoiTuongID`),
   UNIQUE KEY `TenDoiTuong` (`TenDoiTuong`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -70,7 +68,7 @@ CREATE TABLE `doituong` (
 
 LOCK TABLES `doituong` WRITE;
 /*!40000 ALTER TABLE `doituong` DISABLE KEYS */;
-INSERT INTO `doituong` VALUES (1,'Học sinh'),(3,'Người đi làm'),(2,'Sinh viên');
+INSERT INTO `doituong` VALUES (1,'Học sinh'),(2,'Sinh viên');
 /*!40000 ALTER TABLE `doituong` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -127,7 +125,7 @@ CREATE TABLE `giasu` (
   PRIMARY KEY (`GiaSuID`),
   KEY `TaiKhoanID` (`TaiKhoanID`),
   CONSTRAINT `giasu_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -136,7 +134,7 @@ CREATE TABLE `giasu` (
 
 LOCK TABLES `giasu` WRITE;
 /*!40000 ALTER TABLE `giasu` DISABLE KEYS */;
-INSERT INTO `giasu` VALUES (1,2,'Nguyễn Văn A','Q.1, TP.HCM','Nam','1995-05-10','Cử nhân Sư phạm Toán','3 năm',NULL),(2,3,'Trần Thị B','Q.3, TP.HCM','Nữ','1996-08-22','Cử nhân Ngôn ngữ Anh','2 năm',NULL),(3,7,'Trần Minh Luân',NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `giasu` VALUES (1,2,'Nguyễn Văn A','Q.1, TP.HCM','Nam','1995-05-10','Cử nhân Sư phạm Toán','3 năm',NULL),(2,3,'Trần Thị B','Q.3, TP.HCM','Nữ','1996-08-22','Cử nhân Ngôn ngữ Anh','2 năm',NULL);
 /*!40000 ALTER TABLE `giasu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -188,7 +186,7 @@ CREATE TABLE `khoilop` (
   `KhoiLopID` int NOT NULL AUTO_INCREMENT,
   `BacHoc` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`KhoiLopID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -197,7 +195,7 @@ CREATE TABLE `khoilop` (
 
 LOCK TABLES `khoilop` WRITE;
 /*!40000 ALTER TABLE `khoilop` DISABLE KEYS */;
-INSERT INTO `khoilop` VALUES (1,'Lớp 6'),(2,'Lớp 9'),(3,'Lớp 12');
+INSERT INTO `khoilop` VALUES (1,'Lớp 1'),(2,'Lớp 2'),(3,'Lớp 3'),(4,'Lớp 4'),(5,'Lớp 5'),(6,'Lớp 6'),(7,'Lớp 7'),(8,'Lớp 8'),(9,'Lớp 9'),(10,'Lớp 10'),(11,'Lớp 11'),(12,'Lớp 12');
 /*!40000 ALTER TABLE `khoilop` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -214,7 +212,7 @@ CREATE TABLE `lichhoc` (
   `ThoiGianBatDau` time NOT NULL,
   `ThoiGianKetThuc` time NOT NULL,
   `NgayHoc` date NOT NULL,
-  `TrangThai` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'SapToi',
+  `TrangThai` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'DangDay',
   `DuongDan` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`LichHocID`),
@@ -229,7 +227,7 @@ CREATE TABLE `lichhoc` (
 
 LOCK TABLES `lichhoc` WRITE;
 /*!40000 ALTER TABLE `lichhoc` DISABLE KEYS */;
-INSERT INTO `lichhoc` VALUES (1,1,'19:00:00','20:30:00','2025-10-07','DaHoc','https://meet.example.com/yc1-b1','2025-10-26 15:10:06'),(2,1,'19:00:00','20:30:00','2025-10-09','SapToi','https://meet.example.com/yc1-b2','2025-10-26 15:10:06'),(3,2,'18:30:00','20:30:00','2025-10-10','SapToi',NULL,'2025-10-26 15:10:06');
+INSERT INTO `lichhoc` VALUES (1,1,'19:00:00','20:30:00','2025-10-07','DaHoc','https://meet.example.com/yc1-b1','2025-11-02 13:34:06'),(2,1,'19:00:00','20:30:00','2025-10-09','SapToi','https://meet.example.com/yc1-b2','2025-11-02 13:34:06'),(3,2,'18:30:00','20:30:00','2025-10-10','SapToi',NULL,'2025-11-02 13:34:06');
 /*!40000 ALTER TABLE `lichhoc` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -293,7 +291,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -302,7 +300,7 @@ CREATE TABLE `migrations` (
 
 LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2025_10_22_040803_create_personal_access_tokens_table',1);
+INSERT INTO `migrations` VALUES (1,'2025_10_22_040803_create_personal_access_tokens_table',1),(2,'2025_10_31_075505_create_sessions_table',1);
 /*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -318,7 +316,7 @@ CREATE TABLE `monhoc` (
   `TenMon` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
   PRIMARY KEY (`MonID`),
   UNIQUE KEY `TenMon` (`TenMon`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -327,7 +325,7 @@ CREATE TABLE `monhoc` (
 
 LOCK TABLES `monhoc` WRITE;
 /*!40000 ALTER TABLE `monhoc` DISABLE KEYS */;
-INSERT INTO `monhoc` VALUES (2,'Tiếng Anh'),(1,'Toán'),(3,'Vật Lý');
+INSERT INTO `monhoc` VALUES (13,'Âm Nhạc'),(11,'Công Nghệ'),(8,'Địa Lý'),(10,'Giáo Dục Công Dân'),(5,'Hóa Học'),(15,'Khoa Học Tự Nhiên'),(16,'Khoa Học Xã Hội'),(18,'Kỹ năng giao tiếp'),(19,'Kỹ năng thuyết trình'),(25,'Lập trình C++'),(26,'Lập trình Python'),(7,'Lịch Sử'),(23,'Luyện thi đại học'),(22,'Luyện thi IELTS'),(21,'Luyện thi TOEIC'),(24,'Luyện thi vào 10'),(20,'Luyện viết chữ đẹp'),(12,'Mỹ Thuật'),(2,'Ngữ Văn'),(6,'Sinh Học'),(14,'Thể Dục'),(3,'Tiếng Anh'),(29,'Tiếng Hàn'),(28,'Tiếng Nhật'),(30,'Tiếng Trung'),(9,'Tin Học'),(27,'Tin học cơ bản'),(17,'Tin học Văn phòng'),(1,'Toán'),(4,'Vật Lý');
 /*!40000 ALTER TABLE `monhoc` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -419,8 +417,37 @@ CREATE TABLE `phanquyen` (
 
 LOCK TABLES `phanquyen` WRITE;
 /*!40000 ALTER TABLE `phanquyen` DISABLE KEYS */;
-INSERT INTO `phanquyen` VALUES (1,1),(2,2),(3,2),(7,2),(4,3),(5,3),(6,3);
+INSERT INTO `phanquyen` VALUES (1,1),(2,2),(3,2),(4,3),(5,3),(6,3);
 /*!40000 ALTER TABLE `phanquyen` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sessions`
+--
+
+DROP TABLE IF EXISTS `sessions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `sessions` (
+  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` bigint unsigned DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `payload` longtext COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_activity` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `sessions_user_id_index` (`user_id`),
+  KEY `sessions_last_activity_index` (`last_activity`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sessions`
+--
+
+LOCK TABLES `sessions` WRITE;
+/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -440,7 +467,7 @@ CREATE TABLE `taikhoan` (
   PRIMARY KEY (`TaiKhoanID`),
   UNIQUE KEY `Email` (`Email`),
   UNIQUE KEY `SoDienThoai` (`SoDienThoai`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -449,7 +476,7 @@ CREATE TABLE `taikhoan` (
 
 LOCK TABLES `taikhoan` WRITE;
 /*!40000 ALTER TABLE `taikhoan` DISABLE KEYS */;
-INSERT INTO `taikhoan` VALUES (1,'admin@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000001',1,'2025-10-01 09:00:00'),(2,'tutor1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000003',1,'2025-10-01 09:10:00'),(3,'tutor2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000004',1,'2025-10-01 09:15:00'),(4,'student1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000005',1,'2025-10-01 09:20:00'),(5,'student2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000006',1,'2025-10-01 09:25:00'),(6,'student3@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000007',1,'2025-10-01 09:30:00'),(7,'test@gmail.com','$2y$12$US/ZXwPvLFOZDUpSSQg9we/ei0/1Lzerh/UtdDlglPPZQBotfrq7C','0934140224',1,'2025-10-26 15:13:56');
+INSERT INTO `taikhoan` VALUES (1,'admin@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000001',1,'2025-10-01 09:00:00'),(2,'tutor1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000003',1,'2025-10-01 09:10:00'),(3,'tutor2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000004',1,'2025-10-01 09:15:00'),(4,'student1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000005',1,'2025-10-01 09:20:00'),(5,'student2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000006',1,'2025-10-01 09:25:00'),(6,'student3@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000007',1,'2025-10-01 09:30:00');
 /*!40000 ALTER TABLE `taikhoan` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -475,7 +502,7 @@ CREATE TABLE `thoigianday` (
 
 LOCK TABLES `thoigianday` WRITE;
 /*!40000 ALTER TABLE `thoigianday` DISABLE KEYS */;
-INSERT INTO `thoigianday` VALUES (1,'3 buổi/tuần','T2-T4-T6 tối','90 phút'),(2,'2 buổi/tuần','T3-T5 tối','120 phút'),(3,'1 buổi/tuần','Cuối tuần','120 phút');
+INSERT INTO `thoigianday` VALUES (1,'3','T2-T4-T6 tối','90 phút'),(2,'2','T3-T5 tối','120 phút'),(3,'1','Cuối tuần','120 phút');
 /*!40000 ALTER TABLE `thoigianday` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -538,7 +565,7 @@ CREATE TABLE `yeucaunhanlop` (
 
 LOCK TABLES `yeucaunhanlop` WRITE;
 /*!40000 ALTER TABLE `yeucaunhanlop` DISABLE KEYS */;
-INSERT INTO `yeucaunhanlop` VALUES (1,2,1,2,'GiaSu','Pending','Tôi muốn nhận lớp này','2025-10-26 15:10:06','2025-10-26 15:10:06'),(2,3,2,4,'NguoiHoc','Pending','Mời cô đến dạy cho con tôi','2025-10-26 15:10:06','2025-10-26 15:10:06');
+INSERT INTO `yeucaunhanlop` VALUES (1,2,1,2,'GiaSu','Pending','Tôi muốn nhận lớp này','2025-11-02 13:34:06','2025-11-02 13:34:06'),(2,3,2,4,'NguoiHoc','Pending','Mời cô đến dạy cho con tôi','2025-11-02 13:34:06','2025-11-02 13:34:06');
 /*!40000 ALTER TABLE `yeucaunhanlop` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -551,4 +578,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-26 15:27:22
+-- Dump completed on 2025-11-02 13:35:20
