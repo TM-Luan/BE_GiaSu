@@ -2,18 +2,13 @@
 
 namespace App\Http\Controllers;
 use App\Models\LopHocYeuCau;
-use App\Http\Requests\LopHocYeuCauRequest;   // <-- IMPORT MỚI
-use App\Http\Resources\LopHocYeuCauResource; // <-- IMPORT MỚI
+use App\Http\Requests\LopHocYeuCauRequest;
+use App\Http\Requests\SearchRequest;
+use App\Http\Resources\LopHocYeuCauResource;
 use Illuminate\Http\Request;
 
 class LopHocYeuCauController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    /**
-     * Display a listing of the resource.
-     */
     /**
      * Display a listing of the resource.
      */
@@ -35,6 +30,130 @@ class LopHocYeuCauController extends Controller
 
         // Dùng Resource để định dạng danh sách
         return LopHocYeuCauResource::collection($lopHocList);
+    }
+
+    /**
+     * Tìm kiếm và lọc danh sách lớp học
+     * API: GET /lophoc/search
+     * Parameters:
+     * - keyword: tìm kiếm theo mô tả
+     * - min_price: học phí tối thiểu
+     * - max_price: học phí tối đa
+     * - subject_id: ID môn học
+     * - grade_id: ID khối lớp
+     * - target_id: ID đối tượng
+     * - time_id: ID thời gian dạy
+     * - form: hình thức (online/offline)
+     * - status: trạng thái lớp
+     * - location: địa chỉ
+     */
+    public function search(SearchRequest $request)
+    {
+        try {
+            $query = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay']);
+
+            // Tìm kiếm theo từ khóa trong mô tả
+            if ($request->filled('keyword')) {
+                $keyword = $request->keyword;
+                $query->where(function($q) use ($keyword) {
+                    $q->where('MoTa', 'LIKE', "%{$keyword}%")
+                      ->orWhereHas('nguoiHoc', function($subQ) use ($keyword) {
+                          $subQ->where('HoTen', 'LIKE', "%{$keyword}%");
+                      });
+                });
+            }
+
+            // Lọc theo môn học
+            if ($request->filled('subject_id')) {
+                $query->where('MonID', $request->subject_id);
+            }
+
+            // Lọc theo khối lớp
+            if ($request->filled('grade_id')) {
+                $query->where('KhoiLopID', $request->grade_id);
+            }
+
+            // Lọc theo đối tượng
+            if ($request->filled('target_id')) {
+                $query->where('DoiTuongID', $request->target_id);
+            }
+
+            // Lọc theo thời gian dạy
+            if ($request->filled('time_id')) {
+                $query->where('ThoiGianDayID', $request->time_id);
+            }
+
+            // Lọc theo hình thức
+            if ($request->filled('form')) {
+                $query->where('HinhThuc', $request->form);
+            }
+
+            // Lọc theo trạng thái
+            if ($request->filled('status')) {
+                $query->where('TrangThai', $request->status);
+            } else {
+                // Mặc định chỉ lấy lớp đang tìm gia sư
+                $query->whereIn('TrangThai', ['TimGiaSu', 'ChoDuyet']);
+            }
+
+            // Lọc theo học phí
+            if ($request->filled('min_price')) {
+                $query->where('HocPhi', '>=', $request->min_price);
+            }
+
+            if ($request->filled('max_price')) {
+                $query->where('HocPhi', '<=', $request->max_price);
+            }
+
+            // Lọc theo địa chỉ (thông qua người học)
+            if ($request->filled('location')) {
+                $location = $request->location;
+                $query->whereHas('nguoiHoc', function($q) use ($location) {
+                    $q->where('DiaChi', 'LIKE', "%{$location}%");
+                });
+            }
+
+            // Sắp xếp
+            $sortBy = $request->get('sort_by', 'created_at');
+            $sortOrder = $request->get('sort_order', 'desc');
+
+            switch ($sortBy) {
+                case 'price':
+                    $query->orderBy('HocPhi', $sortOrder);
+                    break;
+                case 'duration':
+                    $query->orderBy('ThoiLuong', $sortOrder);
+                    break;
+                case 'students':
+                    $query->orderBy('SoLuong', $sortOrder);
+                    break;
+                default:
+                    $query->orderBy('NgayTao', $sortOrder);
+            }
+
+            // Phân trang
+            $perPage = $request->get('per_page', 20);
+            $classes = $query->paginate($perPage);
+
+            return response()->json([
+                'success' => true,
+                'data' => LopHocYeuCauResource::collection($classes->items()),
+                'pagination' => [
+                    'current_page' => $classes->currentPage(),
+                    'last_page' => $classes->lastPage(),
+                    'per_page' => $classes->perPage(),
+                    'total' => $classes->total(),
+                    'from' => $classes->firstItem(),
+                    'to' => $classes->lastItem(),
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi tìm kiếm: ' . $e->getMessage()
+            ], 500);
+        }
     }
     /**
      * Store a newly created resource in storage.

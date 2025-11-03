@@ -34,6 +34,13 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
 });
 
+// === API MỚI CHO SEARCH & FILTER (PHẢI ĐẶT TRƯỚC RESOURCE ROUTES) ===
+Route::get('/giasu/search', [GiaSuController::class, 'search']);
+Route::get('/lophoc/search', [LopHocYeuCauController::class, 'search']);
+Route::get('/filter-options', [DropdownDataController::class, 'getFilterOptions']);
+Route::get('/search-stats', [DropdownDataController::class, 'getSearchStats']);
+Route::get('/search-suggestions', [DropdownDataController::class, 'getSearchSuggestions']);
+
 Route::resource('nguoihoc', NguoiHocController::class); // 👈 đặt sau
 Route::resource('giasu', GiaSuController::class);
 Route::resource('lophocyeucau', LopHocYeuCauController::class);
