@@ -10,12 +10,18 @@ class LichHoc extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'LopYeuCauID','ThoiGianBatDau','ThoiGianKetThuc','NgayHoc','TrangThai','DuongDan','NgayTao'
+        'LopYeuCauID',
+        'ThoiGianBatDau',
+        'ThoiGianKetThuc',
+        'NgayHoc',
+        'TrangThai',
+        'DuongDan',
+        'NgayTao'
     ];
 
-    protected $dates = ['NgayTao','NgayHoc'];
+    protected $dates = ['NgayTao', 'NgayHoc'];
 
-    public function lop()
+    public function lopHocYeuCau()
     {
         return $this->belongsTo(LopHocYeuCau::class, 'LopYeuCauID', 'LopYeuCauID');
     }

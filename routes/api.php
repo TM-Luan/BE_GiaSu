@@ -7,6 +7,7 @@ use App\Http\Controllers\GiaSuController;
 use App\Http\Controllers\NguoiHocController;
 use App\Http\Controllers\LopHocYeuCauController;
 use App\Http\Controllers\YeuCauNhanLopController;
+use App\Http\Controllers\LichHocController;
 use App\Http\Controllers\DropdownDataController;
 
 Route::get('/giasu/{giaSuID}/lop', [YeuCauNhanLopController::class, 'getLopCuaGiaSu']);
@@ -51,3 +52,8 @@ Route::get('/khoilop', [DropdownDataController::class, 'getKhoiLopList']);
 Route::get('/doituong', [DropdownDataController::class, 'getDoiTuongList']);
 Route::get('/thoigianday', [DropdownDataController::class, 'getThoiGianDayList']);
 
+Route::controller(LichHocController::class)->prefix('lich-hoc')->group(function () {
+        Route::post('/', 'taoLichHoc');
+        Route::put('/{lichHocId}', 'capNhatLichHoc');
+        Route::delete('/{lichHocId}', 'xoaLichHoc');
+    });
