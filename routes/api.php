@@ -10,6 +10,7 @@ use App\Http\Controllers\YeuCauNhanLopController;
 use App\Http\Controllers\LichHocController;
 use App\Http\Controllers\DropdownDataController;
 
+
 Route::get('/giasu/{giaSuID}/lop', [YeuCauNhanLopController::class, 'getLopCuaGiaSu']);
 
 Route::post('/resetpassword', [AuthController::class, 'resetPassword']);
@@ -25,6 +26,7 @@ Route::get('/lophocyeucau/{lopYeuCauID}/de-nghi', [YeuCauNhanLopController::clas
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::put('/lophocyeucau/{id}', [LopHocYeuCauController::class, 'update']);
 
 // ⚠️ Đặt route này TRƯỚC resource
 Route::middleware(['auth:sanctum'])->group(function () {

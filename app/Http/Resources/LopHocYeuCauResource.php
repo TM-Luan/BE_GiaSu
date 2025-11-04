@@ -29,7 +29,7 @@ class LopHocYeuCauResource extends JsonResource
             'TenNguoiHoc' => $this->whenLoaded('nguoiHoc', $this->nguoiHoc ? $this->nguoiHoc->HoTen : null),
             
             'DiaChi' => $this->NguoiHoc ? $this->NguoiHoc->DiaChi : null,
-            'HocPhi' => $this->HocPhi . ' vnd/Buoi',
+            'HocPhi' => $this->HocPhi,//. ' vnd/Buoi',
             'TrangThai' => $this->TrangThai,
             'MoTaChiTiet' => $this->MoTa,
             
