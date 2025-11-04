@@ -45,4 +45,5 @@ class LopHocYeuCauRequest extends FormRequest
             'ThoiGianDayID' => 'required|exists:thoigianday,ThoiGianDayID',
         ];
     }
+    
 }

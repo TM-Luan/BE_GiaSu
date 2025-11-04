@@ -183,17 +183,20 @@ class LopHocYeuCauController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(LopHocYeuCauRequest $request, $id) // <-- Dùng Request để validate
+    public function update(LopHocYeuCauRequest $request, $id)
     {
         $lopHoc = LopHocYeuCau::findOrFail($id);
-        
         $lopHoc->update($request->validated());
-        // Tải lại dữ liệu quan hệ
-        $lopHoc->load(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu']); 
 
-        return new LopHocYeuCauResource($lopHoc);
+        // Load lại các quan hệ để trả về dữ liệu đầy đủ cho Flutter
+        $lopHoc->load(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay']); 
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Cập nhật lớp học thành công!',
+            'data' => new LopHocYeuCauResource($lopHoc)
+        ]);
     }
-
     /**
      * Remove the specified resource from storage.
      */
