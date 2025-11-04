@@ -35,6 +35,19 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
+
+    // 👈 THÊM: Routes cho lịch học lặp lại
+    Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
+    Route::delete('/lich-hoc/{lichHocId}', [LichHocController::class, 'xoaLichHoc']);
+    // Route mới: Lấy lịch học theo người học
+    Route::get('/nguoihoc/lich-hoc', [LichHocController::class, 'getLichHocTheoNguoiHoc']);
+    
+    // Route mới: Lấy lịch học theo gia sư
+    Route::get('/giasu/lich-hoc', [LichHocController::class, 'getLichHocTheoGiaSu']);
+    // Route hiện tại (giữ nguyên)
+    Route::get('/lop/{lopYeuCauId}/lich-hoc', [LichHocController::class, 'getLichHocTheoLop']);
+    Route::post('/lop/{lopYeuCauId}/lich-hoc', [LichHocController::class, 'taoLichHocChoGiaSu']);
+    Route::put('/lich-hoc/{lichHocId}', [LichHocController::class, 'capNhatLichHocGiaSu']);
 });
 
 // === API MỚI CHO SEARCH & FILTER (PHẢI ĐẶT TRƯỚC RESOURCE ROUTES) ===
@@ -53,9 +66,3 @@ Route::get('/monhoc', [DropdownDataController::class, 'getMonHocList']);
 Route::get('/khoilop', [DropdownDataController::class, 'getKhoiLopList']);
 Route::get('/doituong', [DropdownDataController::class, 'getDoiTuongList']);
 Route::get('/thoigianday', [DropdownDataController::class, 'getThoiGianDayList']);
-
-Route::controller(LichHocController::class)->prefix('lich-hoc')->group(function () {
-        Route::post('/', 'taoLichHoc');
-        Route::put('/{lichHocId}', 'capNhatLichHoc');
-        Route::delete('/{lichHocId}', 'xoaLichHoc');
-    });

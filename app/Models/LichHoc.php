@@ -16,7 +16,9 @@ class LichHoc extends Model
         'NgayHoc',
         'TrangThai',
         'DuongDan',
-        'NgayTao'
+        'NgayTao',
+        'LichHocGocID',
+        'IsLapLai'
     ];
 
     protected $dates = ['NgayTao', 'NgayHoc'];
@@ -24,5 +26,26 @@ class LichHoc extends Model
     public function lopHocYeuCau()
     {
         return $this->belongsTo(LopHocYeuCau::class, 'LopYeuCauID', 'LopYeuCauID');
+    }
+
+    public function lichHocCon()
+    {
+        return $this->hasMany(LichHoc::class, 'LichHocGocID', 'LichHocID');
+    }
+
+    public function lichHocGoc()
+    {
+        return $this->belongsTo(LichHoc::class, 'LichHocGocID', 'LichHocID');
+    }
+
+    public function scopeLaGoc($query)
+    {
+        return $query->whereColumn('LichHocID', 'LichHocGocID')
+                    ->orWhereNull('LichHocGocID');
+    }
+
+    public function getLaBuoiGocAttribute()
+    {
+        return $this->LichHocID == $this->LichHocGocID || $this->LichHocGocID === null;
     }
 }
