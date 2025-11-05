@@ -9,6 +9,7 @@ use App\Http\Controllers\LopHocYeuCauController;
 use App\Http\Controllers\YeuCauNhanLopController;
 use App\Http\Controllers\LichHocController;
 use App\Http\Controllers\DropdownDataController;
+use App\Http\Controllers\KhieuNaiController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -20,6 +21,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
+    Route::get('/khieunai', [KhieuNaiController::class, 'index']);
+    Route::post('/khieunai', [KhieuNaiController::class, 'store']);
 
     // LichHoc routes - Tạo và quản lý lịch học
     Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
