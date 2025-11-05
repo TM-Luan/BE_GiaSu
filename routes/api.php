@@ -9,6 +9,7 @@ use App\Http\Controllers\LopHocYeuCauController;
 use App\Http\Controllers\YeuCauNhanLopController;
 use App\Http\Controllers\LichHocController;
 use App\Http\Controllers\DropdownDataController;
+use App\Http\Controllers\KhieuNaiController;
 
 
 Route::get('/giasu/{giaSuID}/lop', [YeuCauNhanLopController::class, 'getLopCuaGiaSu']);
@@ -35,6 +36,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/profile', [AuthController::class, 'updateProfile']);
     Route::post('logout', [AuthController::class, 'logout']);
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
+    Route::get('/khieunai', [KhieuNaiController::class, 'index']);
+    Route::post('/khieunai', [KhieuNaiController::class, 'store']);
 
     // 👈 THÊM: Routes cho lịch học lặp lại
     Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
