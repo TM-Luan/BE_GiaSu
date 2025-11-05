@@ -38,14 +38,25 @@ class LichHoc extends Model
         return $this->belongsTo(LichHoc::class, 'LichHocGocID', 'LichHocID');
     }
 
-    public function scopeLaGoc($query)
+    // public function scopeLaGoc($query)
+    // {
+    //     return $query->whereColumn('LichHocID', 'LichHocGocID')
+    //         ->orWhereNull('LichHocGocID');
+    // }
+
+    // public function getLaBuoiGocAttribute()
+    // {
+    //     return $this->LichHocID == $this->LichHocGocID || $this->LichHocGocID === null;
+    // }
+    // Thêm vào model LichHoc.php
+    public function scopeTheoThang($query, $thang, $nam)
     {
-        return $query->whereColumn('LichHocID', 'LichHocGocID')
-                    ->orWhereNull('LichHocGocID');
+        return $query->whereYear('NgayHoc', $nam)
+            ->whereMonth('NgayHoc', $thang);
     }
 
-    public function getLaBuoiGocAttribute()
+    public function scopeTheoLop($query, $lopYeuCauId)
     {
-        return $this->LichHocID == $this->LichHocGocID || $this->LichHocGocID === null;
+        return $query->where('LopYeuCauID', $lopYeuCauId);
     }
 }
