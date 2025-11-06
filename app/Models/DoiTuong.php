@@ -10,7 +10,7 @@ class DoiTuong extends Model
     use HasFactory;
 
     // Tuân thủ quy ước đặt tên bảng giống như NguoiHoc.php và GiaSu.php
-    protected $table = 'doituong'; 
+    protected $table = 'DoiTuong'; 
     
     protected $primaryKey = 'DoiTuongID';
     

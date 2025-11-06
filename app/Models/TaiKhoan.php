@@ -9,7 +9,7 @@ class TaiKhoan extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
-    protected $table = 'taikhoan';
+    protected $table = 'TaiKhoan';
     protected $primaryKey = 'TaiKhoanID';
     public $timestamps = false; // schema dùng NgayTao default
 

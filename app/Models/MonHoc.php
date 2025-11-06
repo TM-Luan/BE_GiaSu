@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class MonHoc extends Model
 {
-    protected $table = 'monhoc';
+    protected $table = 'MonHoc';
     protected $primaryKey = 'MonID';
     public $timestamps = false;
 

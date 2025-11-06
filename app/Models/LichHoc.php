@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LichHoc extends Model
 {
-    protected $table = 'lichhoc';
+    protected $table = 'LichHoc';
     protected $primaryKey = 'LichHocID';
     public $timestamps = false;
 

@@ -28,8 +28,8 @@ class LopHocYeuCauRequest extends FormRequest
     {
         // Validation rules based on your sql.sql schema
         return [
-            'NguoiHocID' => 'required|exists:nguoihoc,NguoiHocID',
-            'GiaSuID' => 'nullable|exists:giasu,GiaSuID',
+            'NguoiHocID' => 'required|exists:NguoiHoc,NguoiHocID',
+            'GiaSuID' => 'nullable|exists:GiaSu,GiaSuID',
             'HinhThuc' => 'required|string|max:100',
             'HocPhi' => 'required|numeric|min:0',
             'ThoiLuong' => 'required|string|max:50',
@@ -39,10 +39,10 @@ class LopHocYeuCauRequest extends FormRequest
             ],
             'SoLuong' => 'nullable|integer|min:1',
             'MoTa' => 'nullable|string',
-            'MonID' => 'required|exists:monhoc,MonID',
-            'KhoiLopID' => 'required|exists:khoilop,KhoiLopID',
-            'DoiTuongID' => 'required|exists:doituong,DoiTuongID',
-            'ThoiGianDayID' => 'required|exists:thoigianday,ThoiGianDayID',
+            'MonID' => 'required|exists:MonHoc,MonID',
+            'KhoiLopID' => 'required|exists:KhoiLop,KhoiLopID',
+            'DoiTuongID' => 'required|exists:DoiTuong,DoiTuongID',
+            'ThoiGianDayID' => 'required|exists:ThoiGianDay,ThoiGianDayID',
         ];
     }
     

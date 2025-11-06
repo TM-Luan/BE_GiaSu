@@ -34,10 +34,10 @@ class SearchRequest extends FormRequest
             'max_price' => 'nullable|numeric|min:0|gte:min_price',
             
             // Category filters
-            'subject_id' => 'nullable|integer|exists:monhoc,MonID',
-            'grade_id' => 'nullable|integer|exists:khoilop,KhoiLopID',
-            'target_id' => 'nullable|integer|exists:doituong,DoiTuongID',
-            'time_id' => 'nullable|integer|exists:thoigianday,ThoiGianDayID',
+            'subject_id' => 'nullable|integer|exists:MonHoc,MonID',
+            'grade_id' => 'nullable|integer|exists:KhoiLop,KhoiLopID',
+            'target_id' => 'nullable|integer|exists:DoiTuong,DoiTuongID',
+            'time_id' => 'nullable|integer|exists:ThoiGianDay,ThoiGianDayID',
             
             // Tutor specific filters
             'gender' => 'nullable|string|in:Nam,Nữ',

@@ -15,7 +15,7 @@ class KhieuNaiController extends Controller
     {
         $validated = $request->validate([
             'NoiDung' => 'required|string|max:2000',
-            'LopYeuCauID' => 'nullable|integer|exists:lophocyeucau,LopYeuCauID',
+            'LopYeuCauID' => 'nullable|integer|exists:LopHocYeuCau,LopYeuCauID',
             'GiaoDichID' => 'nullable|integer|exists:giaodich,GiaoDichID',
         ]);
 

@@ -19,6 +19,24 @@ class AuthController extends Controller
             'MatKhau' => 'required|min:6|confirmed',
             'SoDienThoai' => 'nullable|string|max:20|unique:TaiKhoan,SoDienThoai',
             'VaiTro' => 'required|in:1,2,3'
+        ], [
+            'HoTen.required' => 'Vui lòng nhập họ tên.',
+            'HoTen.string' => 'Họ tên phải là chuỗi ký tự.',
+            'HoTen.max' => 'Họ tên không được vượt quá 255 ký tự.',
+
+            'Email.required' => 'Vui lòng nhập email.',
+            'Email.email' => 'Email không hợp lệ.',
+            'Email.unique' => 'Email này đã được sử dụng.',
+
+            'MatKhau.required' => 'Vui lòng nhập mật khẩu.',
+            'MatKhau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+            'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
+
+            'SoDienThoai.unique' => 'Số điện thoại đã tồn tại.',
+            'SoDienThoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+
+            'VaiTro.required' => 'Vui lòng chọn vai trò.',
+            'VaiTro.in' => 'Vai trò không hợp lệ.'
         ]);
 
         try {
@@ -139,7 +157,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
-      public function getProfile(Request $request)
+    public function getProfile(Request $request)
     {
         try {
             $user = $request->user();
@@ -158,7 +176,7 @@ class AuthController extends Controller
                 $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($giaSu) {
                     $profileData = array_merge($profileData, [
-                        'GiaSuID'=>$giaSu->GiaSuID,
+                        'GiaSuID' => $giaSu->GiaSuID,
                         'HoTen' => $giaSu->HoTen,
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
@@ -172,7 +190,7 @@ class AuthController extends Controller
                 $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($nguoiHoc) {
                     $profileData = array_merge($profileData, [
-                        'NguoiHocID'=>$nguoiHoc->NguoiHocID,
+                        'NguoiHocID' => $nguoiHoc->NguoiHocID,
                         'HoTen' => $nguoiHoc->HoTen,
                         'DiaChi' => $nguoiHoc->DiaChi,
                         'GioiTinh' => $nguoiHoc->GioiTinh,
