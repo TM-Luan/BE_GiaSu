@@ -33,6 +33,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/giasu/lich-hoc-theo-thang', [LichHocController::class, 'getLichHocTheoThangGiaSu']);
     Route::get('/nguoihoc/lich-hoc-theo-thang', [LichHocController::class, 'getLichHocTheoThangNguoiHoc']);
     Route::get('/lop/{lopYeuCauId}/lich-hoc-theo-thang', [LichHocController::class, 'getLichHocTheoLopVaThang']);
+    
+    // LichHoc routes - API mới cho Calendar (Summary + Chi tiết theo ngày)
+    Route::get('/giasu/lich-hoc-summary', [LichHocController::class, 'getLichHocSummaryGiaSu']);
+    Route::get('/giasu/lich-hoc-theo-ngay', [LichHocController::class, 'getLichHocTheoNgayGiaSu']);
+    Route::get('/nguoihoc/lich-hoc-summary', [LichHocController::class, 'getLichHocSummaryNguoiHoc']);
+    Route::get('/nguoihoc/lich-hoc-theo-ngay', [LichHocController::class, 'getLichHocTheoNgayNguoiHoc']);
 
     // YeuCauNhanLop routes
     Route::post('/giasu/guiyeucau', [YeuCauNhanLopController::class, 'giaSuGuiYeuCau']);

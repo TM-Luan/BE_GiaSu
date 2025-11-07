@@ -375,6 +375,120 @@ class LichHocController extends Controller
     }
 
     /**
+     * [MỚI] Lấy summary lịch học (danh sách ngày có lịch) cho GIA SƯ
+     */
+    public function getLichHocSummaryGiaSu(Request $request): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user->giasu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là gia sư.'
+                ], 403);
+            }
+
+            $giaSuId = $user->giasu->GiaSuID;
+            $thang = $request->input('thang', date('m'));
+            $nam = $request->input('nam', date('Y'));
+
+            // Lấy danh sách lớp của gia sư
+            $lopHocCuaGiaSu = LopHocYeuCau::where('GiaSuID', $giaSuId)
+                ->where('TrangThai', 'DangHoc')
+                ->pluck('LopYeuCauID');
+
+            if ($lopHocCuaGiaSu->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+
+            // Lấy danh sách ngày có lịch (không trùng)
+            $ngayCoLich = LichHoc::whereIn('LopYeuCauID', $lopHocCuaGiaSu)
+                ->whereYear('NgayHoc', $nam)
+                ->whereMonth('NgayHoc', $thang)
+                ->where('TrangThai', '!=', 'Huy')
+                ->selectRaw('DISTINCT DATE(NgayHoc) as ngay')
+                ->pluck('ngay')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $ngayCoLich
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * [MỚI] Lấy chi tiết lịch học theo 1 NGÀY cho GIA SƯ
+     */
+    public function getLichHocTheoNgayGiaSu(Request $request): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user->giasu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là gia sư.'
+                ], 403);
+            }
+
+            $giaSuId = $user->giasu->GiaSuID;
+            $ngay = $request->input('ngay'); // Format: Y-m-d
+
+            if (!$ngay) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng cung cấp tham số ngày (ngay).'
+                ], 400);
+            }
+
+            // Lấy danh sách lớp của gia sư
+            $lopHocCuaGiaSu = LopHocYeuCau::where('GiaSuID', $giaSuId)
+                ->where('TrangThai', 'DangHoc')
+                ->pluck('LopYeuCauID');
+
+            if ($lopHocCuaGiaSu->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+
+            // Lấy lịch học trong ngày
+            $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaGiaSu)
+                ->with([
+                    'lopHocYeuCau' => function ($q) {
+                        $q->with(['nguoiHoc', 'monHoc', 'khoiLop']);
+                    }
+                ])
+                ->whereDate('NgayHoc', $ngay)
+                ->orderBy('ThoiGianBatDau', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $lichHoc
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Lấy lịch học theo tháng cho NGƯỜI HỌC
      */
     public function getLichHocTheoThangNguoiHoc(Request $request): JsonResponse
@@ -460,6 +574,120 @@ class LichHocController extends Controller
                 ],
                 'tong_so_buoi' => $lichHoc->count(),
                 'tong_so_lop' => $lopHocTrongThang->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * [MỚI] Lấy summary lịch học (danh sách ngày có lịch) cho NGƯỜI HỌC
+     */
+    public function getLichHocSummaryNguoiHoc(Request $request): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user->nguoiHoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là người học.'
+                ], 403);
+            }
+
+            $nguoiHocId = $user->nguoiHoc->NguoiHocID;
+            $thang = $request->input('thang', date('m'));
+            $nam = $request->input('nam', date('Y'));
+
+            // Lấy danh sách lớp của người học
+            $lopHocCuaNguoiHoc = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
+                ->where('TrangThai', 'DangHoc')
+                ->pluck('LopYeuCauID');
+
+            if ($lopHocCuaNguoiHoc->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+
+            // Lấy danh sách ngày có lịch (không trùng)
+            $ngayCoLich = LichHoc::whereIn('LopYeuCauID', $lopHocCuaNguoiHoc)
+                ->whereYear('NgayHoc', $nam)
+                ->whereMonth('NgayHoc', $thang)
+                ->where('TrangThai', '!=', 'Huy')
+                ->selectRaw('DISTINCT DATE(NgayHoc) as ngay')
+                ->pluck('ngay')
+                ->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $ngayCoLich
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * [MỚI] Lấy chi tiết lịch học theo 1 NGÀY cho NGƯỜI HỌC
+     */
+    public function getLichHocTheoNgayNguoiHoc(Request $request): JsonResponse
+    {
+        try {
+            $user = auth()->user();
+
+            if (!$user->nguoiHoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là người học.'
+                ], 403);
+            }
+
+            $nguoiHocId = $user->nguoiHoc->NguoiHocID;
+            $ngay = $request->input('ngay'); // Format: Y-m-d
+
+            if (!$ngay) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Vui lòng cung cấp tham số ngày (ngay).'
+                ], 400);
+            }
+
+            // Lấy danh sách lớp của người học
+            $lopHocCuaNguoiHoc = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
+                ->where('TrangThai', 'DangHoc')
+                ->pluck('LopYeuCauID');
+
+            if ($lopHocCuaNguoiHoc->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'data' => []
+                ]);
+            }
+
+            // Lấy lịch học trong ngày
+            $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaNguoiHoc)
+                ->with([
+                    'lopHocYeuCau' => function ($q) {
+                        $q->with(['giaSu', 'monHoc', 'khoiLop']);
+                    }
+                ])
+                ->whereDate('NgayHoc', $ngay)
+                ->orderBy('ThoiGianBatDau', 'asc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $lichHoc
             ]);
 
         } catch (\Exception $e) {
