@@ -29,6 +29,7 @@ CREATE TABLE `DanhGia` (
   `DiemSo` double NOT NULL,
   `BinhLuan` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayDanhGia` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `LanSua` int NOT NULL DEFAULT '0' COMMENT 'Số lần đã sửa đánh giá (0=chưa sửa, 1=đã sửa 1 lần)',
   PRIMARY KEY (`DanhGiaID`),
   KEY `LopYeuCauID` (`LopYeuCauID`),
   KEY `TaiKhoanID` (`TaiKhoanID`),
@@ -43,7 +44,7 @@ CREATE TABLE `DanhGia` (
 
 LOCK TABLES `DanhGia` WRITE;
 /*!40000 ALTER TABLE `DanhGia` DISABLE KEYS */;
-INSERT INTO `DanhGia` VALUES (1,1,4,4.5,'Gia sư dạy dễ hiểu, đúng giờ.','2025-10-07 21:00:00'),(2,1,2,5,'Học viên hợp tác tốt, chuẩn bị bài.','2025-10-07 21:05:00');
+INSERT INTO `DanhGia` VALUES (1,1,4,4.5,'Gia sư dạy dễ hiểu, đúng giờ.','2025-10-07 21:00:00',0),(2,1,2,5,'Học viên hợp tác tốt, chuẩn bị bài.','2025-10-07 21:05:00',0);
 /*!40000 ALTER TABLE `DanhGia` ENABLE KEYS */;
 UNLOCK TABLES;
 

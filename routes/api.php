@@ -10,6 +10,7 @@ use App\Http\Controllers\YeuCauNhanLopController;
 use App\Http\Controllers\LichHocController;
 use App\Http\Controllers\DropdownDataController;
 use App\Http\Controllers\KhieuNaiController;
+use App\Http\Controllers\DanhGiaController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -23,6 +24,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
     Route::get('/khieunai', [KhieuNaiController::class, 'index']);
     Route::post('/khieunai', [KhieuNaiController::class, 'store']);
+
+    // DanhGia routes - Đánh giá gia sư
+    Route::post('/danhgia', [DanhGiaController::class, 'taoDanhGia']);
+    Route::get('/giasu/{giaSuId}/kiem-tra-danh-gia', [DanhGiaController::class, 'kiemTraDaDanhGia']);
+    Route::delete('/danhgia/{danhGiaId}', [DanhGiaController::class, 'xoaDanhGia']);
 
     // LichHoc routes - Tạo và quản lý lịch học
     Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
@@ -63,6 +69,9 @@ Route::get('/lophoc/search', [LopHocYeuCauController::class, 'search']);
 Route::get('/filter-options', [DropdownDataController::class, 'getFilterOptions']);
 Route::get('/search-stats', [DropdownDataController::class, 'getSearchStats']);
 Route::get('/search-suggestions', [DropdownDataController::class, 'getSearchSuggestions']);
+
+// DanhGia routes (public) - Xem đánh giá gia sư
+Route::get('/giasu/{giaSuId}/danhgia', [DanhGiaController::class, 'getDanhGiaGiaSu']);
 
 // Dropdown data routes (public)
 Route::get('/monhoc', [DropdownDataController::class, 'getMonHocList']);

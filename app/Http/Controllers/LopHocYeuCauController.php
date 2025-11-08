@@ -33,79 +33,81 @@ class LopHocYeuCauController extends Controller
     }
 
     /**
-     * Tìm kiếm và lọc danh sách lớp học
+     * Tìm kiếm và lọc danh sách lớp học (Dành cho Gia Sư)
      * API: GET /lophoc/search
-     * Parameters:
-     * - keyword: tìm kiếm theo mô tả
-     * - min_price: học phí tối thiểu
-     * - max_price: học phí tối đa
-     * - subject_id: ID môn học
-     * - grade_id: ID khối lớp
-     * - target_id: ID đối tượng
-     * - time_id: ID thời gian dạy
-     * - form: hình thức (online/offline)
-     * - status: trạng thái lớp
-     * - location: địa chỉ
+     * Filters:
+     * - subject_id: Lọc theo môn học
+     * - grade_id: Lọc theo khối lớp
+     * - form: Hình thức (Online/Offline)
+     * - min_price, max_price: Lọc theo giá
+     * - keyword: Tìm kiếm trong mô tả
      */
     public function search(SearchRequest $request)
     {
         try {
-            $query = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay']);
+            $query = LopHocYeuCau::with([
+                'nguoiHoc',
+                'giaSu', 
+                'monHoc',
+                'khoiLop',
+                'doiTuong',
+                'thoiGianDay'
+            ]);
 
-            // Tìm kiếm theo từ khóa trong mô tả
+            // Chỉ hiển thị lớp đang tìm gia sư hoặc chờ duyệt
+            $query->whereIn('TrangThai', ['TimGiaSu', 'ChoDuyet', 'DangChonGiaSu']);
+
+            // Tìm kiếm theo từ khóa
             if ($request->filled('keyword')) {
                 $keyword = $request->keyword;
                 $query->where(function($q) use ($keyword) {
                     $q->where('MoTa', 'LIKE', "%{$keyword}%")
                       ->orWhereHas('nguoiHoc', function($subQ) use ($keyword) {
                           $subQ->where('HoTen', 'LIKE', "%{$keyword}%");
+                      })
+                      ->orWhereHas('monHoc', function($subQ) use ($keyword) {
+                          $subQ->where('TenMon', 'LIKE', "%{$keyword}%");
                       });
                 });
             }
 
-            // Lọc theo môn học
+            // 1. Lọc theo môn học
             if ($request->filled('subject_id')) {
                 $query->where('MonID', $request->subject_id);
             }
 
-            // Lọc theo khối lớp
+            // 2. Lọc theo khối lớp
             if ($request->filled('grade_id')) {
                 $query->where('KhoiLopID', $request->grade_id);
             }
 
-            // Lọc theo đối tượng
-            if ($request->filled('target_id')) {
-                $query->where('DoiTuongID', $request->target_id);
-            }
-
-            // Lọc theo thời gian dạy
-            if ($request->filled('time_id')) {
-                $query->where('ThoiGianDayID', $request->time_id);
-            }
-
-            // Lọc theo hình thức
+            // 3. Lọc theo hình thức (Online/Offline)
             if ($request->filled('form')) {
                 $query->where('HinhThuc', $request->form);
             }
 
-            // Lọc theo trạng thái
-            if ($request->filled('status')) {
-                $query->where('TrangThai', $request->status);
-            } else {
-                // Mặc định chỉ lấy lớp đang tìm gia sư
-                $query->whereIn('TrangThai', ['TimGiaSu', 'ChoDuyet']);
-            }
-
-            // Lọc theo học phí
+            // 4. Lọc theo giá mỗi buổi
             if ($request->filled('min_price')) {
-                $query->where('HocPhi', '>=', $request->min_price);
+                $minPrice = (float) $request->min_price;
+                $query->where('HocPhi', '>=', $minPrice);
             }
 
             if ($request->filled('max_price')) {
-                $query->where('HocPhi', '<=', $request->max_price);
+                $maxPrice = (float) $request->max_price;
+                $query->where('HocPhi', '<=', $maxPrice);
             }
 
-            // Lọc theo địa chỉ (thông qua người học)
+            // Lọc theo đối tượng (nếu cần)
+            if ($request->filled('target_id')) {
+                $query->where('DoiTuongID', $request->target_id);
+            }
+
+            // Lọc theo thời gian dạy (nếu cần)
+            if ($request->filled('time_id')) {
+                $query->where('ThoiGianDayID', $request->time_id);
+            }
+
+            // Lọc theo địa chỉ
             if ($request->filled('location')) {
                 $location = $request->location;
                 $query->whereHas('nguoiHoc', function($q) use ($location) {

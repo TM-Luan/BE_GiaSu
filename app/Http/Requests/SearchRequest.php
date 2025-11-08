@@ -31,7 +31,7 @@ class SearchRequest extends FormRequest
             
             // Price filters
             'min_price' => 'nullable|numeric|min:0',
-            'max_price' => 'nullable|numeric|min:0|gte:min_price',
+            'max_price' => 'nullable|numeric|min:0',
             
             // Category filters
             'subject_id' => 'nullable|integer|exists:MonHoc,MonID',
@@ -40,14 +40,16 @@ class SearchRequest extends FormRequest
             'time_id' => 'nullable|integer|exists:ThoiGianDay,ThoiGianDayID',
             
             // Tutor specific filters
-            'gender' => 'nullable|string|in:Nam,Nữ',
+            'gender' => 'nullable|string|in:Nam,Nữ,Khác',
             'education_level' => 'nullable|string',
             'experience_level' => 'nullable|string',
             'min_experience' => 'nullable|integer|min:0',
-            'max_experience' => 'nullable|integer|min:0|gte:min_experience',
+            'max_experience' => 'nullable|integer|min:0',
+            'min_rating' => 'nullable|numeric|min:0|max:5',
+            'max_rating' => 'nullable|numeric|min:0|max:5',
             
             // Class specific filters
-            'form' => 'nullable|string|in:Online,Offline,Cả hai',
+            'form' => 'nullable|string|in:Online,Offline',
             'status' => 'nullable|string|in:TimGiaSu,ChoDuyet,DangHoc,HoanThanh',
             'location' => 'nullable|string|max:255',
         ];
@@ -62,16 +64,18 @@ class SearchRequest extends FormRequest
             'keyword.max' => 'Từ khóa tìm kiếm không được quá 255 ký tự.',
             'min_price.numeric' => 'Giá tối thiểu phải là số.',
             'max_price.numeric' => 'Giá tối đa phải là số.',
-            'max_price.gte' => 'Giá tối đa phải lớn hơn hoặc bằng giá tối thiểu.',
             'subject_id.exists' => 'Môn học không tồn tại.',
             'grade_id.exists' => 'Khối lớp không tồn tại.',
             'target_id.exists' => 'Đối tượng không tồn tại.',
             'time_id.exists' => 'Thời gian dạy không tồn tại.',
-            'gender.in' => 'Giới tính phải là Nam hoặc Nữ.',
+            'gender.in' => 'Giới tính phải là Nam, Nữ hoặc Khác.',
             'experience_level.in' => 'Cấp độ kinh nghiệm không hợp lệ.',
             'min_experience.integer' => 'Kinh nghiệm tối thiểu phải là số.',
             'max_experience.integer' => 'Kinh nghiệm tối đa phải là số.',
-            'max_experience.gte' => 'Kinh nghiệm tối đa phải lớn hơn hoặc bằng kinh nghiệm tối thiểu.',
+            'min_rating.numeric' => 'Đánh giá tối thiểu phải là số.',
+            'max_rating.numeric' => 'Đánh giá tối đa phải là số.',
+            'min_rating.max' => 'Đánh giá tối thiểu không được vượt quá 5.',
+            'max_rating.max' => 'Đánh giá tối đa không được vượt quá 5.',
             'form.in' => 'Hình thức dạy không hợp lệ.',
             'status.in' => 'Trạng thái lớp không hợp lệ.',
             'location.max' => 'Địa chỉ không được quá 255 ký tự.',

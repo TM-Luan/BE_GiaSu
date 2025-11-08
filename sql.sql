@@ -31,6 +31,7 @@ CREATE TABLE `danhgia` (
   `DiemSo` double NOT NULL,
   `BinhLuan` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayDanhGia` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `LanSua` int NOT NULL DEFAULT '0' COMMENT 'Số lần đã sửa đánh giá (0=chưa sửa, 1=đã sửa 1 lần)',
   PRIMARY KEY (`DanhGiaID`),
   KEY `LopYeuCauID` (`LopYeuCauID`),
   KEY `TaiKhoanID` (`TaiKhoanID`),
@@ -45,7 +46,7 @@ CREATE TABLE `danhgia` (
 
 LOCK TABLES `danhgia` WRITE;
 /*!40000 ALTER TABLE `danhgia` DISABLE KEYS */;
-INSERT INTO `danhgia` VALUES (1,1,4,4.5,'Gia sư dạy dễ hiểu, đúng giờ.','2025-10-07 21:00:00'),(2,1,2,5,'Học viên hợp tác tốt, chuẩn bị bài.','2025-10-07 21:05:00');
+INSERT INTO `danhgia` VALUES (1,1,4,4.5,'Gia sư dạy dễ hiểu, đúng giờ.','2025-10-07 21:00:00',0),(2,1,2,5,'Học viên hợp tác tốt, chuẩn bị bài.','2025-10-07 21:05:00',0);
 /*!40000 ALTER TABLE `danhgia` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -210,6 +211,7 @@ DROP TABLE IF EXISTS `lichhoc`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `lichhoc` (
   `LichHocID` int NOT NULL AUTO_INCREMENT,
+  `LichHocGocID` int DEFAULT NULL,
   `LopYeuCauID` int NOT NULL,
   `ThoiGianBatDau` time NOT NULL,
   `ThoiGianKetThuc` time NOT NULL,
@@ -217,8 +219,12 @@ CREATE TABLE `lichhoc` (
   `TrangThai` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'DangDay',
   `DuongDan` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `IsLapLai` tinyint(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`LichHocID`),
   KEY `LopYeuCauID` (`LopYeuCauID`),
+  KEY `idx_lichhoc_goc` (`LichHocGocID`),
+  KEY `idx_lichhoc_lap_lai` (`IsLapLai`),
+  CONSTRAINT `fk_lichhoc_lichhocgoc` FOREIGN KEY (`LichHocGocID`) REFERENCES `lichhoc` (`LichHocID`) ON DELETE CASCADE,
   CONSTRAINT `lichhoc_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `lophocyeucau` (`LopYeuCauID`) ON DELETE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -229,7 +235,7 @@ CREATE TABLE `lichhoc` (
 
 LOCK TABLES `lichhoc` WRITE;
 /*!40000 ALTER TABLE `lichhoc` DISABLE KEYS */;
-INSERT INTO `lichhoc` VALUES (1,1,'19:00:00','20:30:00','2025-10-07','DaHoc','https://meet.example.com/yc1-b1','2025-11-02 13:34:06'),(2,1,'19:00:00','20:30:00','2025-10-09','SapToi','https://meet.example.com/yc1-b2','2025-11-02 13:34:06'),(3,2,'18:30:00','20:30:00','2025-10-10','SapToi',NULL,'2025-11-02 13:34:06');
+INSERT INTO `lichhoc` VALUES (1,NULL,1,'19:00:00','20:30:00','2025-10-07','DaHoc','https://meet.example.com/yc1-b1','2025-11-02 13:34:06',0),(2,NULL,1,'19:00:00','20:30:00','2025-10-09','SapToi','https://meet.example.com/yc1-b2','2025-11-02 13:34:06',0),(3,NULL,2,'18:30:00','20:30:00','2025-10-10','SapToi',NULL,'2025-11-02 13:34:06',0);
 /*!40000 ALTER TABLE `lichhoc` ENABLE KEYS */;
 UNLOCK TABLES;
 

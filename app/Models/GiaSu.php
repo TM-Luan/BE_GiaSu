@@ -23,13 +23,28 @@ class GiaSu extends Model
     {
         return $this->belongsTo(TaiKhoan::class, 'TaiKhoanID','TaiKhoanID');
     }
+    
     public function yeuCauNhanLop()
     {
         return $this->hasMany(YeuCauNhanLop::class, 'GiaSuID', 'GiaSuID');
     }
-    public function DanhGia()
-{
-    return $this->hasOne(DanhGia::class, 'TaiKhoanID', 'TaiKhoanID');
-}
+    
+    public function lopHocYeuCau()
+    {
+        return $this->hasMany(LopHocYeuCau::class, 'GiaSuID', 'GiaSuID');
+    }
+    
+    public function danhGia()
+    {
+        // Lấy đánh giá qua các lớp mà gia sư đã dạy
+        return $this->hasManyThrough(
+            DanhGia::class,
+            LopHocYeuCau::class,
+            'GiaSuID', // Foreign key on LopHocYeuCau
+            'LopYeuCauID', // Foreign key on DanhGia
+            'GiaSuID', // Local key on GiaSu
+            'LopYeuCauID' // Local key on LopHocYeuCau
+        );
+    }
 }
 

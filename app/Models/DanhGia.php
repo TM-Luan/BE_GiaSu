@@ -7,10 +7,10 @@ class DanhGia extends Model
 {
     protected $table = 'DanhGia';
     protected $primaryKey = 'DanhGiaID';
-    public $timestamps = false;
+    public $timestamps = false; // Tắt timestamps vì bảng chưa có
 
     protected $fillable = [
-        'LopYeuCauID','TaiKhoanID','DiemSo','BinhLuan','NgayDanhGia'
+        'LopYeuCauID','TaiKhoanID','DiemSo','BinhLuan','NgayDanhGia','LanSua'
     ];
 
     protected $dates = ['NgayDanhGia'];
