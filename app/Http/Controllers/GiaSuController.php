@@ -135,9 +135,21 @@ class GiaSuController extends Controller
                 $query->where('GioiTinh', $request->gender);
             }
 
-            // Lọc theo trình độ học vấn
+            // Lọc theo trình độ học vấn và chuyên ngành
             if ($request->filled('education_level')) {
-                $query->where('BangCap', 'LIKE', "%{$request->education_level}%");
+                $query->where(function($q) use ($request) {
+                    $q->where('BangCap', 'LIKE', "%{$request->education_level}%")
+                      ->orWhere('TruongDaoTao', 'LIKE', "%{$request->education_level}%");
+                });
+            }
+
+            if ($request->filled('chuyen_nganh')) {
+                $query->where('ChuyenNganh', 'LIKE', "%{$request->chuyen_nganh}%");
+            }
+
+            // Lọc theo thành tích
+            if ($request->filled('thanh_tich')) {
+                $query->where('ThanhTich', 'LIKE', "%{$request->thanh_tich}%");
             }
 
             // Sắp xếp
@@ -150,6 +162,13 @@ class GiaSuController extends Controller
                     break;
                 case 'experience':
                     $query->orderBy('KinhNghiem', $sortOrder);
+                    break;
+                case 'education':
+                    $query->orderBy('BangCap', $sortOrder)
+                          ->orderBy('TruongDaoTao', $sortOrder);
+                    break;
+                case 'achievement':
+                    $query->orderBy('ThanhTich', $sortOrder);
                     break;
                 default:
                     $query->orderBy('GiaSuID', $sortOrder);

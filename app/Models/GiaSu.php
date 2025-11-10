@@ -15,7 +15,9 @@ class GiaSu extends Model
 
     protected $fillable = [
         'TaiKhoanID', 'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
-        'BangCap', 'KinhNghiem', 'AnhDaiDien'
+        'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
+        'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
+        'ThanhTich', 'KinhNghiem', 'AnhDaiDien'
     ];
 
     // Quan hệ

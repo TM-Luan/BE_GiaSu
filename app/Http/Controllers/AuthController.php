@@ -181,7 +181,13 @@ class AuthController extends Controller
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
                         'NgaySinh' => $giaSu->NgaySinh,
+                        'AnhCCCD_MatTruoc' => $giaSu->AnhCCCD_MatTruoc,
+                        'AnhCCCD_MatSau' => $giaSu->AnhCCCD_MatSau,
                         'BangCap' => $giaSu->BangCap,
+                        'AnhBangCap' => $giaSu->AnhBangCap,
+                        'TruongDaoTao' => $giaSu->TruongDaoTao,
+                        'ChuyenNganh' => $giaSu->ChuyenNganh,
+                        'ThanhTich' => $giaSu->ThanhTich,
                         'KinhNghiem' => $giaSu->KinhNghiem,
                         'AnhDaiDien' => $giaSu->AnhDaiDien
                     ]);
@@ -234,7 +240,13 @@ class AuthController extends Controller
             'DiaChi' => 'nullable|string|max:255',
             'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
             'NgaySinh' => 'nullable|date|before:today',
+            'AnhCCCD_MatTruoc' => 'nullable|string|max:255',
+            'AnhCCCD_MatSau' => 'nullable|string|max:255',
             'BangCap' => 'nullable|string|max:255',
+            'AnhBangCap' => 'nullable|string|max:255',
+            'TruongDaoTao' => 'nullable|string|max:255',
+            'ChuyenNganh' => 'nullable|string|max:255',
+            'ThanhTich' => 'nullable|string',
             'KinhNghiem' => 'nullable|string',
             'AnhDaiDien' => 'nullable|string|max:500'
         ]);
@@ -266,7 +278,12 @@ class AuthController extends Controller
                 $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($giaSu) {
                     $giaSuUpdateData = [];
-                    $fields = ['HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh', 'BangCap', 'KinhNghiem', 'AnhDaiDien'];
+                    $fields = [
+                        'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
+                        'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
+                        'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
+                        'ThanhTich', 'KinhNghiem', 'AnhDaiDien'
+                    ];
 
                     foreach ($fields as $field) {
                         if ($request->has($field)) {

@@ -19,7 +19,13 @@ class GiaSuRequest extends FormRequest
             'DiaChi' => 'nullable|string|max:255',
             'GioiTinh' => 'nullable|string|max:10',
             'NgaySinh' => 'nullable|date',
+            'AnhCCCD_MatTruoc' => 'nullable|string|max:255',
+            'AnhCCCD_MatSau' => 'nullable|string|max:255',
             'BangCap' => 'nullable|string|max:255',
+            'AnhBangCap' => 'nullable|string|max:255',
+            'TruongDaoTao' => 'nullable|string|max:255',
+            'ChuyenNganh' => 'nullable|string|max:255',
+            'ThanhTich' => 'nullable|string',
             'KinhNghiem' => 'nullable|string|max:255',
             'AnhDaiDien' => 'nullable|string|max:255',
         ];
