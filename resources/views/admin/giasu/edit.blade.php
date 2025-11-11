@@ -22,13 +22,16 @@
                     </ul>
                 </div>
             @endif
-
+            
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
 
-            <form action="{{ route('admin.giasu.update', $taiKhoan->TaiKhoanID) }}" method="POST">
-                @csrf @method('PUT') <h5 class="text-white mb-3">Thông tin Cơ bản (Bảng TaiKhoan)</h5>
+            <form action="{{ route('admin.giasu.update', $taiKhoan->TaiKhoanID) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
+
+                <h5 class="text-white mb-3">Thông tin Cơ bản (Bảng TaiKhoan)</h5>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Email (Bắt buộc)</label>
@@ -51,7 +54,26 @@
 
                 <hr class="border-secondary">
 
+                <h5 class="text-white mb-3">Đổi Mật khẩu (Tùy chọn)</h5>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input type="password" name="MatKhau" class="form-control form-control-dark" 
+                               placeholder="Bỏ trống nếu không đổi"
+                               autocomplete="new-password">
+                        <div class="form-text text-muted">Yêu cầu tối thiểu 8 ký tự.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Xác nhận Mật khẩu mới</label>
+                        <input type="password" name="MatKhau_confirmation" class="form-control form-control-dark"
+                               placeholder="Nhập lại mật khẩu mới"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+                <hr class="border-secondary">
+
                 <h5 class="text-white mb-3">Thông tin Chi tiết (Bảng GiaSu)</h5>
+                
                 <div class="row">
                     <div class="col-md-5 mb-3">
                         <label class="form-label">Họ tên (Bắt buộc)</label>
@@ -78,29 +100,79 @@
                         <input type="text" name="DiaChi" class="form-control form-control-dark" 
                                value="{{ old('DiaChi', $taiKhoan->giasu->DiaChi ?? '') }}">
                     </div>
-                    
-                    <div class="col-md-6 mb-3">
+
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label">Bằng cấp</label>
+                        <input type="text" name="BangCap" class="form-control form-control-dark" 
+                               value="{{ old('BangCap', $taiKhoan->giasu->BangCap ?? '') }}">
+                    </div>
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Trường đào tạo</label>
                         <input type="text" name="TruongDaoTao" class="form-control form-control-dark" 
                                value="{{ old('TruongDaoTao', $taiKhoan->giasu->TruongDaoTao ?? '') }}">
                     </div>
-                     <div class="col-md-6 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label class="form-label">Chuyên ngành</label>
                         <input type="text" name="ChuyenNganh" class="form-control form-control-dark" 
                                value="{{ old('ChuyenNganh', $taiKhoan->giasu->ChuyenNganh ?? '') }}">
                     </div>
-                    
-                    <div class="col-md-12 mb-3">
+
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Kinh nghiệm</label>
                         <input type="text" name="KinhNghiem" class="form-control form-control-dark" 
                                value="{{ old('KinhNghiem', $taiKhoan->giasu->KinhNghiem ?? '') }}">
                     </div>
-                    <div class="col-md-12 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Thành tích</label>
                         <textarea name="ThanhTich" class="form-control form-control-dark" rows="3">{{ old('ThanhTich', $taiKhoan->giasu->ThanhTich ?? '') }}</textarea>
                     </div>
-                    
                 </div>
+
+                <hr class="border-secondary">
+                <h5 class="text-white mb-3">Hình ảnh (Upload để thay đổi)</h5>
+                
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Ảnh đại diện</label>
+                        @if($taiKhoan->giasu?->AnhDaiDien)
+                            <img src="{{ $taiKhoan->giasu->AnhDaiDien }}" alt="Ảnh đại diện" class="img-fluid rounded mb-2" style="max-height: 150px; border: 1px solid #555;">
+                        @else
+                            <div class="text-muted fst-italic mb-2">Chưa có ảnh</div>
+                        @endif
+                        <input class="form-control form-control-dark" type="file" name="AnhDaiDien">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">CCCD Mặt trước</label>
+                        @if($taiKhoan->giasu?->AnhCCCD_MatTruoc)
+                            <img src="{{ $taiKhoan->giasu->AnhCCCD_MatTruoc }}" alt="CCCD Mặt trước" class="img-fluid rounded mb-2" style="max-height: 150px; border: 1px solid #555;">
+                        @else
+                            <div class="text-muted fst-italic mb-2">Chưa có ảnh</div>
+                        @endif
+                        <input class="form-control form-control-dark" type="file" name="AnhCCCD_MatTruoc">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">CCCD Mặt sau</label>
+                        @if($taiKhoan->giasu?->AnhCCCD_MatSau)
+                            <img src="{{ $taiKhoan->giasu->AnhCCCD_MatSau }}" alt="CCCD Mặt sau" class="img-fluid rounded mb-2" style="max-height: 150px; border: 1px solid #555;">
+                        @else
+                            <div class="text-muted fst-italic mb-2">Chưa có ảnh</div>
+                        @endif
+                        <input class="form-control form-control-dark" type="file" name="AnhCCCD_MatSau">
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Ảnh Bằng cấp</label>
+                        @if($taiKhoan->giasu?->AnhBangCap)
+                            <img src="{{ $taiKhoan->giasu->AnhBangCap }}" alt="Ảnh Bằng cấp" class="img-fluid rounded mb-2" style="max-height: 150px; border: 1px solid #555;">
+                        @else
+                            <div class="text-muted fst-italic mb-2">Chưa có ảnh</div>
+                        @endif
+                        <input class="form-control form-control-dark" type="file" name="AnhBangCap">
+                    </div>
+                </div>
+
 
                 <div class="text-end mt-4">
                     <button type="submit" class="btn btn-primary">

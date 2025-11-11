@@ -13,7 +13,6 @@
 
     <div class="card">
         <div class="card-body">
-            <!-- Hiển thị lỗi validation -->
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -23,10 +22,14 @@
                     </ul>
                 </div>
             @endif
+            
+            @if(session('error'))
+                <div class="alert alert-danger">{{ session('error') }}</div>
+            @endif
 
-            <form action="{{ route('admin.nguoihoc.update', $taiKhoan->TaiKhoanID) }}" method="POST">
-                @csrf <!-- Bắt buộc -->
-                @method('PUT') <!-- Bắt buộc cho route resource update -->
+            <form action="{{ route('admin.nguoihoc.update', $taiKhoan->TaiKhoanID) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                @method('PUT')
 
                 <h5 class="text-white mb-3">Thông tin Cơ bản (Bảng TaiKhoan)</h5>
                 <div class="row">
@@ -51,9 +54,51 @@
 
                 <hr class="border-secondary">
 
-                <h5 class="text-white mb-3">Thông tin Chi tiết (Bảng NguoiHoc) - ĐÃ CẬP NHẬT</h5>
+                <h5 class="text-white mb-3">Đổi Mật khẩu (Tùy chọn)</h5>
                 <div class="row">
-                    <!-- Hàng 1: Tên, Giới tính, Ngày sinh -->
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Mật khẩu mới</label>
+                        <input type="password" name="MatKhau" class="form-control form-control-dark" 
+                               placeholder="Bỏ trống nếu không đổi"
+                               autocomplete="new-password">
+                        <div class="form-text text-muted">Yêu cầu tối thiểu 8 ký tự.</div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Xác nhận Mật khẩu mới</label>
+                        <input type="password" name="MatKhau_confirmation" class="form-control form-control-dark"
+                               placeholder="Nhập lại mật khẩu mới"
+                               autocomplete="new-password">
+                    </div>
+                </div>
+                <hr class="border-secondary">
+
+                <h5 class="text-white mb-3">Thông tin Chi tiết (Bảng NguoiHoc)</h5>
+                
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label class="form-label">Ảnh đại diện hiện tại</label>
+                        @php
+                            $avatarSrc = $taiKhoan->nguoihoc?->AnhDaiDien;
+                            // Logic hiển thị ảnh: http (ImgBB) hoặc storage (ảnh cũ)
+                            if ($avatarSrc && !str_starts_with($avatarSrc, 'http')) {
+                                $avatarSrc = asset('storage/' . $avatarSrc);
+                            }
+                        @endphp
+                        
+                        @if($avatarSrc)
+                            <img src="{{ $avatarSrc }}" alt="Ảnh đại diện" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #555;">
+                        @else
+                            <div class="text-muted fst-italic">Chưa có ảnh</div>
+                        @endif
+                    </div>
+                    <div class="col-md-9 mb-3">
+                        <label for="AnhDaiDien" class="form-label">Thay đổi Ảnh đại diện</label>
+                        <input class="form-control form-control-dark" type="file" name="AnhDaiDien" id="AnhDaiDien">
+                        <div class="form-text text-muted">Chọn file để upload. Sẽ được lưu thành link http.</div>
+                    </div>
+
+                    <div class="col-12"><hr class="border-secondary my-3"></div>
+
                     <div class="col-md-5 mb-3">
                         <label class="form-label">Họ tên (Bắt buộc)</label>
                         <input type="text" name="HoTen" class="form-control form-control-dark" 
@@ -74,7 +119,6 @@
                                value="{{ old('NgaySinh', $taiKhoan->nguoihoc->NgaySinh ?? '') }}">
                     </div>
 
-                    <!-- Hàng 2: Địa chỉ -->
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Địa chỉ</label>
                         <input type="text" name="DiaChi" class="form-control form-control-dark" 
