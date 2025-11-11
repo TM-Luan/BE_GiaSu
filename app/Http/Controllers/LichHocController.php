@@ -3,6 +3,7 @@ namespace App\Http\Controllers;
 
 use App\Models\LichHoc;
 use App\Models\LopHocYeuCau;
+use App\Http\Resources\LichHocResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
@@ -86,6 +87,7 @@ class LichHocController extends Controller
 
                     $lichHocData = [
                         'LopYeuCauID' => $lopYeuCauId,
+                        'TenLop' => $lopHoc->TenLop,
                         'ThoiGianBatDau' => $validated['ThoiGianBatDau'],
                         'ThoiGianKetThuc' => $validated['ThoiGianKetThuc'],
                         'NgayHoc' => $ngayHocMoi->format('Y-m-d'),
@@ -326,8 +328,19 @@ class LichHocController extends Controller
             // Lấy lịch học theo tháng
             $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaGiaSu)
                 ->with([
-                    'lopHocYeuCau' => function ($q) {
-                        $q->with(['nguoiHoc', 'monHoc', 'khoiLop']);
+                    'lop' => function ($q) {
+                        $q->with([
+                            'nguoiHoc' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'giaSu' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'monHoc',
+                            'khoiLop',
+                            'doiTuong',
+                            'thoiGianDay'
+                        ]);
                     }
                 ])
                 ->whereYear('NgayHoc', $nam)
@@ -338,7 +351,7 @@ class LichHocController extends Controller
 
             // Gom nhóm lịch học theo ngày
             $lichHocTheoNgay = $lichHoc->groupBy('NgayHoc')->map(function($items) {
-                return $items->sortBy('ThoiGianBatDau')->values();
+                return LichHocResource::collection($items->sortBy('ThoiGianBatDau')->values())->resolve();
             });
 
             // Thống kê theo tháng
@@ -351,7 +364,7 @@ class LichHocController extends Controller
             ];
 
             // Lấy thông tin các lớp có lịch trong tháng
-            $lopHocTrongThang = $lichHoc->pluck('lopHocYeuCau')->unique('LopYeuCauID')->values();
+            $lopHocTrongThang = $lichHoc->pluck('lop')->unique('LopYeuCauID')->values();
 
             return response()->json([
                 'success' => true,
@@ -467,8 +480,19 @@ class LichHocController extends Controller
             // Lấy lịch học trong ngày
             $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaGiaSu)
                 ->with([
-                    'lopHocYeuCau' => function ($q) {
-                        $q->with(['nguoiHoc', 'monHoc', 'khoiLop']);
+                    'lop' => function ($q) {
+                        $q->with([
+                            'nguoiHoc' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'giaSu' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'monHoc',
+                            'khoiLop',
+                            'doiTuong',
+                            'thoiGianDay'
+                        ]);
                     }
                 ])
                 ->whereDate('NgayHoc', $ngay)
@@ -477,7 +501,7 @@ class LichHocController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $lichHoc
+                'data' => LichHocResource::collection($lichHoc)
             ]);
 
         } catch (\Exception $e) {
@@ -536,8 +560,19 @@ class LichHocController extends Controller
             // Lấy lịch học theo tháng
             $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaNguoiHoc)
                 ->with([
-                    'lopHocYeuCau' => function ($q) {
-                        $q->with(['giaSu', 'monHoc', 'khoiLop']);
+                    'lop' => function ($q) {
+                        $q->with([
+                            'nguoiHoc' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'giaSu' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'monHoc',
+                            'khoiLop',
+                            'doiTuong',
+                            'thoiGianDay'
+                        ]);
                     }
                 ])
                 ->whereYear('NgayHoc', $nam)
@@ -548,7 +583,7 @@ class LichHocController extends Controller
 
             // Gom nhóm lịch học theo ngày
             $lichHocTheoNgay = $lichHoc->groupBy('NgayHoc')->map(function($items) {
-                return $items->sortBy('ThoiGianBatDau')->values();
+                return LichHocResource::collection($items->sortBy('ThoiGianBatDau')->values())->resolve();
             });
 
             // Thống kê theo tháng
@@ -561,7 +596,7 @@ class LichHocController extends Controller
             ];
 
             // Lấy thông tin các lớp có lịch trong tháng
-            $lopHocTrongThang = $lichHoc->pluck('lopHocYeuCau')->unique('LopYeuCauID')->values();
+            $lopHocTrongThang = $lichHoc->pluck('lop')->unique('LopYeuCauID')->values();
 
             return response()->json([
                 'success' => true,
@@ -677,8 +712,19 @@ class LichHocController extends Controller
             // Lấy lịch học trong ngày
             $lichHoc = LichHoc::whereIn('LopYeuCauID', $lopHocCuaNguoiHoc)
                 ->with([
-                    'lopHocYeuCau' => function ($q) {
-                        $q->with(['giaSu', 'monHoc', 'khoiLop']);
+                    'lop' => function ($q) {
+                        $q->with([
+                            'nguoiHoc' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'giaSu' => function($q2) {
+                                $q2->with('taiKhoan');
+                            },
+                            'monHoc',
+                            'khoiLop',
+                            'doiTuong',
+                            'thoiGianDay'
+                        ]);
                     }
                 ])
                 ->whereDate('NgayHoc', $ngay)
@@ -687,7 +733,7 @@ class LichHocController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data' => $lichHoc
+                'data' => LichHocResource::collection($lichHoc)
             ]);
 
         } catch (\Exception $e) {
