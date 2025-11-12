@@ -7,12 +7,14 @@
         <h3 class="text-white">
             <i class="fa-solid fa-user-graduate me-2"></i> Quản lý Người học
         </h3>
-        <a href="#" class="btn btn-primary">
+        <a href="{{ route('admin.nguoihoc.create') }}" class="btn btn-primary">
             <i class="fa-solid fa-plus me-2"></i> Thêm Người học
         </a>
     </div>
 
-    <!-- Khung Lọc -->
+    <!-- ============================================= -->
+    <!-- KHUNG LỌC (FORM TÌM KIẾM) ĐÃ CÓ Ở ĐÂY -->
+    <!-- ============================================= -->
     <div class="card mb-4">
         <div class="card-body">
             <form method="GET" action="{{ route('admin.nguoihoc.index') }}">
@@ -37,6 +39,9 @@
             </form>
         </div>
     </div>
+    <!-- ============================================= -->
+    <!-- KẾT THÚC KHUNG LỌC -->
+    <!-- ============================================= -->
 
     <!-- Bảng Dữ liệu -->
     <div class="card">
@@ -73,10 +78,19 @@
                             <td>
                                 <a href="{{ route('admin.nguoihoc.edit', $tk->TaiKhoanID) }}" class="btn btn-sm btn-outline-warning" title="Sửa">
                                     <i class="fa-solid fa-pen"></i>
-                                </a>
-                                <a href="#" class="btn btn-sm btn-outline-info" title="Xem">
+                                </a> 
+                                <a href="{{ route('admin.nguoihoc.show', $tk->TaiKhoanID) }}" class="btn btn-sm btn-outline-info" title="Xem">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
+                                                                {{-- Thêm nút xóa hoặc xem nếu cần --}}
+                                <form action="{{ route('admin.nguoihoc.destroy', $tk->TaiKhoanID) }}" method="POST" class="d-inline"
+                                    onsubmit="return confirm('Bạn có chắc chắn muốn xóa người học {{ $tk->Email }}? Thao tác này không thể hoàn tác!');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                         @empty
