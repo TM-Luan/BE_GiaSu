@@ -11,7 +11,9 @@ class LopHocYeuCau extends Model
 
     protected $fillable = [
         'NguoiHocID','GiaSuID','HinhThuc','HocPhi','ThoiLuong','TrangThai','SoLuong','MoTa',
-        'MonID','KhoiLopID','DoiTuongID','ThoiGianDayID','NgayTao'
+        'MonID','KhoiLopID','DoiTuongID',
+        'SoBuoiTuan',
+        'LichHocMongMuon','NgayTao'
     ];
 
     protected $casts = [

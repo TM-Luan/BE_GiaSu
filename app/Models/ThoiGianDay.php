@@ -9,7 +9,7 @@ class ThoiGianDay extends Model
     protected $primaryKey = 'ThoiGianDayID';
     public $timestamps = false;
 
-    protected $fillable = ['SoBuoi','BuoiHoc','ThoiLuong'];
+    protected $fillable = ['SoBuoi','BuoiHoc'];
 
     public function lopYeuCau()
     {

@@ -19,12 +19,31 @@ class LichHocResource extends JsonResource
             'IsLapLai' => $this->IsLapLai,
             'NgayTao' => optional($this->NgayTao)->format('d-m-Y H:i'),
             
-            // Thông tin lớp học liên quan
+            // SỬA LẠI TOÀN BỘ PHẦN NÀY
+            // Key 'Lop' khớp với `json['Lop']` trong file lichhoc.dart
             'Lop' => $this->whenLoaded('lop', function() {
                 if (!$this->lop) {
                     return null;
                 }
                 
+                // Lấy thông tin từ các relationship đã load
+                $tenNguoiHoc = ($this->lop->relationLoaded('nguoiHoc') && $this->lop->nguoiHoc)
+                    ? $this->lop->nguoiHoc->HoTen
+                    : 'Chưa rõ';
+                
+                $tenMon = ($this->lop->relationLoaded('monHoc') && $this->lop->monHoc)
+                    ? $this->lop->monHoc->TenMon
+                    : null;
+
+                $tenGiaSu = ($this->lop->relationLoaded('giaSu') && $this->lop->giaSu)
+                    ? $this->lop->giaSu->HoTen
+                    : null;
+                
+                $tenKhoiLop = ($this->lop->relationLoaded('khoiLop') && $this->lop->khoiLop)
+                    ? $this->lop->khoiLop->BacHoc // Giả sử anh muốn lấy 'BacHoc' làm 'TenKhoiLop'
+                    : null;
+
+                // Trả về cấu trúc PHẲNG (flat) khớp với lophoc.dart
                 return [
                     'LopYeuCauID' => $this->lop->LopYeuCauID,
                     'HocPhi' => $this->lop->HocPhi,
@@ -33,80 +52,17 @@ class LichHocResource extends JsonResource
                     'TrangThai' => $this->lop->TrangThai,
                     'MoTa' => $this->lop->MoTa,
                     
-                    // Thông tin học viên
-                    'NguoiHoc' => $this->whenLoaded('lop.nguoiHoc', function() {
-                        if (!$this->lop->nguoiHoc) {
-                            return null;
-                        }
-                        return [
-                            'NguoiHocID' => $this->lop->nguoiHoc->NguoiHocID,
-                            'HoTen' => $this->lop->nguoiHoc->HoTen,
-                            'Email' => $this->lop->nguoiHoc->taiKhoan->Email ?? null,
-                            'SoDienThoai' => $this->lop->nguoiHoc->taiKhoan->SoDienThoai ?? null,
-                            'DiaChi' => $this->lop->nguoiHoc->DiaChi,
-                        ];
-                    }),
-                    
-                    // Thông tin gia sư
-                    'GiaSu' => $this->whenLoaded('lop.giaSu', function() {
-                        if (!$this->lop->giaSu) {
-                            return null;
-                        }
-                        return [
-                            'GiaSuID' => $this->lop->giaSu->GiaSuID,
-                            'HoTen' => $this->lop->giaSu->HoTen,
-                            'Email' => $this->lop->giaSu->taiKhoan->Email ?? null,
-                            'SoDienThoai' => $this->lop->giaSu->taiKhoan->SoDienThoai ?? null,
-                            'BangCap' => $this->lop->giaSu->BangCap,
-                            'KinhNghiem' => $this->lop->giaSu->KinhNghiem,
-                        ];
-                    }),
-                    
-                    // Thông tin môn học
-                    'MonHoc' => $this->whenLoaded('lop.monHoc', function() {
-                        if (!$this->lop->monHoc) {
-                            return null;
-                        }
-                        return [
-                            'MonID' => $this->lop->monHoc->MonID,
-                            'TenMon' => $this->lop->monHoc->TenMon,
-                        ];
-                    }),
-                    
-                    // Thông tin khối lớp
-                    'KhoiLop' => $this->whenLoaded('lop.khoiLop', function() {
-                        if (!$this->lop->khoiLop) {
-                            return null;
-                        }
-                        return [
-                            'KhoiLopID' => $this->lop->khoiLop->KhoiLopID,
-                            'BacHoc' => $this->lop->khoiLop->BacHoc,
-                        ];
-                    }),
-                    
-                    // Thông tin đối tượng
-                    'DoiTuong' => $this->whenLoaded('lop.doiTuong', function() {
-                        if (!$this->lop->doiTuong) {
-                            return null;
-                        }
-                        return [
-                            'DoiTuongID' => $this->lop->doiTuong->DoiTuongID,
-                            'TenDoiTuong' => $this->lop->doiTuong->TenDoiTuong,
-                        ];
-                    }),
-                    
-                    // Thông tin thời gian dạy
-                    'ThoiGianDay' => $this->whenLoaded('lop.thoiGianDay', function() {
-                        if (!$this->lop->thoiGianDay) {
-                            return null;
-                        }
-                        return [
-                            'ThoiGianDayID' => $this->lop->thoiGianDay->ThoiGianDayID,
-                            'SoBuoi' => $this->lop->thoiGianDay->SoBuoi,
-                            'BuoiHoc' => $this->lop->thoiGianDay->BuoiHoc,
-                            'ThoiLuong' => $this->lop->thoiGianDay->ThoiLuong,
-                        ];
-                    }),
+                    // Các trường đã được làm phẳng:
+                    'TenNguoiHoc' => $tenNguoiHoc,      // <-- Sẽ hiển thị
+                    'TenMon' => $tenMon,                // <-- Sẽ hiển thị
+                    'TenGiaSu' => $tenGiaSu,
+                    'TenKhoiLop' => $tenKhoiLop,
+
+                    // Các ID mà lophoc.dart cần
+                    'MonID' => $this->lop->MonID,
+                    'KhoiLopID' => $this->lop->KhoiLopID,
+                    'DoiTuongID' => $this->lop->DoiTuongID,
+                    'ThoiGianDayID' => $this->lop->ThoiGianDayID,
                 ];
             }),
         ];

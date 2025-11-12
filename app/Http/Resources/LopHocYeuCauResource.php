@@ -14,14 +14,12 @@ class LopHocYeuCauResource extends JsonResource
      */
     public function toArray($request)
     {
-        // Đảm bảo Controller (cả index() và show()) đã eager load:
-        // ['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay']
+        // Controller đã xóa 'thoiGianDay'
+        // ['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong']
 
         return [
             'MaLop' => $this->LopYeuCauID,
             
-            // --- CÁC DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THÊM KIỂM TRA NULL (ví dụ: $this->monHoc ? ...) ---
-
             'TieuDeLop' => $this->whenLoaded('monHoc', $this->monHoc ? $this->monHoc->TenMon : '') 
                            . ' ' 
                            . $this->whenLoaded('khoiLop', $this->khoiLop ? $this->khoiLop->BacHoc : ''),
@@ -29,28 +27,29 @@ class LopHocYeuCauResource extends JsonResource
             'TenNguoiHoc' => $this->whenLoaded('nguoiHoc', $this->nguoiHoc ? $this->nguoiHoc->HoTen : null),
             
             'DiaChi' => $this->NguoiHoc ? $this->NguoiHoc->DiaChi : null,
-            'HocPhi' => $this->HocPhi,//. ' vnd/Buoi',
+            'HocPhi' => $this->HocPhi,
             'TrangThai' => $this->TrangThai,
-            'MoTaChiTiet' => $this->MoTa,
+            'MoTaChiTiet' => $this->MoTa, // Khớp với Flutter (MoTa)
             
             'HinhThuc' => $this->HinhThuc,
             'ThoiLuong' => $this->ThoiLuong,
             'SoLuong' => $this->SoLuong,
 
             'DoiTuong' => $this->whenLoaded('doiTuong', $this->doiTuong ? $this->doiTuong->TenDoiTuong : null),
-            'ThoiGianHoc' => $this->whenLoaded('thoiGianDay', 
-                                $this->thoiGianDay ? $this->thoiGianDay->BuoiHoc . ' (' . $this->thoiGianDay->SoBuoi . ')' : null
-                            ),
+            
+            // SỬA: Xóa 'ThoiGianHoc' và thêm 2 trường mới
+            'SoBuoiTuan' => $this->SoBuoiTuan,
+            'LichHocMongMuon' => $this->LichHocMongMuon,
             
             'MonID' => $this->MonID,
             'KhoiLopID' => $this->KhoiLopID,
-            'NgayTao' => $this->NgayTao->format('d-m-Y'), // Model đã cast nên an toàn
+            'DoiTuongID' => $this->DoiTuongID,
+            'NgayTao' => $this->NgayTao->format('d-m-Y'),
 
             'TenMon' => $this->whenLoaded('monHoc', $this->monHoc ? $this->monHoc->TenMon : null),
             'TenKhoiLop' => $this->whenLoaded('khoiLop', $this->khoiLop ? $this->khoiLop->BacHoc : null),
             
-            // Đây là dòng gây lỗi 500
-            'TenGiaSu' => $this->whenLoaded('giaSu', $this->giaSu ? $this->giaSu->HoTen : null), // Thêm ?
+            'TenGiaSu' => $this->whenLoaded('giaSu', $this->giaSu ? $this->giaSu->HoTen : null), 
             
             'GiaSu' => new GiaSuResource($this->whenLoaded('giaSu')),
         ];

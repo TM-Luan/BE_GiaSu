@@ -6,9 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\MonHoc;
 use App\Models\KhoiLop;
 use App\Models\DoiTuong;
-use App\Models\ThoiGianDay;
-
-
+// SỬA: Xóa 'use App\Models\ThoiGianDay;'
 
 class DropdownDataController extends Controller
 {
@@ -31,11 +29,14 @@ class DropdownDataController extends Controller
         return response()->json(['data' => $data]);
     }
 
+    // SỬA: Xóa hàm getThoiGianDayList()
+    /*
     public function getThoiGianDayList()
     {
         $data = ThoiGianDay::query()->select('ThoiGianDayID', 'SoBuoi', 'BuoiHoc')->get();
         return response()->json(['data' => $data]);
     }
+    */
 
     /**
      * Lấy tất cả dữ liệu dropdown cho form filter
@@ -48,7 +49,10 @@ class DropdownDataController extends Controller
                 'subjects' => MonHoc::select('MonID', 'TenMon')->get(),
                 'grades' => KhoiLop::select('KhoiLopID', 'BacHoc')->get(),
                 'targets' => DoiTuong::select('DoiTuongID', 'TenDoiTuong')->get(),
-                'times' => ThoiGianDay::select('ThoiGianDayID', 'SoBuoi', 'BuoiHoc')->get(),
+                // SỬA: Xóa 'times'
+                // 'times' => ThoiGianDay::select('ThoiGianDayID', 'SoBuoi', 'BuoiHoc')->get(),
+                
+                // ... (Các phần còn lại giữ nguyên)
                 'education_levels' => [
                     ['value' => 'Sinh viên', 'label' => 'Sinh viên'],
                     ['value' => 'Cử nhân', 'label' => 'Cử nhân'],
@@ -71,11 +75,11 @@ class DropdownDataController extends Controller
                     ['value' => 'Offline', 'label' => 'Tại nhà'],
                     ['value' => 'Cả hai', 'label' => 'Cả hai'],
                 ],
-                'class_statuses' => [
+              'class_statuses' => [
                     ['value' => 'TimGiaSu', 'label' => 'Đang tìm gia sư'],
-                    ['value' => 'ChoDuyet', 'label' => 'Chờ duyệt'],
                     ['value' => 'DangHoc', 'label' => 'Đang học'],
                     ['value' => 'HoanThanh', 'label' => 'Hoàn thành'],
+                    ['value' => 'Huy', 'label' => 'Đã hủy'],
                 ],
                 'sort_options' => [
                     // For tutors
@@ -121,9 +125,10 @@ class DropdownDataController extends Controller
     public function getSearchStats()
     {
         try {
+            // SỬA: Xóa 'ChoDuyet'
             $stats = [
                 'total_tutors' => \App\Models\GiaSu::count(),
-                'total_classes' => \App\Models\LopHocYeuCau::whereIn('TrangThai', ['TimGiaSu', 'ChoDuyet'])->count(),
+                'total_classes' => \App\Models\LopHocYeuCau::where('TrangThai', 'TimGiaSu')->count(),
                 'total_subjects' => MonHoc::count(),
                 'avg_price' => \App\Models\LopHocYeuCau::avg('HocPhi'),
                 'price_range' => [

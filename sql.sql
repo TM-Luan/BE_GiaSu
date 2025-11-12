@@ -1,600 +1,833 @@
+
 CREATE DATABASE  IF NOT EXISTS `giasu` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `giasu`;
--- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
 --
--- Host: ballast.proxy.rlwy.net    Database: railway
--- ------------------------------------------------------
--- Server version	9.4.0
+-- Máy chủ: localhost:3306
+-- Thời gian đã tạo: Th10 12, 2025 lúc 09:25 PM
+-- Phiên bản máy phục vụ: 10.5.29-MariaDB-log
+-- Phiên bản PHP: 8.3.13
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET NAMES utf8mb4 */;
 
 --
--- Table structure for table `DanhGia`
+-- Cơ sở dữ liệu: `cvcuyxzh8akt_giasu1`
 --
 
-DROP TABLE IF EXISTS `DanhGia`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `DanhGia`
+--
+
 CREATE TABLE `DanhGia` (
-  `DanhGiaID` int NOT NULL AUTO_INCREMENT,
-  `LopYeuCauID` int NOT NULL,
-  `TaiKhoanID` int NOT NULL,
+  `DanhGiaID` int(11) NOT NULL,
+  `LopYeuCauID` int(11) NOT NULL,
+  `TaiKhoanID` int(11) NOT NULL,
   `DiemSo` double NOT NULL,
-  `BinhLuan` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `NgayDanhGia` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `LanSua` int NOT NULL DEFAULT '0' COMMENT 'Số lần đã sửa đánh giá (0=chưa sửa, 1=đã sửa 1 lần)',
-  PRIMARY KEY (`DanhGiaID`),
-  KEY `LopYeuCauID` (`LopYeuCauID`),
-  KEY `TaiKhoanID` (`TaiKhoanID`),
-  CONSTRAINT `DanhGia_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
-  CONSTRAINT `DanhGia_ibfk_2` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `BinhLuan` varchar(500) DEFAULT NULL,
+  `NgayDanhGia` datetime NOT NULL DEFAULT current_timestamp(),
+  `LanSua` int(11) NOT NULL DEFAULT 0 COMMENT 'Số lần đã sửa đánh giá (0=chưa sửa, 1=đã sửa 1 lần)'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `DanhGia`
+-- Đang đổ dữ liệu cho bảng `DanhGia`
 --
 
-LOCK TABLES `DanhGia` WRITE;
-/*!40000 ALTER TABLE `DanhGia` DISABLE KEYS */;
-INSERT INTO `DanhGia` VALUES (1,1,4,4.5,'Gia sư dạy dễ hiểu, đúng giờ.','2025-10-07 21:00:00',0),(2,1,2,5,'Học viên hợp tác tốt, chuẩn bị bài.','2025-10-07 21:05:00',0);
-/*!40000 ALTER TABLE `DanhGia` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `DanhGia` (`DanhGiaID`, `LopYeuCauID`, `TaiKhoanID`, `DiemSo`, `BinhLuan`, `NgayDanhGia`, `LanSua`) VALUES
+(1, 1, 4, 4.5, 'Gia sư dạy dễ hiểu, đúng giờ.', '2025-10-07 21:00:00', 0),
+(2, 1, 2, 5, 'Học viên hợp tác tốt, chuẩn bị bài.', '2025-10-07 21:05:00', 0);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `DoiTuong`
+-- Cấu trúc bảng cho bảng `DoiTuong`
 --
 
-DROP TABLE IF EXISTS `DoiTuong`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `DoiTuong` (
-  `DoiTuongID` int NOT NULL AUTO_INCREMENT,
-  `TenDoiTuong` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`DoiTuongID`),
-  UNIQUE KEY `TenDoiTuong` (`TenDoiTuong`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `DoiTuongID` int(11) NOT NULL,
+  `TenDoiTuong` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `DoiTuong`
+-- Đang đổ dữ liệu cho bảng `DoiTuong`
 --
 
-LOCK TABLES `DoiTuong` WRITE;
-/*!40000 ALTER TABLE `DoiTuong` DISABLE KEYS */;
-INSERT INTO `DoiTuong` VALUES (1,'Học sinh'),(2,'Sinh viên');
-/*!40000 ALTER TABLE `DoiTuong` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `DoiTuong` (`DoiTuongID`, `TenDoiTuong`) VALUES
+(3, 'Giáo viên'),
+(1, 'Người đi làm'),
+(2, 'Sinh viên');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `GiaSu`
+-- Cấu trúc bảng cho bảng `GiaoDich`
 --
 
-DROP TABLE IF EXISTS `GiaSu`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `GiaoDich` (
+  `GiaoDichID` bigint(20) NOT NULL,
+  `LopYeuCauID` int(11) NOT NULL,
+  `TaiKhoanID` int(11) NOT NULL,
+  `SoTien` double NOT NULL,
+  `ThoiGian` datetime NOT NULL DEFAULT current_timestamp(),
+  `TrangThai` varchar(50) NOT NULL DEFAULT 'ChoXacNhan',
+  `GhiChu` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `GiaoDich`
+--
+
+INSERT INTO `GiaoDich` (`GiaoDichID`, `LopYeuCauID`, `TaiKhoanID`, `SoTien`, `ThoiGian`, `TrangThai`, `GhiChu`) VALUES
+(1, 1, 4, 200000, '2025-10-07 18:00:00', 'ThanhCong', 'Thanh toán buổi 1'),
+(2, 1, 4, 200000, '2025-10-09 18:00:00', 'ChoXacNhan', 'Thanh toán buổi 2 (chờ đối soát)'),
+(3, 2, 6, 180000, '2025-10-10 17:30:00', 'ChoXacNhan', 'Đặt cọc buổi đầu');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `GiaSu`
+--
+
 CREATE TABLE `GiaSu` (
-  `GiaSuID` int NOT NULL AUTO_INCREMENT,
-  `TaiKhoanID` int NOT NULL,
-  `HoTen` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `DiaChi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `GioiTinh` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `GiaSuID` int(11) NOT NULL,
+  `TaiKhoanID` int(11) NOT NULL,
+  `HoTen` varchar(150) NOT NULL,
+  `DiaChi` varchar(255) DEFAULT NULL,
+  `GioiTinh` varchar(10) DEFAULT NULL,
   `NgaySinh` date DEFAULT NULL,
-  `AnhCCCD_MatTruoc` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `AnhCCCD_MatSau` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `BangCap` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `AnhBangCap` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `TruongDaoTao` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ChuyenNganh` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `ThanhTich` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `KinhNghiem` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `AnhDaiDien` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`GiaSuID`),
-  KEY `TaiKhoanID` (`TaiKhoanID`),
-  CONSTRAINT `GiaSu_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `AnhCCCD_MatTruoc` varchar(255) DEFAULT NULL,
+  `AnhCCCD_MatSau` varchar(255) DEFAULT NULL,
+  `BangCap` varchar(255) DEFAULT NULL,
+  `AnhBangCap` varchar(255) DEFAULT NULL,
+  `TruongDaoTao` varchar(255) DEFAULT NULL,
+  `ChuyenNganh` varchar(255) DEFAULT NULL,
+  `ThanhTich` text DEFAULT NULL,
+  `KinhNghiem` varchar(255) DEFAULT NULL,
+  `AnhDaiDien` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `GiaSu`
+-- Đang đổ dữ liệu cho bảng `GiaSu`
 --
 
-LOCK TABLES `GiaSu` WRITE;
-/*!40000 ALTER TABLE `GiaSu` DISABLE KEYS */;
-INSERT INTO `GiaSu` VALUES 
+INSERT INTO `GiaSu` (`GiaSuID`, `TaiKhoanID`, `HoTen`, `DiaChi`, `GioiTinh`, `NgaySinh`, `AnhCCCD_MatTruoc`, `AnhCCCD_MatSau`, `BangCap`, `AnhBangCap`, `TruongDaoTao`, `ChuyenNganh`, `ThanhTich`, `KinhNghiem`, `AnhDaiDien`) VALUES
 (1, 2, 'Nguyễn Văn A', 'Q.1, TP.HCM', 'Nam', '1995-05-10', 'cccd_front_1.jpg', 'cccd_back_1.jpg', 'Cử nhân Sư phạm Toán', 'bangcap_1.jpg', 'Đại học Sư phạm TP.HCM', 'Sư phạm Toán', 'Tốt nghiệp loại Giỏi\nGiải nhất Olympic Toán cấp trường\nHọc sinh đạt điểm cao trong kỳ thi THPT QG\nNhiều học sinh đạt giải HSG cấp thành phố', '3 năm kinh nghiệm dạy Toán THPT', NULL),
 (2, 3, 'Trần Thị B', 'Q.3, TP.HCM', 'Nữ', '1996-08-22', 'cccd_front_2.jpg', 'cccd_back_2.jpg', 'Cử nhân Ngôn ngữ Anh', 'bangcap_2.jpg', 'Đại học KHXH&NV', 'Ngôn ngữ Anh', 'IELTS 8.0\nTốt nghiệp loại Khá\nNhiều học sinh đạt chứng chỉ IELTS 6.5+', '2 năm kinh nghiệm dạy tiếng Anh', NULL),
 (3, 7, 'Nguyễn Văn A', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 (4, 8, 'Tran Minh Luan', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
-/*!40000 ALTER TABLE `GiaSu` ENABLE KEYS */;
-UNLOCK TABLES;
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `GiaoDich`
+-- Cấu trúc bảng cho bảng `KhieuNai`
 --
 
-DROP TABLE IF EXISTS `GiaoDich`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `GiaoDich` (
-  `GiaoDichID` bigint NOT NULL AUTO_INCREMENT,
-  `LopYeuCauID` int NOT NULL,
-  `TaiKhoanID` int NOT NULL,
-  `SoTien` double NOT NULL,
-  `ThoiGian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `TrangThai` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ChoXacNhan',
-  `GhiChu` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`GiaoDichID`),
-  KEY `LopYeuCauID` (`LopYeuCauID`),
-  KEY `TaiKhoanID` (`TaiKhoanID`),
-  CONSTRAINT `GiaoDich_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
-  CONSTRAINT `GiaoDich_ibfk_2` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `GiaoDich`
---
-
-LOCK TABLES `GiaoDich` WRITE;
-/*!40000 ALTER TABLE `GiaoDich` DISABLE KEYS */;
-INSERT INTO `GiaoDich` VALUES (1,1,4,200000,'2025-10-07 18:00:00','ThanhCong','Thanh toán buổi 1'),(2,1,4,200000,'2025-10-09 18:00:00','ChoXacNhan','Thanh toán buổi 2 (chờ đối soát)'),(3,2,6,180000,'2025-10-10 17:30:00','ChoXacNhan','Đặt cọc buổi đầu');
-/*!40000 ALTER TABLE `GiaoDich` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `KhieuNai`
---
-
-DROP TABLE IF EXISTS `KhieuNai`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `KhieuNai` (
-  `KhieuNaiID` int NOT NULL AUTO_INCREMENT,
-  `TaiKhoanID` int NOT NULL,
-  `NoiDung` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `TrangThai` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'TiepNhan',
-  `GiaiQuyet` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `PhanHoi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `GiaoDichID` bigint DEFAULT NULL,
-  `LopYeuCauID` int DEFAULT NULL,
-  PRIMARY KEY (`KhieuNaiID`),
-  KEY `TaiKhoanID` (`TaiKhoanID`),
-  KEY `GiaoDichID` (`GiaoDichID`),
-  KEY `LopYeuCauID` (`LopYeuCauID`),
-  CONSTRAINT `KhieuNai_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE,
-  CONSTRAINT `KhieuNai_ibfk_2` FOREIGN KEY (`GiaoDichID`) REFERENCES `GiaoDich` (`GiaoDichID`) ON DELETE SET NULL,
-  CONSTRAINT `KhieuNai_ibfk_3` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `KhieuNaiID` int(11) NOT NULL,
+  `TaiKhoanID` int(11) NOT NULL,
+  `NoiDung` text NOT NULL,
+  `NgayTao` datetime NOT NULL DEFAULT current_timestamp(),
+  `TrangThai` varchar(50) NOT NULL DEFAULT 'TiepNhan',
+  `GiaiQuyet` text DEFAULT NULL,
+  `PhanHoi` varchar(255) DEFAULT NULL,
+  `GiaoDichID` bigint(20) DEFAULT NULL,
+  `LopYeuCauID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `KhieuNai`
+-- Đang đổ dữ liệu cho bảng `KhieuNai`
 --
 
-LOCK TABLES `KhieuNai` WRITE;
-/*!40000 ALTER TABLE `KhieuNai` DISABLE KEYS */;
-INSERT INTO `KhieuNai` VALUES (1,6,'Chưa tìm được gia sư phù hợp cho lớp YC2.','2025-10-10 20:00:00','TiepNhan',NULL,NULL,NULL,2),(2,4,'Thanh toán buổi 2 đã chuyển nhưng chưa xác nhận.','2025-10-09 21:30:00','DangXuLy',NULL,NULL,2,1);
-/*!40000 ALTER TABLE `KhieuNai` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `KhieuNai` (`KhieuNaiID`, `TaiKhoanID`, `NoiDung`, `NgayTao`, `TrangThai`, `GiaiQuyet`, `PhanHoi`, `GiaoDichID`, `LopYeuCauID`) VALUES
+(1, 6, 'Chưa tìm được gia sư phù hợp cho lớp YC2.', '2025-10-10 20:00:00', 'TiepNhan', NULL, NULL, NULL, 2),
+(2, 4, 'Thanh toán buổi 2 đã chuyển nhưng chưa xác nhận.', '2025-10-09 21:30:00', 'DangXuLy', NULL, NULL, 2, 1);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `KhoiLop`
+-- Cấu trúc bảng cho bảng `KhoiLop`
 --
 
-DROP TABLE IF EXISTS `KhoiLop`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `KhoiLop` (
-  `KhoiLopID` int NOT NULL AUTO_INCREMENT,
-  `BacHoc` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`KhoiLopID`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `KhoiLopID` int(11) NOT NULL,
+  `BacHoc` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `KhoiLop`
+-- Đang đổ dữ liệu cho bảng `KhoiLop`
 --
 
-LOCK TABLES `KhoiLop` WRITE;
-/*!40000 ALTER TABLE `KhoiLop` DISABLE KEYS */;
-INSERT INTO `KhoiLop` VALUES (1,'Lớp 1'),(2,'Lớp 2'),(3,'Lớp 3'),(4,'Lớp 4'),(5,'Lớp 5'),(6,'Lớp 6'),(7,'Lớp 7'),(8,'Lớp 8'),(9,'Lớp 9'),(10,'Lớp 10'),(11,'Lớp 11'),(12,'Lớp 12');
-/*!40000 ALTER TABLE `KhoiLop` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `KhoiLop` (`KhoiLopID`, `BacHoc`) VALUES
+(1, 'Lớp 1'),
+(2, 'Lớp 2'),
+(3, 'Lớp 3'),
+(4, 'Lớp 4'),
+(5, 'Lớp 5'),
+(6, 'Lớp 6'),
+(7, 'Lớp 7'),
+(8, 'Lớp 8'),
+(9, 'Lớp 9'),
+(10, 'Lớp 10'),
+(11, 'Lớp 11'),
+(12, 'Lớp 12');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `LichHoc`
+-- Cấu trúc bảng cho bảng `LichHoc`
 --
 
-DROP TABLE IF EXISTS `LichHoc`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `LichHoc` (
-  `LichHocID` int NOT NULL AUTO_INCREMENT,
-  `LichHocGocID` int DEFAULT NULL,
-  `LopYeuCauID` int NOT NULL,
+  `LichHocID` int(11) NOT NULL,
+  `LichHocGocID` int(11) DEFAULT NULL,
+  `LopYeuCauID` int(11) NOT NULL,
   `ThoiGianBatDau` time NOT NULL,
   `ThoiGianKetThuc` time NOT NULL,
   `NgayHoc` date NOT NULL,
-  `TrangThai` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'DangDay',
-  `DuongDan` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `IsLapLai` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`LichHocID`),
-  KEY `LopYeuCauID` (`LopYeuCauID`),
-  KEY `idx_lichhoc_goc` (`LichHocGocID`),
-  KEY `idx_lichhoc_lap_lai` (`IsLapLai`),
-  CONSTRAINT `fk_lichhoc_lichhocgoc` FOREIGN KEY (`LichHocGocID`) REFERENCES `LichHoc` (`LichHocID`) ON DELETE CASCADE,
-  CONSTRAINT `LichHoc_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `LichHoc`
---
-
-LOCK TABLES `LichHoc` WRITE;
-/*!40000 ALTER TABLE `LichHoc` DISABLE KEYS */;
-INSERT INTO `LichHoc` VALUES (4,4,1,'08:00:00','09:30:00','2025-11-05','SapToi','https://meet.example.com/toan-b1','2025-11-04 19:20:43',1),(5,4,1,'08:00:00','09:30:00','2025-11-12','SapToi','https://meet.example.com/toan-b2','2025-11-04 19:20:43',1),(6,4,1,'08:00:00','09:30:00','2025-11-19','SapToi','https://meet.example.com/toan-b3','2025-11-04 19:20:43',1),(7,4,1,'08:00:00','09:30:00','2025-11-26','SapToi','https://meet.example.com/toan-b4','2025-11-04 19:20:43',1),(8,4,1,'08:00:00','09:30:00','2025-12-03','SapToi','https://meet.example.com/toan-b5','2025-11-04 19:20:43',1),(9,4,1,'08:00:00','09:30:00','2025-12-10','SapToi','https://meet.example.com/toan-b6','2025-11-04 19:20:43',1),(10,4,1,'08:00:00','09:30:00','2025-12-17','SapToi','https://meet.example.com/toan-b7','2025-11-04 19:20:43',1),(11,4,1,'08:00:00','09:30:00','2025-12-24','SapToi','https://meet.example.com/toan-b8','2025-11-04 19:20:43',1);
-/*!40000 ALTER TABLE `LichHoc` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `LopHocYeuCau`
---
-
-DROP TABLE IF EXISTS `LopHocYeuCau`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `LopHocYeuCau` (
-  `LopYeuCauID` int NOT NULL AUTO_INCREMENT,
-  `NguoiHocID` int NOT NULL,
-  `GiaSuID` int DEFAULT NULL,
-  `HinhThuc` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `HocPhi` double NOT NULL,
-  `ThoiLuong` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TrangThai` enum('ChoDuyet','TimGiaSu','DangChonGiaSu','DangHoc','HoanThanh','Huy') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ChoDuyet',
-  `SoLuong` int DEFAULT '1',
-  `MoTa` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `MonID` int NOT NULL,
-  `KhoiLopID` int NOT NULL,
-  `DoiTuongID` int NOT NULL,
-  `ThoiGianDayID` int NOT NULL,
-  `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`LopYeuCauID`),
-  KEY `NguoiHocID` (`NguoiHocID`),
-  KEY `GiaSuID` (`GiaSuID`),
-  KEY `MonID` (`MonID`),
-  KEY `KhoiLopID` (`KhoiLopID`),
-  KEY `DoiTuongID` (`DoiTuongID`),
-  KEY `ThoiGianDayID` (`ThoiGianDayID`),
-  CONSTRAINT `LopHocYeuCau_ibfk_1` FOREIGN KEY (`NguoiHocID`) REFERENCES `NguoiHoc` (`NguoiHocID`) ON DELETE CASCADE,
-  CONSTRAINT `LopHocYeuCau_ibfk_2` FOREIGN KEY (`GiaSuID`) REFERENCES `GiaSu` (`GiaSuID`),
-  CONSTRAINT `LopHocYeuCau_ibfk_3` FOREIGN KEY (`MonID`) REFERENCES `MonHoc` (`MonID`),
-  CONSTRAINT `LopHocYeuCau_ibfk_4` FOREIGN KEY (`KhoiLopID`) REFERENCES `KhoiLop` (`KhoiLopID`),
-  CONSTRAINT `LopHocYeuCau_ibfk_5` FOREIGN KEY (`DoiTuongID`) REFERENCES `DoiTuong` (`DoiTuongID`),
-  CONSTRAINT `LopHocYeuCau_ibfk_6` FOREIGN KEY (`ThoiGianDayID`) REFERENCES `ThoiGianDay` (`ThoiGianDayID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `LopHocYeuCau`
---
-
-LOCK TABLES `LopHocYeuCau` WRITE;
-/*!40000 ALTER TABLE `LopHocYeuCau` DISABLE KEYS */;
-INSERT INTO `LopHocYeuCau` VALUES (1,1,1,'Online',200000,'90 phút/buổi','DangHoc',1,'Ôn thi giữa kỳ',1,2,1,1,'2025-10-05 08:00:00'),(2,2,NULL,'Offline',180000,'120 phút/buổi','TimGiaSu',1,'Giao tiếp cơ bản',2,1,1,2,'2025-10-06 09:00:00'),(3,3,2,'Online',250000,'120 phút/buổi','ChoDuyet',2,'Ôn luyện chương Dao động',3,3,1,3,'2025-10-06 10:00:00');
-/*!40000 ALTER TABLE `LopHocYeuCau` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `MonHoc`
---
-
-DROP TABLE IF EXISTS `MonHoc`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `MonHoc` (
-  `MonID` int NOT NULL AUTO_INCREMENT,
-  `TenMon` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`MonID`),
-  UNIQUE KEY `TenMon` (`TenMon`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `MonHoc`
---
-
-LOCK TABLES `MonHoc` WRITE;
-/*!40000 ALTER TABLE `MonHoc` DISABLE KEYS */;
-INSERT INTO `MonHoc` VALUES (13,'Âm Nhạc'),(11,'Công Nghệ'),(8,'Địa Lý'),(10,'Giáo Dục Công Dân'),(5,'Hóa Học'),(15,'Khoa Học Tự Nhiên'),(16,'Khoa Học Xã Hội'),(18,'Kỹ năng giao tiếp'),(19,'Kỹ năng thuyết trình'),(25,'Lập trình C++'),(26,'Lập trình Python'),(7,'Lịch Sử'),(23,'Luyện thi đại học'),(22,'Luyện thi IELTS'),(21,'Luyện thi TOEIC'),(24,'Luyện thi vào 10'),(20,'Luyện viết chữ đẹp'),(12,'Mỹ Thuật'),(2,'Ngữ Văn'),(6,'Sinh Học'),(14,'Thể Dục'),(3,'Tiếng Anh'),(29,'Tiếng Hàn'),(28,'Tiếng Nhật'),(30,'Tiếng Trung'),(9,'Tin Học'),(27,'Tin học cơ bản'),(17,'Tin học Văn phòng'),(1,'Toán'),(4,'Vật Lý');
-/*!40000 ALTER TABLE `MonHoc` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `NguoiHoc`
---
-
-DROP TABLE IF EXISTS `NguoiHoc`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `NguoiHoc` (
-  `NguoiHocID` int NOT NULL AUTO_INCREMENT,
-  `TaiKhoanID` int NOT NULL,
-  `HoTen` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `NgaySinh` date DEFAULT NULL,
-  `GioiTinh` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `DiaChi` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `AnhDaiDien` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`NguoiHocID`),
-  KEY `TaiKhoanID` (`TaiKhoanID`),
-  CONSTRAINT `NguoiHoc_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `NguoiHoc`
---
-
-LOCK TABLES `NguoiHoc` WRITE;
-/*!40000 ALTER TABLE `NguoiHoc` DISABLE KEYS */;
-INSERT INTO `NguoiHoc` VALUES (1,4,'Lê Minh C','2010-03-12','Nam','Thủ Đức, TP.HCM',NULL),(2,5,'Phạm Gia D','2008-11-05','Nam','Q.7, TP.HCM',NULL),(3,6,'Hoàng Anh E','2006-01-28','Nữ','Q.5, TP.HCM',NULL);
-/*!40000 ALTER TABLE `NguoiHoc` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `PhanQuyen`
---
-
-DROP TABLE IF EXISTS `PhanQuyen`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `PhanQuyen` (
-  `TaiKhoanID` int NOT NULL,
-  `VaiTroID` int NOT NULL,
-  PRIMARY KEY (`TaiKhoanID`,`VaiTroID`),
-  KEY `VaiTroID` (`VaiTroID`),
-  CONSTRAINT `PhanQuyen_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE,
-  CONSTRAINT `PhanQuyen_ibfk_2` FOREIGN KEY (`VaiTroID`) REFERENCES `VaiTro` (`VaiTroID`) ON DELETE CASCADE
+  `TrangThai` varchar(50) DEFAULT 'DangDay',
+  `DuongDan` varchar(255) DEFAULT NULL,
+  `NgayTao` datetime NOT NULL DEFAULT current_timestamp(),
+  `IsLapLai` tinyint(1) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `PhanQuyen`
+-- Đang đổ dữ liệu cho bảng `LichHoc`
 --
 
-LOCK TABLES `PhanQuyen` WRITE;
-/*!40000 ALTER TABLE `PhanQuyen` DISABLE KEYS */;
-INSERT INTO `PhanQuyen` VALUES (1,1),(2,2),(3,2),(7,2),(8,2),(4,3),(5,3),(6,3);
-/*!40000 ALTER TABLE `PhanQuyen` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `LichHoc` (`LichHocID`, `LichHocGocID`, `LopYeuCauID`, `ThoiGianBatDau`, `ThoiGianKetThuc`, `NgayHoc`, `TrangThai`, `DuongDan`, `NgayTao`, `IsLapLai`) VALUES
+(4, 4, 1, '08:00:00', '09:30:00', '2025-11-05', 'SapToi', 'https://meet.example.com/toan-b1', '2025-11-04 19:20:43', 1),
+(5, 4, 1, '08:00:00', '09:30:00', '2025-11-12', 'SapToi', 'https://meet.example.com/toan-b2', '2025-11-04 19:20:43', 1),
+(6, 4, 1, '08:00:00', '09:30:00', '2025-11-19', 'SapToi', 'https://meet.example.com/toan-b3', '2025-11-04 19:20:43', 1),
+(7, 4, 1, '08:00:00', '09:30:00', '2025-11-26', 'SapToi', 'https://meet.example.com/toan-b4', '2025-11-04 19:20:43', 1),
+(8, 4, 1, '08:00:00', '09:30:00', '2025-12-03', 'SapToi', 'https://meet.example.com/toan-b5', '2025-11-04 19:20:43', 1),
+(9, 4, 1, '08:00:00', '09:30:00', '2025-12-10', 'SapToi', 'https://meet.example.com/toan-b6', '2025-11-04 19:20:43', 1),
+(10, 4, 1, '08:00:00', '09:30:00', '2025-12-17', 'SapToi', 'https://meet.example.com/toan-b7', '2025-11-04 19:20:43', 1),
+(11, 4, 1, '08:00:00', '09:30:00', '2025-12-24', 'SapToi', 'https://meet.example.com/toan-b8', '2025-11-04 19:20:43', 1);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `TaiKhoan`
+-- Cấu trúc bảng cho bảng `LopHocYeuCau`
 --
 
-DROP TABLE IF EXISTS `TaiKhoan`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `TaiKhoan` (
-  `TaiKhoanID` int NOT NULL AUTO_INCREMENT,
-  `Email` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MatKhauHash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `SoDienThoai` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `TrangThai` tinyint NOT NULL DEFAULT '1',
-  `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`TaiKhoanID`),
-  UNIQUE KEY `Email` (`Email`),
-  UNIQUE KEY `SoDienThoai` (`SoDienThoai`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE `LopHocYeuCau` (
+  `LopYeuCauID` int(11) NOT NULL,
+  `NguoiHocID` int(11) NOT NULL,
+  `GiaSuID` int(11) DEFAULT NULL,
+  `HinhThuc` enum('Online','Offline') NOT NULL DEFAULT 'Offline',
+  `HocPhi` double NOT NULL,
+  `ThoiLuong` int(11) NOT NULL,
+  `TrangThai` enum('TimGiaSu','DangHoc','HoanThanh','Huy') NOT NULL DEFAULT 'TimGiaSu',
+  `SoLuong` int(11) DEFAULT 1,
+  `MoTa` text DEFAULT NULL,
+  `MonID` int(11) NOT NULL,
+  `KhoiLopID` int(11) NOT NULL,
+  `DoiTuongID` int(11) NOT NULL,
+  `SoBuoiTuan` int(11) DEFAULT NULL,
+  `LichHocMongMuon` varchar(255) DEFAULT NULL,
+  `NgayTao` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `TaiKhoan`
+-- Đang đổ dữ liệu cho bảng `LopHocYeuCau`
 --
 
-LOCK TABLES `TaiKhoan` WRITE;
-/*!40000 ALTER TABLE `TaiKhoan` DISABLE KEYS */;
-INSERT INTO `TaiKhoan` VALUES (1,'admin@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000001',1,'2025-10-01 09:00:00'),(2,'tutor1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000003',1,'2025-10-01 09:10:00'),(3,'tutor2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000004',1,'2025-10-01 09:15:00'),(4,'student1@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000005',1,'2025-10-01 09:20:00'),(5,'student2@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000006',1,'2025-10-01 09:25:00'),(6,'student3@site.com','$2y$10$92IXUNpkjO0rOQ5byMi...','0900000007',1,'2025-10-01 09:30:00'),(7,'test@example.com','$2y$12$mnws/ZvjrE6nRMfej4PJN.J9ciUa/zXVWi9iS6xPI9/NdwHynz8Vy','0912345678',1,'2025-11-04 19:27:58'),(8,'1@gmail.com','$2y$12$kiusU12D7xQY0//81mc55OmvsCc6bp4dJgForFtkVqUxy6VlTH36C','0934140224',1,'2025-11-06 09:35:34');
-/*!40000 ALTER TABLE `TaiKhoan` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `LopHocYeuCau` (`LopYeuCauID`, `NguoiHocID`, `GiaSuID`, `HinhThuc`, `HocPhi`, `ThoiLuong`, `TrangThai`, `SoLuong`, `MoTa`, `MonID`, `KhoiLopID`, `DoiTuongID`, `SoBuoiTuan`, `LichHocMongMuon`, `NgayTao`) VALUES
+(1, 1, 1, 'Online', 200000, 90, 'DangHoc', 1, 'Ôn thi giữa kỳ', 1, 2, 1, NULL, NULL, '2025-10-05 08:00:00'),
+(2, 2, NULL, 'Offline', 180000, 120, 'TimGiaSu', 1, 'Giao tiếp cơ bản', 2, 1, 1, NULL, NULL, '2025-10-06 09:00:00'),
+(3, 3, 2, 'Online', 250000, 120, 'TimGiaSu', 2, 'Ôn luyện chương Dao động', 3, 3, 1, NULL, NULL, '2025-10-06 10:00:00'),
+(4, 4, NULL, 'Online', 120000, 90, 'TimGiaSu', 1, NULL, 8, 2, 1, NULL, NULL, '2025-11-11 21:52:37'),
+(5, 4, 4, 'Online', 120000, 90, 'DangHoc', 1, 'llolo', 10, 3, 1, 3, 't2,t3', '2025-11-12 09:22:39');
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `ThoiGianDay`
+-- Cấu trúc bảng cho bảng `migrations`
 --
 
-DROP TABLE IF EXISTS `ThoiGianDay`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ThoiGianDay` (
-  `ThoiGianDayID` int NOT NULL AUTO_INCREMENT,
-  `SoBuoi` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `BuoiHoc` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ThoiLuong` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`ThoiGianDayID`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ThoiGianDay`
---
-
-LOCK TABLES `ThoiGianDay` WRITE;
-/*!40000 ALTER TABLE `ThoiGianDay` DISABLE KEYS */;
-INSERT INTO `ThoiGianDay` VALUES (1,'3','T2-T4-T6 tối','90 phút'),(2,'2','T3-T5 tối','120 phút'),(3,'1','Cuối tuần','120 phút');
-/*!40000 ALTER TABLE `ThoiGianDay` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `VaiTro`
---
-
-DROP TABLE IF EXISTS `VaiTro`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `VaiTro` (
-  `VaiTroID` int NOT NULL AUTO_INCREMENT,
-  `TenVaiTro` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `MoTa` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  PRIMARY KEY (`VaiTroID`),
-  UNIQUE KEY `TenVaiTro` (`TenVaiTro`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `VaiTro`
---
-
-LOCK TABLES `VaiTro` WRITE;
-/*!40000 ALTER TABLE `VaiTro` DISABLE KEYS */;
-INSERT INTO `VaiTro` VALUES (1,'Admin','Quản trị hệ thống'),(2,'GiaSu','Tài khoản gia sư'),(3,'NguoiHoc','Tài khoản người học');
-/*!40000 ALTER TABLE `VaiTro` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `YeuCauNhanLop`
---
-
-DROP TABLE IF EXISTS `YeuCauNhanLop`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `YeuCauNhanLop` (
-  `YeuCauID` int NOT NULL AUTO_INCREMENT,
-  `LopYeuCauID` int NOT NULL,
-  `GiaSuID` int NOT NULL,
-  `NguoiGuiTaiKhoanID` int NOT NULL,
-  `VaiTroNguoiGui` enum('GiaSu','NguoiHoc') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `TrangThai` enum('Pending','Accepted','Rejected','Cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'Pending',
-  `GhiChu` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `NgayTao` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `NgayCapNhat` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`YeuCauID`),
-  KEY `GiaSuID` (`GiaSuID`),
-  KEY `NguoiGuiTaiKhoanID` (`NguoiGuiTaiKhoanID`),
-  KEY `idx_lop_giasu` (`LopYeuCauID`,`GiaSuID`),
-  CONSTRAINT `YeuCauNhanLop_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
-  CONSTRAINT `YeuCauNhanLop_ibfk_2` FOREIGN KEY (`GiaSuID`) REFERENCES `GiaSu` (`GiaSuID`) ON DELETE CASCADE,
-  CONSTRAINT `YeuCauNhanLop_ibfk_3` FOREIGN KEY (`NguoiGuiTaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `YeuCauNhanLop`
---
-
-LOCK TABLES `YeuCauNhanLop` WRITE;
-/*!40000 ALTER TABLE `YeuCauNhanLop` DISABLE KEYS */;
-INSERT INTO `YeuCauNhanLop` VALUES (1,2,1,2,'GiaSu','Pending','Tôi muốn nhận lớp này','2025-11-02 13:34:06','2025-11-02 13:34:06'),(2,3,2,4,'NguoiHoc','Pending','Mời cô đến dạy cho con tôi','2025-11-02 13:34:06','2025-11-02 13:34:06');
-/*!40000 ALTER TABLE `YeuCauNhanLop` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `migrations`
---
-
-DROP TABLE IF EXISTS `migrations`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `migrations` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `migration` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `batch` int NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `id` int(10) UNSIGNED NOT NULL,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `migrations`
+-- Đang đổ dữ liệu cho bảng `migrations`
 --
 
-LOCK TABLES `migrations` WRITE;
-/*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
-INSERT INTO `migrations` VALUES (1,'2025_10_22_040803_create_personal_access_tokens_table',1),(2,'2025_10_31_075505_create_sessions_table',1);
-/*!40000 ALTER TABLE `migrations` ENABLE KEYS */;
-UNLOCK TABLES;
+INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
+(1, '2025_10_22_040803_create_personal_access_tokens_table', 1),
+(2, '2025_10_31_075505_create_sessions_table', 1),
+(3, '2025_11_12_021922_modify_lop_hoc_yeu_cau_for_schedule_fields', 2);
+
+-- --------------------------------------------------------
 
 --
--- Table structure for table `personal_access_tokens`
+-- Cấu trúc bảng cho bảng `MonHoc`
 --
 
-DROP TABLE IF EXISTS `personal_access_tokens`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `MonHoc` (
+  `MonID` int(11) NOT NULL,
+  `TenMon` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `MonHoc`
+--
+
+INSERT INTO `MonHoc` (`MonID`, `TenMon`) VALUES
+(13, 'Âm Nhạc'),
+(11, 'Công Nghệ'),
+(8, 'Địa Lý'),
+(10, 'Giáo Dục Công Dân'),
+(5, 'Hóa Học'),
+(15, 'Khoa Học Tự Nhiên'),
+(16, 'Khoa Học Xã Hội'),
+(18, 'Kỹ năng giao tiếp'),
+(19, 'Kỹ năng thuyết trình'),
+(25, 'Lập trình C++'),
+(26, 'Lập trình Python'),
+(7, 'Lịch Sử'),
+(23, 'Luyện thi đại học'),
+(22, 'Luyện thi IELTS'),
+(21, 'Luyện thi TOEIC'),
+(24, 'Luyện thi vào 10'),
+(20, 'Luyện viết chữ đẹp'),
+(12, 'Mỹ Thuật'),
+(2, 'Ngữ Văn'),
+(6, 'Sinh Học'),
+(14, 'Thể Dục'),
+(3, 'Tiếng Anh'),
+(29, 'Tiếng Hàn'),
+(28, 'Tiếng Nhật'),
+(30, 'Tiếng Trung'),
+(9, 'Tin Học'),
+(27, 'Tin học cơ bản'),
+(17, 'Tin học Văn phòng'),
+(1, 'Toán'),
+(4, 'Vật Lý');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `NguoiHoc`
+--
+
+CREATE TABLE `NguoiHoc` (
+  `NguoiHocID` int(11) NOT NULL,
+  `TaiKhoanID` int(11) NOT NULL,
+  `HoTen` varchar(150) NOT NULL,
+  `NgaySinh` date DEFAULT NULL,
+  `GioiTinh` varchar(10) DEFAULT NULL,
+  `DiaChi` varchar(255) DEFAULT NULL,
+  `AnhDaiDien` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `NguoiHoc`
+--
+
+INSERT INTO `NguoiHoc` (`NguoiHocID`, `TaiKhoanID`, `HoTen`, `NgaySinh`, `GioiTinh`, `DiaChi`, `AnhDaiDien`) VALUES
+(1, 4, 'Lê Minh C', '2010-03-12', 'Nam', 'Thủ Đức, TP.HCM', NULL),
+(2, 5, 'Phạm Gia D', '2008-11-05', 'Nam', 'Q.7, TP.HCM', NULL),
+(3, 6, 'Hoàng Anh E', '2006-01-28', 'Nữ', 'Q.5, TP.HCM', NULL),
+(4, 9, '2', NULL, NULL, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `personal_access_tokens`
+--
+
 CREATE TABLE `personal_access_tokens` (
-  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
-  `tokenable_type` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `tokenable_id` bigint unsigned NOT NULL,
-  `name` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `token` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `abilities` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `tokenable_type` varchar(255) NOT NULL,
+  `tokenable_id` bigint(20) UNSIGNED NOT NULL,
+  `name` text NOT NULL,
+  `token` varchar(64) NOT NULL,
+  `abilities` text DEFAULT NULL,
   `last_used_at` timestamp NULL DEFAULT NULL,
   `expires_at` timestamp NULL DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
-  `updated_at` timestamp NULL DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
-  KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
-  KEY `personal_access_tokens_expires_at_index` (`expires_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `personal_access_tokens`
---
-
-LOCK TABLES `personal_access_tokens` WRITE;
-/*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
-INSERT INTO `personal_access_tokens` VALUES (2,'App\\Models\\TaiKhoan',8,'1@gmail.com','1f2bc4b075048e5cbf2f7f861a86e3fe50b93acc45f71b49acb29798c5bc5350','[\"*\"]','2025-11-06 09:43:40',NULL,'2025-11-06 09:35:48','2025-11-06 09:43:40');
-/*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `sessions`
---
-
-DROP TABLE IF EXISTS `sessions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `sessions` (
-  `id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `user_id` bigint unsigned DEFAULT NULL,
-  `ip_address` varchar(45) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `user_agent` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `last_activity` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `sessions_user_id_index` (`user_id`),
-  KEY `sessions_last_activity_index` (`last_activity`)
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `sessions`
+-- Đang đổ dữ liệu cho bảng `personal_access_tokens`
 --
 
-LOCK TABLES `sessions` WRITE;
-/*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `name`, `token`, `abilities`, `last_used_at`, `expires_at`, `created_at`, `updated_at`) VALUES
+(2, 'App\\Models\\TaiKhoan', 8, '1@gmail.com', '1f2bc4b075048e5cbf2f7f861a86e3fe50b93acc45f71b49acb29798c5bc5350', '[\"*\"]', '2025-11-06 09:43:40', NULL, '2025-11-06 09:35:48', '2025-11-06 09:43:40'),
+(12, 'App\\Models\\TaiKhoan', 9, '2@gmail.com', '88768f3c492a2b83dafee4b2439251dadcc138b239688aff6c3b0de098c292e3', '[\"*\"]', '2025-11-12 06:35:22', NULL, '2025-11-11 21:37:12', '2025-11-12 06:35:22');
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `PhanQuyen`
+--
+
+CREATE TABLE `PhanQuyen` (
+  `TaiKhoanID` int(11) NOT NULL,
+  `VaiTroID` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `PhanQuyen`
+--
+
+INSERT INTO `PhanQuyen` (`TaiKhoanID`, `VaiTroID`) VALUES
+(1, 1),
+(2, 2),
+(3, 2),
+(4, 3),
+(5, 3),
+(6, 3),
+(7, 2),
+(8, 2),
+(9, 3);
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `sessions`
+--
+
+CREATE TABLE `sessions` (
+  `id` varchar(255) NOT NULL,
+  `user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `payload` longtext NOT NULL,
+  `last_activity` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `TaiKhoan`
+--
+
+CREATE TABLE `TaiKhoan` (
+  `TaiKhoanID` int(11) NOT NULL,
+  `Email` varchar(100) NOT NULL,
+  `MatKhauHash` varchar(255) NOT NULL,
+  `SoDienThoai` varchar(20) DEFAULT NULL,
+  `TrangThai` tinyint(4) NOT NULL DEFAULT 1,
+  `NgayTao` datetime NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `TaiKhoan`
+--
+
+INSERT INTO `TaiKhoan` (`TaiKhoanID`, `Email`, `MatKhauHash`, `SoDienThoai`, `TrangThai`, `NgayTao`) VALUES
+(1, 'admin@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000001', 1, '2025-10-01 09:00:00'),
+(2, 'tutor1@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000003', 1, '2025-10-01 09:10:00'),
+(3, 'tutor2@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000004', 1, '2025-10-01 09:15:00'),
+(4, 'student1@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000005', 1, '2025-10-01 09:20:00'),
+(5, 'student2@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000006', 1, '2025-10-01 09:25:00'),
+(6, 'student3@site.com', '$2y$10$92IXUNpkjO0rOQ5byMi...', '0900000007', 1, '2025-10-01 09:30:00'),
+(7, 'test@example.com', '$2y$12$mnws/ZvjrE6nRMfej4PJN.J9ciUa/zXVWi9iS6xPI9/NdwHynz8Vy', '0912345678', 1, '2025-11-04 19:27:58'),
+(8, '1@gmail.com', '$2y$12$kiusU12D7xQY0//81mc55OmvsCc6bp4dJgForFtkVqUxy6VlTH36C', '0934140224', 1, '2025-11-06 09:35:34'),
+(9, '2@gmail.com', '$2y$12$8IOrbkQFgIfvgOFwq.g5aeTvnmxVE2GgorYdiQ429XpkbaoqEXHMC', '0927838292', 1, '2025-11-11 21:52:00');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `ThoiGianDay`
+--
+
+CREATE TABLE `ThoiGianDay` (
+  `ThoiGianDayID` int(11) NOT NULL,
+  `SoBuoi` int(11) NOT NULL,
+  `BuoiHoc` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `ThoiGianDay`
+--
+
+INSERT INTO `ThoiGianDay` (`ThoiGianDayID`, `SoBuoi`, `BuoiHoc`) VALUES
+(1, 3, 'T2-T4-T6 tối'),
+(2, 2, 'T3-T5 tối'),
+(3, 1, 'Cuối tuần');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `VaiTro`
+--
+
+CREATE TABLE `VaiTro` (
+  `VaiTroID` int(11) NOT NULL,
+  `TenVaiTro` varchar(50) NOT NULL,
+  `MoTa` varchar(255) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `VaiTro`
+--
+
+INSERT INTO `VaiTro` (`VaiTroID`, `TenVaiTro`, `MoTa`) VALUES
+(1, 'Admin', 'Quản trị hệ thống'),
+(2, 'GiaSu', 'Tài khoản gia sư'),
+(3, 'NguoiHoc', 'Tài khoản người học');
+
+-- --------------------------------------------------------
+
+--
+-- Cấu trúc bảng cho bảng `YeuCauNhanLop`
+--
+
+CREATE TABLE `YeuCauNhanLop` (
+  `YeuCauID` int(11) NOT NULL,
+  `LopYeuCauID` int(11) NOT NULL,
+  `GiaSuID` int(11) NOT NULL,
+  `NguoiGuiTaiKhoanID` int(11) NOT NULL,
+  `VaiTroNguoiGui` enum('GiaSu','NguoiHoc') NOT NULL,
+  `TrangThai` enum('Pending','Accepted','Rejected','Cancelled') NOT NULL DEFAULT 'Pending',
+  `GhiChu` varchar(255) DEFAULT NULL,
+  `NgayTao` datetime NOT NULL DEFAULT current_timestamp(),
+  `NgayCapNhat` datetime NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Đang đổ dữ liệu cho bảng `YeuCauNhanLop`
+--
+
+INSERT INTO `YeuCauNhanLop` (`YeuCauID`, `LopYeuCauID`, `GiaSuID`, `NguoiGuiTaiKhoanID`, `VaiTroNguoiGui`, `TrangThai`, `GhiChu`, `NgayTao`, `NgayCapNhat`) VALUES
+(1, 2, 1, 2, 'GiaSu', 'Pending', 'Tôi muốn nhận lớp này', '2025-11-02 13:34:06', '2025-11-02 13:34:06'),
+(2, 3, 2, 4, 'NguoiHoc', 'Pending', 'Mời cô đến dạy cho con tôi', '2025-11-02 13:34:06', '2025-11-02 13:34:06'),
+(3, 4, 4, 8, 'GiaSu', 'Rejected', NULL, '2025-11-12 02:23:56', '2025-11-12 02:34:43'),
+(4, 5, 4, 8, 'GiaSu', 'Accepted', NULL, '2025-11-12 02:24:06', '2025-11-12 02:24:49'),
+(5, 4, 4, 9, 'NguoiHoc', 'Pending', NULL, '2025-11-12 02:34:50', '2025-11-12 02:34:50'),
+(6, 4, 3, 9, 'NguoiHoc', 'Pending', 'fasdas', '2025-11-12 13:35:20', '2025-11-12 13:35:20');
+
+--
+-- Chỉ mục cho các bảng đã đổ
+--
+
+--
+-- Chỉ mục cho bảng `DanhGia`
+--
+ALTER TABLE `DanhGia`
+  ADD PRIMARY KEY (`DanhGiaID`),
+  ADD KEY `LopYeuCauID` (`LopYeuCauID`),
+  ADD KEY `TaiKhoanID` (`TaiKhoanID`);
+
+--
+-- Chỉ mục cho bảng `DoiTuong`
+--
+ALTER TABLE `DoiTuong`
+  ADD PRIMARY KEY (`DoiTuongID`),
+  ADD UNIQUE KEY `TenDoiTuong` (`TenDoiTuong`);
+
+--
+-- Chỉ mục cho bảng `GiaoDich`
+--
+ALTER TABLE `GiaoDich`
+  ADD PRIMARY KEY (`GiaoDichID`),
+  ADD KEY `LopYeuCauID` (`LopYeuCauID`),
+  ADD KEY `TaiKhoanID` (`TaiKhoanID`);
+
+--
+-- Chỉ mục cho bảng `GiaSu`
+--
+ALTER TABLE `GiaSu`
+  ADD PRIMARY KEY (`GiaSuID`),
+  ADD KEY `TaiKhoanID` (`TaiKhoanID`);
+
+--
+-- Chỉ mục cho bảng `KhieuNai`
+--
+ALTER TABLE `KhieuNai`
+  ADD PRIMARY KEY (`KhieuNaiID`),
+  ADD KEY `TaiKhoanID` (`TaiKhoanID`),
+  ADD KEY `GiaoDichID` (`GiaoDichID`),
+  ADD KEY `LopYeuCauID` (`LopYeuCauID`);
+
+--
+-- Chỉ mục cho bảng `KhoiLop`
+--
+ALTER TABLE `KhoiLop`
+  ADD PRIMARY KEY (`KhoiLopID`);
+
+--
+-- Chỉ mục cho bảng `LichHoc`
+--
+ALTER TABLE `LichHoc`
+  ADD PRIMARY KEY (`LichHocID`),
+  ADD KEY `LopYeuCauID` (`LopYeuCauID`),
+  ADD KEY `idx_lichhoc_goc` (`LichHocGocID`),
+  ADD KEY `idx_lichhoc_lap_lai` (`IsLapLai`);
+
+--
+-- Chỉ mục cho bảng `LopHocYeuCau`
+--
+ALTER TABLE `LopHocYeuCau`
+  ADD PRIMARY KEY (`LopYeuCauID`),
+  ADD KEY `NguoiHocID` (`NguoiHocID`),
+  ADD KEY `GiaSuID` (`GiaSuID`),
+  ADD KEY `MonID` (`MonID`),
+  ADD KEY `KhoiLopID` (`KhoiLopID`),
+  ADD KEY `DoiTuongID` (`DoiTuongID`);
+
+--
+-- Chỉ mục cho bảng `migrations`
+--
+ALTER TABLE `migrations`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Chỉ mục cho bảng `MonHoc`
+--
+ALTER TABLE `MonHoc`
+  ADD PRIMARY KEY (`MonID`),
+  ADD UNIQUE KEY `TenMon` (`TenMon`);
+
+--
+-- Chỉ mục cho bảng `NguoiHoc`
+--
+ALTER TABLE `NguoiHoc`
+  ADD PRIMARY KEY (`NguoiHocID`),
+  ADD KEY `TaiKhoanID` (`TaiKhoanID`);
+
+--
+-- Chỉ mục cho bảng `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
+  ADD KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
+  ADD KEY `personal_access_tokens_expires_at_index` (`expires_at`);
+
+--
+-- Chỉ mục cho bảng `PhanQuyen`
+--
+ALTER TABLE `PhanQuyen`
+  ADD PRIMARY KEY (`TaiKhoanID`,`VaiTroID`),
+  ADD KEY `VaiTroID` (`VaiTroID`);
+
+--
+-- Chỉ mục cho bảng `sessions`
+--
+ALTER TABLE `sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `sessions_user_id_index` (`user_id`),
+  ADD KEY `sessions_last_activity_index` (`last_activity`);
+
+--
+-- Chỉ mục cho bảng `TaiKhoan`
+--
+ALTER TABLE `TaiKhoan`
+  ADD PRIMARY KEY (`TaiKhoanID`),
+  ADD UNIQUE KEY `Email` (`Email`),
+  ADD UNIQUE KEY `SoDienThoai` (`SoDienThoai`);
+
+--
+-- Chỉ mục cho bảng `ThoiGianDay`
+--
+ALTER TABLE `ThoiGianDay`
+  ADD PRIMARY KEY (`ThoiGianDayID`);
+
+--
+-- Chỉ mục cho bảng `VaiTro`
+--
+ALTER TABLE `VaiTro`
+  ADD PRIMARY KEY (`VaiTroID`),
+  ADD UNIQUE KEY `TenVaiTro` (`TenVaiTro`);
+
+--
+-- Chỉ mục cho bảng `YeuCauNhanLop`
+--
+ALTER TABLE `YeuCauNhanLop`
+  ADD PRIMARY KEY (`YeuCauID`),
+  ADD KEY `GiaSuID` (`GiaSuID`),
+  ADD KEY `NguoiGuiTaiKhoanID` (`NguoiGuiTaiKhoanID`),
+  ADD KEY `idx_lop_giasu` (`LopYeuCauID`,`GiaSuID`);
+
+--
+-- AUTO_INCREMENT cho các bảng đã đổ
+--
+
+--
+-- AUTO_INCREMENT cho bảng `DanhGia`
+--
+ALTER TABLE `DanhGia`
+  MODIFY `DanhGiaID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT cho bảng `DoiTuong`
+--
+ALTER TABLE `DoiTuong`
+  MODIFY `DoiTuongID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `GiaoDich`
+--
+ALTER TABLE `GiaoDich`
+  MODIFY `GiaoDichID` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `GiaSu`
+--
+ALTER TABLE `GiaSu`
+  MODIFY `GiaSuID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT cho bảng `KhieuNai`
+--
+ALTER TABLE `KhieuNai`
+  MODIFY `KhieuNaiID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT cho bảng `KhoiLop`
+--
+ALTER TABLE `KhoiLop`
+  MODIFY `KhoiLopID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT cho bảng `LichHoc`
+--
+ALTER TABLE `LichHoc`
+  MODIFY `LichHocID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+
+--
+-- AUTO_INCREMENT cho bảng `LopHocYeuCau`
+--
+ALTER TABLE `LopHocYeuCau`
+  MODIFY `LopYeuCauID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT cho bảng `migrations`
+--
+ALTER TABLE `migrations`
+  MODIFY `id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `MonHoc`
+--
+ALTER TABLE `MonHoc`
+  MODIFY `MonID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
+
+--
+-- AUTO_INCREMENT cho bảng `NguoiHoc`
+--
+ALTER TABLE `NguoiHoc`
+  MODIFY `NguoiHocID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT cho bảng `personal_access_tokens`
+--
+ALTER TABLE `personal_access_tokens`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+
+--
+-- AUTO_INCREMENT cho bảng `TaiKhoan`
+--
+ALTER TABLE `TaiKhoan`
+  MODIFY `TaiKhoanID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT cho bảng `ThoiGianDay`
+--
+ALTER TABLE `ThoiGianDay`
+  MODIFY `ThoiGianDayID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `VaiTro`
+--
+ALTER TABLE `VaiTro`
+  MODIFY `VaiTroID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- AUTO_INCREMENT cho bảng `YeuCauNhanLop`
+--
+ALTER TABLE `YeuCauNhanLop`
+  MODIFY `YeuCauID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- Các ràng buộc cho các bảng đã đổ
+--
+
+--
+-- Các ràng buộc cho bảng `DanhGia`
+--
+ALTER TABLE `DanhGia`
+  ADD CONSTRAINT `DanhGia_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `DanhGia_ibfk_2` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `GiaoDich`
+--
+ALTER TABLE `GiaoDich`
+  ADD CONSTRAINT `GiaoDich_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `GiaoDich_ibfk_2` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `GiaSu`
+--
+ALTER TABLE `GiaSu`
+  ADD CONSTRAINT `GiaSu_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `KhieuNai`
+--
+ALTER TABLE `KhieuNai`
+  ADD CONSTRAINT `KhieuNai_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `KhieuNai_ibfk_2` FOREIGN KEY (`GiaoDichID`) REFERENCES `GiaoDich` (`GiaoDichID`) ON DELETE SET NULL,
+  ADD CONSTRAINT `KhieuNai_ibfk_3` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE SET NULL;
+
+--
+-- Các ràng buộc cho bảng `LichHoc`
+--
+ALTER TABLE `LichHoc`
+  ADD CONSTRAINT `LichHoc_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `fk_lichhoc_lichhocgoc` FOREIGN KEY (`LichHocGocID`) REFERENCES `LichHoc` (`LichHocID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `LopHocYeuCau`
+--
+ALTER TABLE `LopHocYeuCau`
+  ADD CONSTRAINT `LopHocYeuCau_ibfk_1` FOREIGN KEY (`NguoiHocID`) REFERENCES `NguoiHoc` (`NguoiHocID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `LopHocYeuCau_ibfk_2` FOREIGN KEY (`GiaSuID`) REFERENCES `GiaSu` (`GiaSuID`),
+  ADD CONSTRAINT `LopHocYeuCau_ibfk_3` FOREIGN KEY (`MonID`) REFERENCES `MonHoc` (`MonID`),
+  ADD CONSTRAINT `LopHocYeuCau_ibfk_4` FOREIGN KEY (`KhoiLopID`) REFERENCES `KhoiLop` (`KhoiLopID`),
+  ADD CONSTRAINT `LopHocYeuCau_ibfk_5` FOREIGN KEY (`DoiTuongID`) REFERENCES `DoiTuong` (`DoiTuongID`);
+
+--
+-- Các ràng buộc cho bảng `NguoiHoc`
+--
+ALTER TABLE `NguoiHoc`
+  ADD CONSTRAINT `NguoiHoc_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `PhanQuyen`
+--
+ALTER TABLE `PhanQuyen`
+  ADD CONSTRAINT `PhanQuyen_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `PhanQuyen_ibfk_2` FOREIGN KEY (`VaiTroID`) REFERENCES `VaiTro` (`VaiTroID`) ON DELETE CASCADE;
+
+--
+-- Các ràng buộc cho bảng `YeuCauNhanLop`
+--
+ALTER TABLE `YeuCauNhanLop`
+  ADD CONSTRAINT `YeuCauNhanLop_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `LopHocYeuCau` (`LopYeuCauID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `YeuCauNhanLop_ibfk_2` FOREIGN KEY (`GiaSuID`) REFERENCES `GiaSu` (`GiaSuID`) ON DELETE CASCADE,
+  ADD CONSTRAINT `YeuCauNhanLop_ibfk_3` FOREIGN KEY (`NguoiGuiTaiKhoanID`) REFERENCES `TaiKhoan` (`TaiKhoanID`) ON DELETE CASCADE;
+COMMIT;
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
--- Dump completed on 2025-11-06 16:57:09

@@ -14,8 +14,6 @@ class LopHocYeuCauRequest extends FormRequest
      */
     public function authorize()
     {
-        // Set to true to allow requests.
-        // You can add logic here later, e.g., check if auth()->user()->isNguoiHoc()
         return true;
     }
 
@@ -26,24 +24,28 @@ class LopHocYeuCauRequest extends FormRequest
      */
     public function rules()
     {
-        // Validation rules based on your sql.sql schema
         return [
             'NguoiHocID' => 'required|exists:NguoiHoc,NguoiHocID',
             'GiaSuID' => 'nullable|exists:GiaSu,GiaSuID',
-            'HinhThuc' => 'required|string|max:100',
+            'HinhThuc' => [
+                'required',
+                Rule::in(['Online', 'Offline'])
+            ],
             'HocPhi' => 'required|numeric|min:0',
-            'ThoiLuong' => 'required|string|max:50',
+            'ThoiLuong' => 'required|integer|min:1', 
             'TrangThai' => [
                 'nullable',
-                Rule::in(['ChoDuyet', 'TimGiaSu', 'DangChonGiaSu', 'DangHoc', 'HoanThanh', 'Huy'])
+                Rule::in(['TimGiaSu', 'DangHoc', 'HoanThanh', 'Huy'])
             ],
             'SoLuong' => 'nullable|integer|min:1',
             'MoTa' => 'nullable|string',
             'MonID' => 'required|exists:MonHoc,MonID',
             'KhoiLopID' => 'required|exists:KhoiLop,KhoiLopID',
             'DoiTuongID' => 'required|exists:DoiTuong,DoiTuongID',
-            'ThoiGianDayID' => 'required|exists:ThoiGianDay,ThoiGianDayID',
+            
+            // SỬA: Thay thế ThoiGianDayID bằng 2 trường mới
+            'SoBuoiTuan' => 'nullable|integer|min:1',
+            'LichHocMongMuon' => 'nullable|string|max:255',
         ];
     }
-    
 }
