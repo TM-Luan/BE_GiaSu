@@ -162,17 +162,17 @@
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ Request::routeIs('admin.lophoc.*') ? 'active' : '' }}" href="{{ route('admin.lophoc.index') }}">
                     <i class="fa-solid fa-book fa-fw me-2"></i>Quản lý Khóa học
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ Request::routeIs('admin.giaodich.*') ? 'active' : '' }}" href="{{ route('admin.giaodich.index') }}">
                     <i class="fa-solid fa-credit-card fa-fw me-2"></i>Quản lý Giao dịch
                 </a>
             </li>
             <li class="nav-item">
-                <a class="nav-link" href="#">
+                <a class="nav-link {{ Request::routeIs('admin.khieunai.*') ? 'active' : '' }}" href="{{ route('admin.khieunai.index') }}">
                     <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>Khiếu nại
                 </a>
             </li>

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Lọc và Tìm Kiếm Lớp Học</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-dark text-white">
+    <div class="container mt-5">
+        <h2 class="mb-4">🧪 Test Lọc và Tìm Kiếm Lớp Học</h2>
+        
+        <div class="card bg-secondary mb-4">
+            <div class="card-body">
+                <h5>Hướng dẫn Test:</h5>
+                <ol>
+                    <li>Mở trình duyệt và truy cập: <code>http://localhost/admin/lophoc</code></li>
+                    <li>Test các trường hợp sau:</li>
+                </ol>
+                
+                <div class="accordion" id="testAccordion">
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test1">
+                                Test 1: Lọc theo Trạng thái "Đang học"
+                            </button>
+                        </h2>
+                        <div id="test1" class="accordion-collapse collapse show">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Chọn dropdown "Tất cả Trạng thái" → "Đang học" → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 3 lớp học</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?trangthai=DangHoc</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test2">
+                                Test 2: Lọc theo Hình thức "Online"
+                            </button>
+                        </h2>
+                        <div id="test2" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Chọn dropdown "Tất cả Hình thức" → "Online" → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 5 lớp học</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?hinhthuc=Online</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test3">
+                                Test 3: Tìm kiếm "Toán"
+                            </button>
+                        </h2>
+                        <div id="test3" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Nhập "Toán" vào ô tìm kiếm → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 1 lớp học môn Toán</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?search=Toán</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test4">
+                                Test 4: Tìm kiếm "Lê" (tên người học)
+                            </button>
+                        </h2>
+                        <div id="test4" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Nhập "Lê" vào ô tìm kiếm → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 1 lớp học (Lê Minh C)</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?search=Lê</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test5">
+                                Test 5: Lọc kết hợp "Đang học" + "Online"
+                            </button>
+                        </h2>
+                        <div id="test5" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Chọn "Đang học" + "Online" → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 3 lớp học</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?trangthai=DangHoc&hinhthuc=Online</code></p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#test6">
+                                Test 6: Tìm + Lọc kết hợp
+                            </button>
+                        </h2>
+                        <div id="test6" class="accordion-collapse collapse">
+                            <div class="accordion-body">
+                                <p><strong>Thao tác:</strong> Nhập "Toán" + Chọn "Đang học" → Click "Lọc"</p>
+                                <p><strong>Kết quả mong đợi:</strong> 1 lớp học môn Toán đang học</p>
+                                <p><strong>URL:</strong> <code>http://localhost/admin/lophoc?search=Toán&trangthai=DangHoc</code></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="alert alert-info mt-4">
+                    <h6>📋 Kiểm tra Log:</h6>
+                    <p>Mở file: <code>storage/logs/laravel.log</code></p>
+                    <p>Tìm dòng: <code>[DATE] local.INFO: LopHoc Filter</code></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card bg-secondary">
+            <div class="card-body">
+                <h5>✅ Checklist:</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check1">
+                    <label class="form-check-label" for="check1">
+                        Lọc theo trạng thái hoạt động
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check2">
+                    <label class="form-check-label" for="check2">
+                        Lọc theo hình thức hoạt động
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check3">
+                    <label class="form-check-label" for="check3">
+                        Tìm kiếm theo môn học hoạt động
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check4">
+                    <label class="form-check-label" for="check4">
+                        Tìm kiếm theo tên người học hoạt động
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check5">
+                    <label class="form-check-label" for="check5">
+                        Lọc kết hợp hoạt động
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="check6">
+                    <label class="form-check-label" for="check6">
+                        Dropdown giữ giá trị sau khi lọc
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

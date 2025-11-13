@@ -10,10 +10,15 @@ class KhieuNai extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'TaiKhoanID','NoiDung','NgayTao','TrangThai','GiaiQuyet','PhanHoi','GiaoDichID','LopYeuCauID'
+        'TaiKhoanID','NoiDung','NgayTao','TrangThai','GiaiQuyet','PhanHoi','GiaoDichID','LopYeuCauID','GhiChu','NgayXuLy'
     ];
 
-    protected $dates = ['NgayTao'];
+    protected $dates = ['NgayTao', 'NgayXuLy'];
+
+    protected $casts = [
+        'NgayTao' => 'datetime',
+        'NgayXuLy' => 'datetime',
+    ];
 
     public function taiKhoan()
     {

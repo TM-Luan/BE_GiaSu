@@ -10,10 +10,14 @@ class GiaoDich extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'LopYeuCauID','TaiKhoanID','SoTien','ThoiGian','TrangThai','GhiChu'
+        'LopYeuCauID','TaiKhoanID','SoTien','ThoiGian','TrangThai','GhiChu','LoaiGiaoDich','MaGiaoDich'
     ];
 
     protected $dates = ['ThoiGian'];
+
+    protected $casts = [
+        'ThoiGian' => 'datetime',
+    ];
 
     public function lop()
     {

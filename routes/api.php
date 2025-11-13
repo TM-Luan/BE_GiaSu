@@ -12,6 +12,16 @@ use App\Http\Controllers\DropdownDataController;
 use App\Http\Controllers\KhieuNaiController;
 use App\Http\Controllers\DanhGiaController;
 
+// Admin Controllers
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\GiaSuController as AdminGiaSuController;
+use App\Http\Controllers\Admin\NguoiHocController as AdminNguoiHocController;
+use App\Http\Controllers\Admin\TaiKhoanController as AdminTaiKhoanController;
+use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
+use App\Http\Controllers\Admin\GiaoDichController as AdminGiaoDichController;
+use App\Http\Controllers\Admin\LopHocController as AdminLopHocController;
+use App\Http\Controllers\Admin\LichHocController as AdminLichHocController;
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/resetpassword', [AuthController::class, 'resetPassword']);
@@ -61,6 +71,69 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // User specific routes
     Route::get('/nguoihoc/lopcuatoi', [NguoiHocController::class, 'getLopHocCuaNguoiHoc']);
     Route::put('/lophocyeucau/{id}', [LopHocYeuCauController::class, 'update']);
+
+    // ===== ADMIN ROUTES =====
+    // Middleware kiểm tra vai trò admin cần được thêm vào sau
+    Route::prefix('admin')->group(function () {
+        
+        // Dashboard & Statistics
+        Route::get('/dashboard', [AdminDashboardController::class, 'index']);
+        
+        // Quản lý Gia sư
+        Route::get('/giasu', [AdminGiaSuController::class, 'index']);
+        Route::get('/giasu/pending', [AdminGiaSuController::class, 'pendingList']); // Danh sách chờ duyệt
+        Route::get('/giasu/{id}', [AdminGiaSuController::class, 'show']);
+        Route::post('/giasu', [AdminGiaSuController::class, 'store']);
+        Route::put('/giasu/{id}', [AdminGiaSuController::class, 'update']);
+        Route::delete('/giasu/{id}', [AdminGiaSuController::class, 'destroy']);
+        Route::put('/giasu/{id}/approve', [AdminGiaSuController::class, 'approveProfile']); // Duyệt hồ sơ
+        Route::put('/giasu/{id}/reject', [AdminGiaSuController::class, 'rejectProfile']); // Từ chối hồ sơ
+        
+        // Quản lý Người học
+        Route::get('/nguoihoc', [AdminNguoiHocController::class, 'index']);
+        Route::get('/nguoihoc/{id}', [AdminNguoiHocController::class, 'show']);
+        Route::post('/nguoihoc', [AdminNguoiHocController::class, 'store']);
+        Route::put('/nguoihoc/{id}', [AdminNguoiHocController::class, 'update']);
+        Route::delete('/nguoihoc/{id}', [AdminNguoiHocController::class, 'destroy']);
+        
+        // Quản lý Tài khoản
+        Route::get('/taikhoan', [AdminTaiKhoanController::class, 'index']);
+        
+        // Quản lý Khiếu nại
+        Route::get('/khieunai', [AdminKhieuNaiController::class, 'index']);
+        Route::get('/khieunai/statistics', [AdminKhieuNaiController::class, 'statistics']);
+        Route::get('/khieunai/{id}', [AdminKhieuNaiController::class, 'show']);
+        Route::put('/khieunai/{id}/status', [AdminKhieuNaiController::class, 'updateStatus']);
+        Route::delete('/khieunai/{id}', [AdminKhieuNaiController::class, 'destroy']);
+        
+        // Quản lý Giao dịch
+        Route::get('/giaodich', [AdminGiaoDichController::class, 'index']);
+        Route::get('/giaodich/statistics', [AdminGiaoDichController::class, 'statistics']);
+        Route::get('/giaodich/export', [AdminGiaoDichController::class, 'export']);
+        Route::get('/giaodich/{id}', [AdminGiaoDichController::class, 'show']);
+        Route::put('/giaodich/{id}/status', [AdminGiaoDichController::class, 'updateStatus']);
+        Route::delete('/giaodich/{id}', [AdminGiaoDichController::class, 'destroy']);
+        
+        // Quản lý Lớp học
+        Route::get('/lophoc', [AdminLopHocController::class, 'index']);
+        Route::get('/lophoc/statistics', [AdminLopHocController::class, 'statistics']);
+        Route::get('/lophoc/{id}', [AdminLopHocController::class, 'show']);
+        Route::put('/lophoc/{id}', [AdminLopHocController::class, 'update']);
+        Route::put('/lophoc/{id}/status', [AdminLopHocController::class, 'updateStatus']);
+        Route::delete('/lophoc/{id}', [AdminLopHocController::class, 'destroy']);
+        Route::get('/lophoc/giasu/{giaSuId}', [AdminLopHocController::class, 'getByGiaSu']);
+        Route::get('/lophoc/nguoihoc/{nguoiHocId}', [AdminLopHocController::class, 'getByNguoiHoc']);
+        
+        // Quản lý Lịch học
+        Route::get('/lichhoc', [AdminLichHocController::class, 'index']);
+        Route::get('/lichhoc/statistics', [AdminLichHocController::class, 'statistics']);
+        Route::get('/lichhoc/calendar', [AdminLichHocController::class, 'getCalendar']);
+        Route::get('/lichhoc/{id}', [AdminLichHocController::class, 'show']);
+        Route::put('/lichhoc/{id}', [AdminLichHocController::class, 'update']);
+        Route::put('/lichhoc/{id}/status', [AdminLichHocController::class, 'updateStatus']);
+        Route::delete('/lichhoc/{id}', [AdminLichHocController::class, 'destroy']);
+        Route::get('/lichhoc/lop/{lopId}', [AdminLichHocController::class, 'getByLop']);
+    });
 });
 
 // Search & Filter routes (public)

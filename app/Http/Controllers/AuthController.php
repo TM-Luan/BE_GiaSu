@@ -95,7 +95,29 @@ class AuthController extends Controller
 
         $tk = TaiKhoan::where('Email', $request->Email)->first();
 
-        if (!$tk || !Hash::check($request->MatKhau, $tk->MatKhauHash)) {
+        if (!$tk) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Email hoặc mật khẩu không đúng'
+            ], 401);
+        }
+
+        // Kiểm tra xem mật khẩu đã được hash bằng Bcrypt chưa
+        $isPasswordValid = false;
+        
+        // Kiểm tra nếu mật khẩu đã được hash (bắt đầu với $2y$)
+        if (Hash::needsRehash($tk->MatKhauHash) === false && Hash::check($request->MatKhau, $tk->MatKhauHash)) {
+            $isPasswordValid = true;
+        } 
+        // Nếu mật khẩu chưa hash, so sánh trực tiếp và hash lại
+        elseif ($tk->MatKhauHash === $request->MatKhau) {
+            $isPasswordValid = true;
+            // Tự động hash lại mật khẩu
+            $tk->MatKhauHash = Hash::make($request->MatKhau);
+            $tk->save();
+        }
+
+        if (!$isPasswordValid) {
             return response()->json([
                 'success' => false,
                 'message' => 'Email hoặc mật khẩu không đúng'

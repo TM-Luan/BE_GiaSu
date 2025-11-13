@@ -1,6 +1,5 @@
 <?php
 namespace App\Http\Controllers\Admin;
-
 use App\Http\Controllers\Controller;
 use App\Models\TaiKhoan;
 use App\Models\GiaSu;
@@ -296,6 +295,85 @@ class GiaSuController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('admin.giasu.index')->with('error', 'Lỗi khi xóa: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Duyệt hồ sơ gia sư (Kích hoạt tài khoản)
+     * API: PUT /api/admin/giasu/{id}/approve
+     */
+    public function approveProfile(string $id)
+    {
+        try {
+            $taiKhoan = TaiKhoan::with('giasu')
+                ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
+                ->findOrFail($id);
+
+            // Kích hoạt tài khoản
+            $taiKhoan->update(['TrangThai' => 1]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Duyệt hồ sơ gia sư thành công!',
+                'data' => $taiKhoan->load('giasu'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi duyệt hồ sơ: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Từ chối hồ sơ gia sư (Vô hiệu hóa tài khoản)
+     * API: PUT /api/admin/giasu/{id}/reject
+     */
+    public function rejectProfile(Request $request, string $id)
+    {
+        $request->validate([
+            'ly_do' => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $taiKhoan = TaiKhoan::with('giasu')
+                ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
+                ->findOrFail($id);
+
+            // Vô hiệu hóa tài khoản
+            $taiKhoan->update(['TrangThai' => 0]);
+
+            // Có thể lưu lý do từ chối vào bảng GiaSu hoặc ghi log
+            // $taiKhoan->giasu->update(['LyDoTuChoi' => $request->ly_do]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Từ chối hồ sơ gia sư thành công!',
+                'ly_do' => $request->ly_do,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi từ chối hồ sơ: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Danh sách gia sư chờ duyệt (TrangThai = 0)
+     * API: GET /api/admin/giasu/pending
+     */
+    public function pendingList()
+    {
+        $pendingList = TaiKhoan::with('giasu', 'phanquyen')
+            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
+            ->where('TrangThai', 0)
+            ->orderByDesc('TaiKhoanID')
+            ->paginate(15);
+
+        return response()->json([
+            'success' => true,
+            'data' => $pendingList,
+        ]);
     }
     // =============================================
     // =============================================
