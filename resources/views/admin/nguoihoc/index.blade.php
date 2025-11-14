@@ -66,7 +66,7 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $tk->Email }}</span>
-                                    <small class="text-muted">{{ $tk->SoDienThoai ?? 'Chưa có SĐT' }}</small>
+                                    <small class="fw">{{ $tk->SoDienThoai ?? 'Chưa có SĐT' }}</small>
                                 </div>
                             </td>
                             <td>{{ $tk->NgayTao ? \Carbon\Carbon::parse($tk->NgayTao)->format('Y-m-d') : 'N/A' }}</td>

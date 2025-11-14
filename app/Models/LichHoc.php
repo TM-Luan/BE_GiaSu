@@ -21,7 +21,10 @@ class LichHoc extends Model
         'IsLapLai'
     ];
 
-    protected $dates = ['NgayTao', 'NgayHoc'];
+    protected $casts = [
+        'NgayTao' => 'datetime',
+        'NgayHoc' => 'datetime',
+    ];
 
     public function lopHocYeuCau()
     {

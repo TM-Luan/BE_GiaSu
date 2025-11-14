@@ -48,5 +48,16 @@ class GiaSu extends Model
             'LopYeuCauID' // Local key on LopHocYeuCau
         );
     }
+    public function scopeSearch($query, $keyword)
+    {
+        if (!$keyword) return $query;
+
+        return $query->where(function($q) use ($keyword) {
+            $q->where('HoTen', 'LIKE', "%{$keyword}%")
+            ->orWhere('ChuyenNganh', 'LIKE', "%{$keyword}%") // Tìm theo môn
+            ->orWhere('TruongDaoTao', 'LIKE', "%{$keyword}%") // Tìm theo trường
+            ->orWhere('DiaChi', 'LIKE', "%{$keyword}%");      // Tìm theo khu vực
+        });
+    }
 }
 

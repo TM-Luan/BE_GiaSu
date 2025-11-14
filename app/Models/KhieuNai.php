@@ -9,15 +9,31 @@ class KhieuNai extends Model
     protected $primaryKey = 'KhieuNaiID';
     public $timestamps = false;
 
+    /**
+     * Cập nhật $fillable để khớp với sql.sql
+     * Đã loại bỏ 'GhiChu' và 'NgayXuLy'
+     */
     protected $fillable = [
-        'TaiKhoanID','NoiDung','NgayTao','TrangThai','GiaiQuyet','PhanHoi','GiaoDichID','LopYeuCauID','GhiChu','NgayXuLy'
+        'TaiKhoanID',
+        'NoiDung',
+        'NgayTao',
+        'TrangThai',
+        'GiaiQuyet',
+        'PhanHoi',
+        'GiaoDichID',
+        'LopYeuCauID'
     ];
 
-    protected $dates = ['NgayTao', 'NgayXuLy'];
+    /**
+     * Cập nhật $dates
+     */
+    protected $dates = ['NgayTao'];
 
+    /**
+     * Cập nhật $casts
+     */
     protected $casts = [
         'NgayTao' => 'datetime',
-        'NgayXuLy' => 'datetime',
     ];
 
     public function taiKhoan()
