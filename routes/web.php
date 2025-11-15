@@ -2,104 +2,137 @@
 
 use Illuminate\Support\Facades\Route;
 
-// 1. IMPORT CONTROLLERS
-use App\Http\Controllers\Admin\Auth\AdminLoginController;
-use App\Http\Controllers\Admin\DashboardController;
-use App\Http\Controllers\Admin\GiaSuController;
-use App\Http\Controllers\Admin\NguoiHocController;
-use App\Http\Controllers\Admin\LopHocController as AdminLopHocController; // Đổi tên để tránh trùng
-use App\Http\Controllers\Admin\GiaoDichController;
-use App\Http\Controllers\Admin\KhieuNaiController;
-
+// Web Controllers (Blade Views)
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Web\GiaSuDashboardController;
 use App\Http\Controllers\Web\NguoiHocDashboardController;
-use App\Http\Controllers\Web\LopHocController; // <-- THÊM CONTROLLER LỚP HỌC MỚI
+use App\Http\Controllers\Web\LopHocController;
+use App\Http\Controllers\Web\LichHocWebController;
+use App\Http\Controllers\Web\ProfileController;
+
+// Admin Web Controllers
+use App\Http\Controllers\Admin\Auth\AdminLoginController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\GiaSuController as AdminGiaSuController;
+use App\Http\Controllers\Admin\NguoiHocController as AdminNguoiHocController;
+use App\Http\Controllers\Admin\LopHocController as AdminLopHocController;
+use App\Http\Controllers\Admin\GiaoDichController as AdminGiaoDichController;
+use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
 
 /*
 |--------------------------------------------------------------------------
-| Web Routes
+| Web Routes (Blade Views & Form Submissions)
 |--------------------------------------------------------------------------
+|
+| Tất cả routes ở đây render Blade views hoặc xử lý form submissions
+| Không dùng cho API endpoints
+|
 */
 
-// Redirect mặc định
-Route::get('/', fn() => redirect()->route('login')); 
+// ===== PUBLIC ROUTES =====
 
-// Đăng nhập / Đăng xuất (Web)
+// Homepage redirect
+Route::get('/', fn() => redirect()->route('login'));
+
+// Authentication
+Route::get('register', [RegisterController::class, 'showRegisterForm'])->name('register');
+Route::post('register', [RegisterController::class, 'register'])->name('register.post');
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 
-// ===== KHU VỰC NGƯỜI DÙNG (Cần sửa ở đây) =====
+
+// ===== AUTHENTICATED USER ROUTES =====
 Route::middleware(['auth'])->group(function () {
     
-    // Dashboard
-    Route::get('/giasu/dashboard', [GiaSuDashboardController::class, 'index'])->name('giasu.dashboard');
-    Route::get('/nguoihoc/dashboard', [NguoiHocDashboardController::class, 'index'])->name('nguoihoc.dashboard');
+    // ===== GIA SƯ (TUTOR) ROUTES =====
+    Route::prefix('giasu')->name('giasu.')->group(function () {
+        // Dashboard - Browse available classes marketplace
+        Route::get('/dashboard', [GiaSuDashboardController::class, 'index'])->name('dashboard');
+        
+        // Gửi đề nghị dạy lớp học
+        Route::post('/de-nghi-day', [GiaSuDashboardController::class, 'deNghiDay'])->name('de_nghi_day');
+        
+        // Lớp học của tôi (các lớp đã được chấp nhận)
+        Route::prefix('lop-hoc')->name('lophoc.')->group(function () {
+            Route::get('/', [GiaSuDashboardController::class, 'myClasses'])->name('index');
+            Route::get('/{id}', [GiaSuDashboardController::class, 'showClass'])->name('show');
+        });
+        
+        // Lịch học
+        Route::get('/lich-hoc', [LichHocWebController::class, 'tutorSchedule'])->name('lichhoc.index');
+        
+        // Thông tin cá nhân
+        Route::get('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfile'])->name('profile.index');
+        Route::put('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfileUpdate'])->name('profile.update');
+    });
 
-    // Xem hồ sơ gia sư
-    Route::get('/giasu/ho-so/{id}', [NguoiHocDashboardController::class, 'show'])->name('nguoihoc.giasu.show');
+    // ===== NGƯỜI HỌC (STUDENT) ROUTES =====
+    Route::prefix('nguoihoc')->name('nguoihoc.')->group(function () {
+        // Dashboard - Browse tutors marketplace
+        Route::get('/dashboard', [NguoiHocDashboardController::class, 'index'])->name('dashboard');
+        
+        // Xem hồ sơ gia sư
+        Route::get('/giasu/ho-so/{id}', [NguoiHocDashboardController::class, 'show'])->name('giasu.show');
+        
+        // Mời gia sư dạy
+        Route::post('/moi-day', [NguoiHocDashboardController::class, 'moiDay'])->name('moi_day');
 
-    // Mời dạy
-    Route::post('/nguoihoc/moi-day', [NguoiHocDashboardController::class, 'moiDay'])->name('nguoihoc.moi_day');
+        // Quản lý lớp học của tôi
+        Route::prefix('lop-hoc')->name('lophoc.')->group(function () {
+            Route::get('/', [LopHocController::class, 'index'])->name('index');
+            Route::get('/tao-moi', [LopHocController::class, 'create'])->name('create');
+            Route::post('/', [LopHocController::class, 'store'])->name('store');
+            Route::get('/{id}', [LopHocController::class, 'show'])->name('show');
+            Route::get('/{id}/sua', [LopHocController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [LopHocController::class, 'update'])->name('update');
+            Route::post('/{id}/huy', [LopHocController::class, 'cancel'])->name('cancel');
+            Route::delete('/{id}', [LopHocController::class, 'destroy'])->name('destroy');
+            
+            // Xem danh sách đề nghị của lớp học
+            Route::get('/{id}/de-nghi', [LopHocController::class, 'showProposals'])->name('proposals');
+            
+            // Xem lịch học của lớp
+            Route::get('/{id}/lich', [LichHocWebController::class, 'showScheduleForClass'])->name('schedule');
+            
+            // Khiếu nại lớp học
+            Route::get('/{id}/khieu-nai', [LopHocController::class, 'createComplaint'])->name('complaint.create');
+            Route::post('/{id}/khieu-nai', [LopHocController::class, 'storeComplaint'])->name('complaint.store');
+        });
 
-    // === [MỚI] QUẢN LÝ LỚP HỌC CỦA TÔI ===
-    Route::get('/nguoihoc/lop-hoc', [LopHocController::class, 'index'])->name('nguoihoc.lophoc.index');
-    Route::get('/nguoihoc/lop-hoc/tao-moi', [LopHocController::class, 'create'])->name('nguoihoc.lophoc.create');
-    Route::post('/nguoihoc/lop-hoc', [LopHocController::class, 'store'])->name('nguoihoc.lophoc.store');
-    // 1. Trang danh sách đề nghị của một lớp
-    Route::get('/nguoihoc/lop-hoc/{id}/de-nghi', [LopHocController::class, 'showProposals'])->name('nguoihoc.lophoc.proposals');
-
-    // 2. Hành động Chấp nhận gia sư
-    Route::post('/nguoihoc/de-nghi/{yeuCauId}/chap-nhan', [LopHocController::class, 'acceptProposal'])->name('nguoihoc.proposals.accept');
-
-    // 3. Hành động Từ chối gia sư
-    Route::post('/nguoihoc/de-nghi/{yeuCauId}/tu-choi', [LopHocController::class, 'rejectProposal'])->name('nguoihoc.proposals.reject');
-    Route::get('/nguoihoc/lop-hoc/{id}/sua', [LopHocController::class, 'edit'])->name('nguoihoc.lophoc.edit');
-    Route::put('/nguoihoc/lop-hoc/{id}', [LopHocController::class, 'update'])->name('nguoihoc.lophoc.update');
-    Route::post('/nguoihoc/lop-hoc/{id}/huy', [LopHocController::class, 'cancel'])->name('nguoihoc.lophoc.cancel');
-    Route::delete('/nguoihoc/lop-hoc/{id}', [LopHocController::class, 'destroy'])->name('nguoihoc.lophoc.destroy');
-    Route::get('/nguoihoc/lop-hoc/{id}', [LopHocController::class, 'show'])->name('nguoihoc.lophoc.show');
-    // === [MỚI] KHIẾU NẠI LỚP HỌC ===
-    // 1. Hiển thị form khiếu nại
-    Route::get('/nguoihoc/lop-hoc/{id}/khieu-nai', [LopHocController::class, 'createComplaint'])
-        ->name('nguoihoc.lophoc.complaint.create');
-    // 2. Gửi khiếu nại
-    Route::post('/nguoihoc/lop-hoc/{id}/khieu-nai', [LopHocController::class, 'storeComplaint'])
-        ->name('nguoihoc.lophoc.complaint.store');
-        // === [MỚI] LỊCH HỌC CỦA TÔI ===
-    Route::get('/nguoihoc/lich-hoc', [App\Http\Controllers\Web\LichHocWebController::class, 'index'])
-        ->name('nguoihoc.lichhoc.index');
-        // === [MỚI] THÔNG TIN CÁ NHÂN ===
-        // === [CẬP NHẬT] THÔNG TIN CÁ NHÂN ===
-    Route::get('/nguoihoc/thong-tin-ca-nhan', [App\Http\Controllers\Web\ProfileController::class, 'index'])
-        ->name('nguoihoc.profile.index');
-    Route::put('/nguoihoc/thong-tin-ca-nhan', [App\Http\Controllers\Web\ProfileController::class, 'update'])
-        ->name('nguoihoc.profile.update');
-    // THÊM ROUTE NÀY:
-    Route::put('/nguoihoc/doi-mat-khau', [App\Http\Controllers\Web\ProfileController::class, 'updatePassword'])
-        ->name('nguoihoc.profile.password.update');
-        // === [MỚI] XEM LỊCH CỦA LỚP HỌC ===
-    Route::get('/nguoihoc/lop-hoc/{id}/lich', [App\Http\Controllers\Web\LichHocWebController::class, 'showScheduleForClass'])
-        ->name('nguoihoc.lophoc.schedule');
-
-    
-    // =====================================
+        // Xử lý đề nghị (chấp nhận/từ chối gia sư)
+        Route::post('/de-nghi/{yeuCauId}/chap-nhan', [LopHocController::class, 'acceptProposal'])->name('proposals.accept');
+        Route::post('/de-nghi/{yeuCauId}/tu-choi', [LopHocController::class, 'rejectProposal'])->name('proposals.reject');
+        
+        // Lịch học
+        Route::get('/lich-hoc', [LichHocWebController::class, 'index'])->name('lichhoc.index');
+        
+        // Thông tin cá nhân
+        Route::get('/thong-tin-ca-nhan', [ProfileController::class, 'index'])->name('profile.index');
+        Route::put('/thong-tin-ca-nhan', [ProfileController::class, 'update'])->name('profile.update');
+        Route::put('/doi-mat-khau', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    });
 });
 
 
-// ===== KHU VỰC ADMIN =====
+// ===== ADMIN WEB ROUTES =====
 Route::prefix('admin')->name('admin.')->group(function () {
+    // Admin Authentication
     Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AdminLoginController::class, 'login'])->name('login.post');
     Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
 
-    Route::middleware(['auth:admin'])->group(function () { 
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::resource('/giasu', GiaSuController::class);
-        Route::resource('/nguoihoc', NguoiHocController::class);
-        Route::resource('/lophoc', AdminLopHocController::class); // Dùng controller đã đổi tên
-        Route::resource('/giaodich', GiaoDichController::class);
-        Route::resource('/khieunai', KhieuNaiController::class);
+    // Admin Protected Routes
+    Route::middleware(['auth:admin'])->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+        
+        // Resource Management
+        Route::resource('/giasu', AdminGiaSuController::class);
+        Route::resource('/nguoihoc', AdminNguoiHocController::class);
+        Route::resource('/lophoc', AdminLopHocController::class);
+        Route::resource('/giaodich', AdminGiaoDichController::class);
+        Route::resource('/khieunai', AdminKhieuNaiController::class);
     });
 });

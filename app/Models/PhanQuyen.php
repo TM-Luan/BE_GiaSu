@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 class PhanQuyen extends Model
 {
     protected $table = 'PhanQuyen';
-    protected $primaryKey = 'PhanQuyenID';
+    public $incrementing = false; // Không có auto-increment primary key
+    protected $primaryKey = null; // Composite key
     public $timestamps = false;
 
     protected $fillable = ['TaiKhoanID', 'VaiTroID'];
