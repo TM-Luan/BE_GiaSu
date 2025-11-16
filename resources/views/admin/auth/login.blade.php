@@ -305,10 +305,10 @@
           </button>
 
           <!-- Link đăng ký -->
-          <div class="register-link">
+          {{-- <div class="register-link">
             <span style="color: var(--text-muted);">Chưa có tài khoản?</span>
             <a href="{{ route('admin.register') }}">Đăng ký ngay</a>
-          </div>
+          </div> --}}
         </form>
       </div>
     </div>

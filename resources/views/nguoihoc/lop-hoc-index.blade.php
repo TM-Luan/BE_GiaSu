@@ -50,8 +50,12 @@
         <!-- Grid Danh sách lớp học -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             @forelse($lopHocList as $lopHoc)
-                <!-- Gọi component class-card -->
-                <x-web.class-card :lopHoc="$lopHoc" />
+                <!-- 
+                  SỬA LỖI Ở ĐÂY:
+                  Gọi đúng component của người học 
+                -->
+                {{-- <x-web.class-card :lopHoc="$lopHoc" /> --}} <!-- Component cũ bị sai -->
+                <x-web.nguoihoc-class-card :lopHoc="$lopHoc" /> <!-- Component mới cho người học -->
             @empty
                 <div class="col-span-2 flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100">
                     <div class="bg-gray-100 p-4 rounded-full mb-4">

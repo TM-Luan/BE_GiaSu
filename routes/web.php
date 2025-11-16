@@ -20,6 +20,7 @@ use App\Http\Controllers\Admin\LopHocController as AdminLopHocController;
 use App\Http\Controllers\Admin\GiaoDichController as AdminGiaoDichController;
 use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes (Blade Views & Form Submissions)
@@ -71,6 +72,7 @@ Route::middleware(['auth'])->group(function () {
     // ===== NGƯỜI HỌC (STUDENT) ROUTES =====
     Route::prefix('nguoihoc')->name('nguoihoc.')->group(function () {
         // Dashboard - Browse tutors marketplace
+        Route::get('/', [GiaSuDashboardController::class, 'myClasses'])->name('index');
         Route::get('/dashboard', [NguoiHocDashboardController::class, 'index'])->name('dashboard');
         
         // Xem hồ sơ gia sư
