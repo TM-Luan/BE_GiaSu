@@ -86,7 +86,7 @@
         <!-- Link Đăng ký -->
         <p class="text-sm text-center text-gray-600 mt-6">
             Chưa có tài khoản?
-            <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+            <a href="{{ route('register') }}" class="font-medium text-blue-600 hover:text-blue-500">
                 Đăng ký ngay
             </a>
         </p>
