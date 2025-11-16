@@ -159,7 +159,151 @@ class LichHocController extends Controller
             ], 500);
         }
     }
+    
+    // [HÀM ĐÃ NÂNG CẤP HOÀN TOÀN]
+    public function taoNhieuLichHocTheoTuan(Request $request, $lopYeuCauId): JsonResponse
+    {
+        try {
+            DB::beginTransaction();
 
+            // Lấy lớp học VÀ thời lượng mặc định
+            $lopHoc = LopHocYeuCau::with('giaSu')->find($lopYeuCauId);
+            
+            if (!$lopHoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lớp học không tồn tại'
+                ], 404);
+            }
+
+            // Lấy thời lượng (ví dụ 90 phút) từ lớp học
+            $thoiLuong = $lopHoc->ThoiLuong; 
+            if (!$thoiLuong || $thoiLuong <= 0) {
+                $thoiLuong = 90; // Mặc định 90 phút nếu lớp không có
+            }
+
+            $giasuId = auth()->user()->giasu->GiaSuID;
+            
+            if ($lopHoc->GiaSuID != $giasuId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền tạo lịch cho lớp này'
+                ], 403);
+            }
+
+            // [SỬA] Validator hoàn toàn mới
+            $validator = Validator::make($request->all(), [
+                'ngay_bat_dau' => 'required|date',
+                'so_tuan' => 'required|integer|min:1|max:52',
+                'duong_dan' => 'nullable|string|max:1000',
+                'trang_thai' => 'nullable|in:DangDay,SapToi,DaHoc,Huy',
+
+                // Yêu cầu một mảng "buoi_hoc_mau"
+                'buoi_hoc_mau' => 'required|array|min:1',
+                // Kiểm tra từng item trong mảng
+                'buoi_hoc_mau.*.ngay_thu' => 'required|integer|min:0|max:6', // 0=CN, 1=T2,...
+                'buoi_hoc_mau.*.thoi_gian_bat_dau' => 'required|date_format:H:i:s',
+            ]);
+            // Lưu ý: Không cần 'thoi_gian_ket_thuc' vì chúng ta sẽ tự tính
+            
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dữ liệu không hợp lệ',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $validated = $validator->validated();
+            $ngayBatDau = Carbon::parse($validated['ngay_bat_dau']);
+            $soTuan = $validated['so_tuan'];
+            $buoiHocMau = $validated['buoi_hoc_mau']; // Mảng, ví dụ: [{ngay_thu: 1, thoi_gian_bat_dau: "19:00:00"}, {ngay_thu: 3, thoi_gian_bat_dau: "18:00:00"}]
+            
+            $buoiHocTao = [];
+            $idGoc = null;
+
+            // [SỬA] Lặp qua các buổi học mẫu (T2 19h, T4 18h)
+            foreach ($buoiHocMau as $buoi) {
+                
+                $ngayThu = $buoi['ngay_thu'];
+                $thoiGianBatDau = $buoi['thoi_gian_bat_dau'];
+                
+                // Tự động tính thời gian kết thúc
+                $thoiGianKetThuc = Carbon::parse($thoiGianBatDau)
+                                    ->addMinutes($thoiLuong)
+                                    ->format('H:i:s');
+
+                // 1. Tìm ngày học đầu tiên
+                $ngayDauTien = $ngayBatDau->copy()->startOfWeek(Carbon::SUNDAY)->addDays($ngayThu);
+                
+                if ($ngayDauTien->isBefore($ngayBatDau, 'day')) {
+                    $ngayDauTien->addWeek();
+                }
+
+                // 2. Lặp $soTuan
+                for ($tuan = 0; $tuan < $soTuan; $tuan++) {
+                    $ngayHoc = $ngayDauTien->copy()->addWeeks($tuan);
+
+                    // Kiểm tra trùng lịch
+                    if ($this->kiemTraTrungLich($giasuId, $ngayHoc->format('Y-m-d'), 
+                        $thoiGianBatDau, $thoiGianKetThuc)) {
+                        DB::rollBack();
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Trùng lịch! Bạn đã có lịch vào ngày {$ngayHoc->format('d/m/Y')}."
+                        ], 409);
+                    }
+
+                    $lichHocData = [
+                        'LopYeuCauID' => $lopYeuCauId,
+                        'ThoiGianBatDau' => $thoiGianBatDau,
+                        'ThoiGianKetThuc' => $thoiGianKetThuc, // Dùng thời gian đã tính
+                        'NgayHoc' => $ngayHoc->format('Y-m-d'),
+                        'DuongDan' => $validated['duong_dan'] ?? null,
+                        'TrangThai' => $validated['trang_thai'] ?? 'SapToi',
+                        'NgayTao' => now(),
+                        'IsLapLai' => true,
+                        'LichHocGocID' => $idGoc
+                    ];
+                    
+                    $buoiHoc = LichHoc::create($lichHocData);
+
+                    if ($idGoc === null) {
+                        $idGoc = $buoiHoc->LichHocID;
+                    }
+                    
+                    $buoiHoc->update(['LichHocGocID' => $idGoc]);
+                    
+                    $buoiHocTao[] = $buoiHoc;
+                }
+            }
+            // [HẾT PHẦN SỬA]
+            
+            DB::commit();
+            
+            $soBuoiTao = count($buoiHocTao);
+
+            if ($soBuoiTao == 0) {
+                 return response()->json([
+                    'success' => false,
+                    'message' => 'Không có buổi học nào được tạo. Vui lòng kiểm tra lại ngày bắt đầu.'
+                ], 400);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Đã tạo {$soBuoiTao} buổi học thành công",
+                'data' => $buoiHocTao,
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server khi tạo lịch: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Cập nhật lịch học
      */
@@ -279,7 +423,53 @@ class LichHocController extends Controller
             ], 500);
         }
     }
+public function xoaTatCaLichHocTheoLop(Request $request, $lopYeuCauId): JsonResponse
+    {
+        try {
+            $lopHoc = LopHocYeuCau::find($lopYeuCauId);
+            
+            if (!$lopHoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lớp học không tồn tại'
+                ], 404);
+            }
 
+            // Xác thực quyền: Chỉ gia sư của lớp mới được xóa
+            $giasuId = auth()->user()->giasu->GiaSuID;
+            if ($lopHoc->GiaSuID != $giasuId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không có quyền xóa lịch của lớp này'
+                ], 403);
+            }
+
+            DB::beginTransaction();
+
+            $soBuoiXoa = LichHoc::where('LopYeuCauID', $lopYeuCauId)->delete();
+
+            DB::commit();
+
+            if ($soBuoiXoa > 0) {
+                 return response()->json([
+                    'success' => true,
+                    'message' => "Đã xóa thành công {$soBuoiXoa} buổi học của lớp"
+                ]);
+            } else {
+                 return response()->json([
+                    'success' => true,
+                    'message' => 'Lớp này không có lịch học nào để xóa'
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server khi xóa lịch: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     /**
      * Lấy lịch học theo tháng cho GIA SƯ
      */
@@ -842,13 +1032,17 @@ class LichHocController extends Controller
             ->where('NgayHoc', $ngayHoc)
             ->where('TrangThai', '!=', 'Huy')
             ->where(function($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
-                $q->whereBetween('ThoiGianBatDau', [$thoiGianBatDau, $thoiGianKetThuc])
-                  ->orWhereBetween('ThoiGianKetThuc', [$thoiGianBatDau, $thoiGianKetThuc])
-                  ->orWhere(function($q2) use ($thoiGianBatDau, $thoiGianKetThuc) {
-                      $q2->where('ThoiGianBatDau', '<=', $thoiGianBatDau)
-                         ->where('ThoiGianKetThuc', '>=', $thoiGianKetThuc);
-                  });
+                $q->where('ThoiGianBatDau', '<', $thoiGianKetThuc)
+                  ->where('ThoiGianKetThuc', '>', $thoiGianBatDau);
             });
+            // ->where(function($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
+            //     $q->whereBetween('ThoiGianBatDau', [$thoiGianBatDau, $thoiGianKetThuc])
+            //       ->orWhereBetween('ThoiGianKetThuc', [$thoiGianBatDau, $thoiGianKetThuc])
+            //       ->orWhere(function($q2) use ($thoiGianBatDau, $thoiGianKetThuc) {
+            //           $q2->where('ThoiGianBatDau', '<=', $thoiGianBatDau)
+            //              ->where('ThoiGianKetThuc', '>=', $thoiGianKetThuc);
+            //       });
+            // });
 
         if ($lichHocId) {
             $query->where('LichHocID', '!=', $lichHocId);
