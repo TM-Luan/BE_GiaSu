@@ -44,6 +44,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
     Route::put('/lich-hoc/{lichHocId}', [LichHocController::class, 'capNhatLichHocGiaSu']);
     Route::delete('/lich-hoc/{lichHocId}', [LichHocController::class, 'xoaLichHoc']);
+     Route::post('/lop/{lopYeuCauId}/tao-lich-theo-tuan', [LichHocController::class, 'taoNhieuLichHocTheoTuan']);
+     Route::delete('/lop/{lopYeuCauId}/xoa-tat-ca-lich', [LichHocController::class, 'xoaTatCaLichHocTheoLop']);
+
 
     // LichHoc routes - Hiển thị lịch học theo tháng
     Route::get('/giasu/lich-hoc-theo-thang', [LichHocController::class, 'getLichHocTheoThangGiaSu']);
