@@ -96,10 +96,17 @@
                     <a href="{{ route('nguoihoc.lophoc.proposals', $lopHoc->LopYeuCauID) }}" class="block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors mb-3">
                         Xem danh sách đề nghị ({{ $lopHoc->yeuCauNhanLops->where('VaiTroNguoiGui', 'GiaSu')->count() }})
                     </a>
-                    <a href="{{ route('nguoihoc.lophoc.edit', $lopHoc->LopYeuCauID) }}" class="block w-full text-center py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors">
+                    <a href="{{ route('nguoihoc.lophoc.edit', $lopHoc->LopYeuCauID) }}" class="block w-full text-center py-3 rounded-xl bg-gray-100 text-gray-700 font-bold hover:bg-gray-200 transition-colors mb-3">
                         Sửa thông tin
                     </a>
-                @endif
+
+                    <form action="{{ route('nguoihoc.lophoc.cancel', $lopHoc->LopYeuCauID) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy lớp học này?');">
+                        @csrf
+                        <button type="submit" class="block w-full text-center py-3 rounded-xl bg-red-100 text-red-700 font-bold hover:bg-red-200 transition-colors">
+                            Hủy lớp học
+                        </button>
+                    </form>
+                    @endif
             </div>
 
             @if($lopHoc->giaSu)
