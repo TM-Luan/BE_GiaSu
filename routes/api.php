@@ -146,9 +146,7 @@ Route::get('/filter-options', [DropdownDataController::class, 'getFilterOptions'
 Route::get('/search-stats', [DropdownDataController::class, 'getSearchStats']);
 Route::get('/search-suggestions', [DropdownDataController::class, 'getSearchSuggestions']);
 
-// DanhGia routes (public) - Xem đánh giá gia sư
-Route::get('/giasu/{giaSuId}/danhgia', [DanhGiaController::class, 'getDanhGiaGiaSu']);
-
+Route::get('/giasu/{giaSuId}/danhgia', [DanhGiaController::class, 'getDanhGiaCongKhaiCuaGiaSu']);
 // Dropdown data routes (public)
 Route::get('/monhoc', [DropdownDataController::class, 'getMonHocList']);
 Route::get('/khoilop', [DropdownDataController::class, 'getKhoiLopList']);
