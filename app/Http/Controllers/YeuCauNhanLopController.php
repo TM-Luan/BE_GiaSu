@@ -19,6 +19,7 @@ class YeuCauNhanLopController extends Controller
     private const STATUS_REJECTED = 'Rejected';
     private const STATUS_CANCELLED = 'Cancelled';
 
+    // ... (Các hàm respondSuccess, respondError, resolveInput, getTaiKhoanId, toResource, loadCollection giữ nguyên) ...
     private function respondSuccess(string $message, $data = null, int $status = 200): JsonResponse
     {
         $payload = [
@@ -86,59 +87,71 @@ class YeuCauNhanLopController extends Controller
         return $query->orderByDesc('NgayTao')->get();
     }
 
+
     public function giaSuGuiYeuCau(Request $request)
     {
-        // 1. FIX: Lấy người dùng (Tài Khoản) đã xác thực qua API
+        // 1. Lấy người dùng (Tài Khoản) đã xác thực qua API
         $user = Auth::user();
         if (!$user) {
-            return response()->json(['message' => 'Chưa xác thực.'], 401);
+            return $this->respondError('Chưa xác thực.', 401);
         }
 
-        // 2. FIX: Tìm hồ sơ GiaSu tương ứng
+        // 2. Tìm hồ sơ GiaSu tương ứng
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
         if (!$giaSu) {
-            // Trường hợp tài khoản đăng nhập không phải là gia sư
-            return response()->json(['message' => 'Bạn không có quyền thực hiện thao tác này.'], 403);
+            return $this->respondError('Bạn không có quyền thực hiện thao tác này.', 403);
         }
 
-        // 3. FIX: Áp dụng quy tắc nghiệp vụ của bạn
+        // 3. Áp dụng quy tắc nghiệp vụ:
         // Chỉ gia sư "Hoạt động" (1) mới được gửi đề nghị
         if ($giaSu->TrangThai != 1) { // 1 = Hoạt động
-            return response()->json(['message' => 'Tài khoản cảu bạn chưa được duyệt.Vui lòng cập nhật thông tin tài khoản.'], 403);
+            return $this->respondError('Tài khoản của bạn chưa được duyệt. Vui lòng cập nhật thông tin tài khoản.', 403);
         }
 
-        // 4. FIX: Loại bỏ GiaSuID khỏi validate
+        // 4. <<< SỬA VALIDATION: Đổi 'LopHocID' thành 'LopYeuCauID' và sửa tên bảng
         $request->validate([
-            'LopHocID' => 'required|exists:lop_hoc_yeu_cau,LopHocID',
-            'TrangThai' => 'required|string', // Nên là 'GiaSuGui'
+            'LopYeuCauID' => 'required|exists:lophocyeucau,LopYeuCauID',
+            'GhiChu' => 'nullable|string|max:500', // Thêm GhiChu
         ]);
 
-        $lopHoc = LopHocYeuCau::find($request->LopHocID);
+        // 5. <<< SỬA LOGIC: Dùng 'LopYeuCauID'
+        $lopHoc = LopHocYeuCau::find($request->LopYeuCauID);
 
-        // Kiểm tra xem lớp học có ở trạng thái "Chờ" không
-        if ($lopHoc->TrangThai != 'Chờ') {
-            return response()->json(['message' => 'Lớp học này không còn ở trạng thái chờ.'], 400);
+        // Kiểm tra xem lớp học có ở trạng thái "TimGiaSu" không
+        if ($lopHoc->TrangThai != 'TimGiaSu') { // <<< SỬA LOGIC: (Tên trạng thái trong DB)
+            return $this->respondError('Lớp học này không còn ở trạng thái tìm gia sư.', 400);
         }
 
-        // 5. FIX: Dùng $giaSu->GiaSuID (đã xác thực) để kiểm tra
-        $existingYeuCau = YeuCauNhanLop::where('LopHocID', $request->LopHocID)
+        // 6. <<< SỬA LOGIC: Dùng 'LopYeuCauID'
+        $existingYeuCau = YeuCauNhanLop::where('LopYeuCauID', $request->LopYeuCauID)
             ->where('GiaSuID', $giaSu->GiaSuID) 
+            ->where('TrangThai', self::STATUS_PENDING) // Chỉ kiểm tra nếu đang chờ
             ->first();
 
         if ($existingYeuCau) {
-            return response()->json(['message' => 'Bạn đã gửi yêu cầu cho lớp học này rồi.'], 400);
+            return $this->respondError('Bạn đã gửi yêu cầu cho lớp học này rồi.', 400);
         }
 
-        // 6. FIX: Dùng $giaSu->GiaSuID (đã xác thực) để tạo
+        // 7. <<< SỬA LOGIC: Sửa 'LopHocID' và thêm các trường còn thiếu
         $yeuCau = YeuCauNhanLop::create([
-            'LopHocID' => $request->LopHocID,
+            'LopYeuCauID' => $request->LopYeuCauID,
             'GiaSuID' => $giaSu->GiaSuID, 
-            'TrangThai' => $request->TrangThai,
-            'ThoiGianGui' => now(),
+            'NguoiGuiTaiKhoanID' => $user->TaiKhoanID, // <<< THÊM
+            'VaiTroNguoiGui' => 'GiaSu', // <<< THÊM
+            'TrangThai' => self::STATUS_PENDING, // <<< SỬA (Gán trạng thái chuẩn)
+            'GhiChu' => $request->input('GhiChu'), // <<< THÊM
+            'NgayTao' => Carbon::now(),
+            'NgayCapNhat' => Carbon::now(),
         ]);
 
-        return response()->json(['message' => 'Gửi yêu cầu thành công', 'data' => new YeuCauNhanLopResource($yeuCau)], 201);
+        return $this->respondSuccess(
+            'Gửi đề nghị dạy thành công.',
+            $this->toResource($yeuCau),
+            201
+        );
     }
+    
+    // ... (Các hàm còn lại của YeuCauNhanLopController giữ nguyên) ...
 
     public function nguoiHocMoiGiaSu(Request $request)
     {

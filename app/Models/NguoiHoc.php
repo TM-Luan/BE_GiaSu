@@ -15,7 +15,8 @@ class NguoiHoc extends Model
 
     protected $fillable = [
         'TaiKhoanID', 'HoTen', 'NgaySinh', 'GioiTinh', 'DiaChi',
-       'AnhDaiDien'
+       'AnhDaiDien',
+       'TrangThai' // <<< ĐÃ THÊM
     ];
 
     // Quan hệ
@@ -28,4 +29,3 @@ class NguoiHoc extends Model
         return $this->hasMany(LopHocYeuCau::class, 'NguoiHocID','NguoiHocID');
     }
 }
-

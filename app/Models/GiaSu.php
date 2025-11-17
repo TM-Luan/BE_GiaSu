@@ -17,7 +17,8 @@ class GiaSu extends Model
         'TaiKhoanID', 'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
         'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
         'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
-        'ThanhTich', 'KinhNghiem', 'AnhDaiDien'
+        'ThanhTich', 'KinhNghiem', 'AnhDaiDien',
+        'TrangThai' // <<< ĐÃ THÊM
     ];
 
     // Quan hệ
@@ -26,6 +27,7 @@ class GiaSu extends Model
         return $this->belongsTo(TaiKhoan::class, 'TaiKhoanID','TaiKhoanID');
     }
     
+    // ... (Các quan hệ khác giữ nguyên) ...
     public function yeuCauNhanLop()
     {
         return $this->hasMany(YeuCauNhanLop::class, 'GiaSuID', 'GiaSuID');
@@ -60,4 +62,3 @@ class GiaSu extends Model
         });
     }
 }
-

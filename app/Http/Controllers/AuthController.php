@@ -22,20 +22,13 @@ class AuthController extends Controller
             'VaiTro' => 'required|in:1,2,3' // 2=GiaSu, 3=NguoiHoc
         ], [
             'HoTen.required' => 'Vui lòng nhập họ tên.',
-            'HoTen.string' => 'Họ tên phải là chuỗi ký tự.',
-            'HoTen.max' => 'Họ tên không được vượt quá 255 ký tự.',
-
             'Email.required' => 'Vui lòng nhập email.',
             'Email.email' => 'Email không hợp lệ.',
             'Email.unique' => 'Email này đã được sử dụng.',
-
             'MatKhau.required' => 'Vui lòng nhập mật khẩu.',
             'MatKhau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
             'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-
             'SoDienThoai.unique' => 'Số điện thoại đã tồn tại.',
-            'SoDienThoai.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
-
             'VaiTro.required' => 'Vui lòng chọn vai trò.',
             'VaiTro.in' => 'Vai trò không hợp lệ.'
         ]);
@@ -58,14 +51,14 @@ class AuthController extends Controller
 
             // 3. Tạo Hồ Sơ (Profile) với trạng thái nghiệp vụ
             if ($request->VaiTro == 2) {
-                // <<< SỬA LOGIC (1): Gia sư mặc định là 2 (Chờ duyệt)
+                // Gia sư mặc định là 2 (Chờ duyệt)
                 GiaSu::create([
                     'TaiKhoanID' => $tk->TaiKhoanID,
                     'HoTen' => $request->HoTen,
                     'TrangThai' => 2 // 2 = Chờ duyệt
                 ]);
             } else if ($request->VaiTro == 3) {
-                 // <<< SỬA LOGIC (2): Người học mặc định là 1 (Hoạt động)
+                 // Người học mặc định là 1 (Hoạt động)
                 NguoiHoc::create([
                     'TaiKhoanID' => $tk->TaiKhoanID,
                     'HoTen' => $request->HoTen,
@@ -88,7 +81,7 @@ class AuthController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Đăng ký thất bại',
-                'error' => 'Có lỗi xảy ra trong quá trình đăng ký'
+                'error' => 'Có lỗi xảy ra trong quá trình đăng ký: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -109,7 +102,7 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // (Giữ nguyên logic kiểm tra mật khẩu linh hoạt của bạn)
+        // (Giữ nguyên logic kiểm tra mật khẩu linh hoạt)
         $isPasswordValid = false;
         if (Hash::needsRehash($tk->MatKhauHash) === false && Hash::check($request->MatKhau, $tk->MatKhauHash)) {
             $isPasswordValid = true;
@@ -127,8 +120,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // <<< SỬA LOGIC (3): Kiểm tra trạng thái "Khóa" là 3 (code gốc là 0)
-        if ($tk->TrangThai === 0) { 
+        // <<< SỬA LOGIC (QUAN TRỌNG): Kiểm tra trạng thái "Khóa" là 3
+        if ($tk->TrangThai === 3) { 
             return response()->json([
                 'success' => false,
                 'message' => 'Tài khoản của bạn đã bị khóa'
@@ -138,14 +131,13 @@ class AuthController extends Controller
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
-        // (Giữ nguyên logic lấy HoTen từ profile)
         $hoTen = $tk->HoTen;
-        if ($vaiTro == 2) { // Gia sư
+        if ($vaiTro == 2) { 
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($giaSu && $giaSu->HoTen) {
                 $hoTen = $giaSu->HoTen;
             }
-        } elseif ($vaiTro == 3) { // Người học
+        } elseif ($vaiTro == 3) {
             $nguoiHoc = NguoiHoc::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($nguoiHoc && $nguoiHoc->HoTen) {
                 $hoTen = $nguoiHoc->HoTen;
@@ -160,7 +152,7 @@ class AuthController extends Controller
             'data' => [
                 'TaiKhoanID' => $tk->TaiKhoanID,
                 'Email' => $tk->Email,
-                'HoTen' => $hoTen, // Sử dụng Họ tên đã được xác định theo vai trò
+                'HoTen' => $hoTen,
                 'SoDienThoai' => $tk->SoDienThoai,
                 'VaiTro' => $vaiTro,
             ],
@@ -197,7 +189,7 @@ class AuthController extends Controller
                 'TaiKhoanID' => $user->TaiKhoanID,
                 'Email' => $user->Email,
                 'SoDienThoai' => $user->SoDienThoai,
-                'TrangThaiTaiKhoan' => $user->TrangThai, // Trạng thái của TaiKhoan (1=Login, 3=Khóa)
+                'TrangThaiTaiKhoan' => $user->TrangThai, 
                 'VaiTro' => $roleId
             ];
 
@@ -207,7 +199,7 @@ class AuthController extends Controller
                     $profileData = array_merge($profileData, [
                         'GiaSuID' => $giaSu->GiaSuID,
                         'HoTen' => $giaSu->HoTen,
-                        'TrangThaiNghiepVu' => $giaSu->TrangThai, // <<< Bổ sung: Trạng thái nghiệp vụ (1=HĐ, 2=Chờ)
+                        'TrangThaiNghiepVu' => $giaSu->TrangThai, 
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
                         'NgaySinh' => $giaSu->NgaySinh,
@@ -219,7 +211,8 @@ class AuthController extends Controller
                         'ChuyenNganh' => $giaSu->ChuyenNganh,
                         'ThanhTich' => $giaSu->ThanhTich,
                         'KinhNghiem' => $giaSu->KinhNghiem,
-                        'AnhDaiDien' => $giaSu->AnhDaiDien
+                        'AnhDaiDien' => $giaSu->AnhDaiDien,
+                        'MonID' => $giaSu->MonID // <<< ĐÃ THÊM
                     ]);
                 }
             } elseif ($roleId == 3) {
@@ -228,7 +221,7 @@ class AuthController extends Controller
                     $profileData = array_merge($profileData, [
                         'NguoiHocID' => $nguoiHoc->NguoiHocID,
                         'HoTen' => $nguoiHoc->HoTen,
-                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai, // <<< Bổ sung: Trạng thái nghiệp vụ (1=HĐ)
+                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai,
                         'DiaChi' => $nguoiHoc->DiaChi,
                         'GioiTinh' => $nguoiHoc->GioiTinh,
                         'NgaySinh' => $nguoiHoc->NgaySinh,
@@ -254,13 +247,9 @@ class AuthController extends Controller
     {
         $user = $request->user();
 
-        // 1. VALIDATION (Đã xóa Email)
+        // VALIDATION (Đã xóa Email, thêm MonID)
         $request->validate([
             'HoTen' => 'nullable|string|max:255',
-            // 'Email' => [  // <<< ĐÃ XÓA
-            //     'nullable', 'email', 'max:255',
-            //     Rule::unique('TaiKhoan', 'Email')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-            // ],
             'SoDienThoai' => [
                 'nullable', 'string', 'max:20',
                 Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
@@ -268,12 +257,13 @@ class AuthController extends Controller
             'DiaChi' => 'nullable|string|max:255',
             'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
             'NgaySinh' => 'nullable|date|before:today',
+            'MonID' => 'nullable|integer|exists:monhoc,MonID', // <<< ĐÃ THÊM
 
-            // ... (validation cho ảnh và các trường khác giữ nguyên) ...
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhBangCap' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+
             'BangCap' => 'nullable|string|max:255',
             'TruongDaoTao' => 'nullable|string|max:255',
             'ChuyenNganh' => 'nullable|string|max:255',
@@ -284,12 +274,9 @@ class AuthController extends Controller
         try {
             // Cập nhật bảng TaiKhoan (Đã xóa logic Email)
             $updateData = [];
-            // if ($request->has('Email')) $updateData['Email'] = $request->Email; // <<< ĐÃ XÓA
             if ($request->has('SoDienThoai')) $updateData['SoDienThoai'] = $request->SoDienThoai;
             if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen;
             if (!empty($updateData)) $user->update($updateData);
-
-            // ... (Phần còn lại của hàm giữ nguyên) ...
 
             // Cập nhật bảng GiaSu / NguoiHoc
             $phanQuyen = PhanQuyen::where('TaiKhoanID', $user->TaiKhoanID)->first();
@@ -328,7 +315,7 @@ class AuthController extends Controller
                     $fields = [
                         'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
                         'BangCap', 'TruongDaoTao', 'ChuyenNganh',
-                        'ThanhTich', 'KinhNghiem'
+                        'ThanhTich', 'KinhNghiem', 'MonID' // <<< ĐÃ THÊM
                     ];
                     foreach ($fields as $field) {
                         if ($request->has($field)) {
@@ -364,7 +351,6 @@ class AuthController extends Controller
                         }
                     }
 
-                    // 2. LOGIC UPLOAD ẢNH LÊN IMGBB (Người học)
                     if ($request->hasFile('AnhDaiDien')) {
                         $url = $uploadToImgBB($request->file('AnhDaiDien'));
                         if ($url) {
@@ -382,7 +368,7 @@ class AuthController extends Controller
             // Gộp dữ liệu từ TaiKhoan và (GiaSu/NguoiHoc) để trả về
             $finalData = array_merge($profileData, [
                 'TaiKhoanID' => $user->TaiKhoanID,
-                'Email' => $user->Email, // <<< Email vẫn được trả về (nhưng không bị sửa)
+                'Email' => $user->Email,
                 'SoDienThoai' => $user->SoDienThoai,
             ]);
 
@@ -410,7 +396,6 @@ class AuthController extends Controller
         try {
             $user = $request->user();
 
-            // Kiểm tra mật khẩu hiện tại
             if (!Hash::check($request->MatKhauHienTai, $user->MatKhauHash)) {
                 return response()->json([
                     'success' => false,
@@ -418,7 +403,6 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // Kiểm tra mật khẩu mới không được trùng với mật khẩu cũ
             if (Hash::check($request->MatKhauMoi, $user->MatKhauHash)) {
                 return response()->json([
                     'success' => false,
@@ -426,7 +410,6 @@ class AuthController extends Controller
                 ], 422);
             }
 
-            // Cập nhật mật khẩu mới
             $user->update([
                 'MatKhauHash' => Hash::make($request->MatKhauMoi)
             ]);
@@ -462,7 +445,6 @@ class AuthController extends Controller
                 ], 404);
             }
 
-            // Cập nhật mật khẩu mới
             $tk->update([
                 'MatKhauHash' => Hash::make($request->MatKhauMoi)
             ]);
