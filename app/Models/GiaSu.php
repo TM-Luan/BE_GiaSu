@@ -18,7 +18,8 @@ class GiaSu extends Model
         'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
         'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
         'ThanhTich', 'KinhNghiem', 'AnhDaiDien',
-        'TrangThai' // <<< ĐÃ THÊM
+        'TrangThai', // <<< ĐÃ THÊM
+        'MonID' // <<< THÊM DÒNG NÀY
     ];
 
     // Quan hệ
@@ -37,7 +38,10 @@ class GiaSu extends Model
     {
         return $this->hasMany(LopHocYeuCau::class, 'GiaSuID', 'GiaSuID');
     }
-    
+    public function monHoc()
+    {
+        return $this->belongsTo(MonHoc::class, 'MonID', 'MonID');
+    }
     public function danhGia()
     {
         // Lấy đánh giá qua các lớp mà gia sư đã dạy

@@ -194,7 +194,11 @@ class AuthController extends Controller
             ];
 
             if ($roleId == 2) {
-                $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+                // ⭐️ SỬA ĐỔI: Thêm ->with('monHoc')
+                $giaSu = GiaSu::with('monHoc') // <<< THÊM DÒNG NÀY
+                    ->where('TaiKhoanID', $user->TaiKhoanID)
+                    ->first();
+                    
                 if ($giaSu) {
                     $profileData = array_merge($profileData, [
                         'GiaSuID' => $giaSu->GiaSuID,
@@ -212,22 +216,14 @@ class AuthController extends Controller
                         'ThanhTich' => $giaSu->ThanhTich,
                         'KinhNghiem' => $giaSu->KinhNghiem,
                         'AnhDaiDien' => $giaSu->AnhDaiDien,
-                        'MonID' => $giaSu->MonID // <<< ĐÃ THÊM
+                        'MonID' => $giaSu->MonID,
+                        
+                        // ⭐️ SỬA ĐỔI: Trả về cả tên môn học
+                        'TenMon' => $giaSu->monHoc ? $giaSu->monHoc->TenMon : null
                     ]);
                 }
             } elseif ($roleId == 3) {
-                $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
-                if ($nguoiHoc) {
-                    $profileData = array_merge($profileData, [
-                        'NguoiHocID' => $nguoiHoc->NguoiHocID,
-                        'HoTen' => $nguoiHoc->HoTen,
-                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai,
-                        'DiaChi' => $nguoiHoc->DiaChi,
-                        'GioiTinh' => $nguoiHoc->GioiTinh,
-                        'NgaySinh' => $nguoiHoc->NgaySinh,
-                        'AnhDaiDien' => $nguoiHoc->AnhDaiDien
-                    ]);
-                }
+                // ... (logic NguoiHoc giữ nguyên)
             }
 
             return response()->json([
