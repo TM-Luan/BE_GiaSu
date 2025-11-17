@@ -47,7 +47,7 @@
     <h2 class="text-xl font-bold text-gray-900 mb-6 flex items-center">
         Lớp đang dạy
         @if($lopHocList->total() > 0)
-            <span class="ml-3 bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ $lopHocList->total() }}</span>
+            <span class="ml-3 bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">{{ $lopHocList->total() }}</span>
         @endif
     </h2>
 
@@ -62,7 +62,7 @@
                 $nguoiHoc = $lop->nguoiHoc->taiKhoan->HoTen ?? 'Học sinh';
                 
                 $statusClass = match($lop->TrangThai) {
-                    'DangHoc' => 'bg-green-100 text-green-700',
+                    'DangHoc' => 'bg-blue-100 text-blue-700',
                     'HoanThanh' => 'bg-gray-100 text-gray-700',
                     default => 'bg-blue-100 text-blue-700'
                 };
@@ -74,7 +74,7 @@
                 };
             @endphp
             
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-green-300 transition-all group">
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:border-blue-300 transition-all group">
                 <div class="flex items-start justify-between mb-3">
                     <h3 class="font-bold text-lg text-gray-900 flex-1">{{ $tenLop }}</h3>
                     <span class="{{ $statusClass }} px-2.5 py-1 rounded-full text-xs font-bold">
@@ -94,7 +94,7 @@
                     
                     <div class="flex items-center text-sm text-gray-600">
                         <i data-lucide="banknote" class="w-4 h-4 mr-2 text-gray-400"></i>
-                        <span class="font-semibold text-green-600">{{ $hienThiHocPhi }}/buổi</span>
+                        <span class="font-semibold text-blue-600">{{ $hienThiHocPhi }}/buổi</span>
                     </div>
 
                     @if($lop->HinhThuc)
@@ -106,7 +106,7 @@
                 </div>
 
                 <a href="{{ route('giasu.lophoc.show', $lop->LopYeuCauID) }}" 
-                   class="block text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                   class="block text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
                     Xem chi tiết
                 </a>
             </div>
@@ -116,7 +116,7 @@
                     <i data-lucide="book-open" class="w-8 h-8 text-gray-400"></i>
                 </div>
                 <p class="text-lg font-medium">Bạn chưa có lớp học nào</p>
-                <a href="{{ route('giasu.dashboard') }}" class="text-green-600 hover:underline mt-2 font-medium">
+                <a href="{{ route('giasu.dashboard') }}" class="text-blue-600 hover:underline mt-2 font-medium">
                     Tìm lớp học ngay
                 </a>
             </div>

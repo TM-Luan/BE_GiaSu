@@ -175,6 +175,24 @@
         </div>
     @endif
 
+    {{-- Action Buttons --}}
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            @if($lopHoc->TrangThai == 'DangHoc')
+                <a href="{{ route('giasu.lichhoc.index') }}" 
+                   class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all shadow-lg shadow-blue-200">
+                    <i data-lucide="calendar" class="w-5 h-5 mr-2"></i>
+                    Xem lịch dạy
+                </a>
+            @endif
+            <a href="{{ route('giasu.lophoc.index') }}" 
+               class="inline-flex items-center justify-center px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                Quay lại danh sách
+            </a>
+        </div>
+    </div>
+
 </div>
 
 @endsection

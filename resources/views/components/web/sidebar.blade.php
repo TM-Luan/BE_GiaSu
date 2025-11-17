@@ -58,7 +58,7 @@
                 <li>
                     <a href="{{ route('giasu.dashboard') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
-                       {{ Request::routeIs('giasu.dashboard') ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                       {{ Request::routeIs('giasu.dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="home" class="w-5 h-5 mr-3"></i>
                         Trang chủ
                     </a>
@@ -67,7 +67,7 @@
                 <li>
                     <a href="{{ route('giasu.lophoc.index') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
-                       {{ Request::routeIs('giasu.lophoc.*') ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                       {{ Request::routeIs('giasu.lophoc.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="book-open" class="w-5 h-5 mr-3"></i>
                         Lớp học của tôi
                     </a>
@@ -76,7 +76,7 @@
                 <li>
                     <a href="{{ route('giasu.lichhoc.index') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
-                       {{ Request::routeIs('giasu.lichhoc.*') ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                       {{ Request::routeIs('giasu.lichhoc.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="calendar-days" class="w-5 h-5 mr-3"></i>
                         Lịch học
                     </a>
@@ -85,7 +85,7 @@
                 <li>
                     <a href="{{ route('giasu.profile.index') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
-                       {{ Request::routeIs('giasu.profile.*') ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                       {{ Request::routeIs('giasu.profile.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="user" class="w-5 h-5 mr-3"></i>
                         Thông tin cá nhân
                     </a>

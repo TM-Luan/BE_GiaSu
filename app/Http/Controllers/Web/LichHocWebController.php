@@ -151,4 +151,86 @@ class LichHocWebController extends Controller
             'lopHoc' => $lopHoc // Gửi thông tin lớp học sang để hiển thị tiêu đề
         ]);
     }
+
+    /**
+     * Hiển thị trang lịch học cho Gia sư
+     */
+    public function tutorSchedule()
+    {
+        // 1. Lấy ID Gia sư
+        $giaSuId = Auth::user()->giaSu->GiaSuID;
+
+        // 2. Lấy ID các lớp mà gia sư đang dạy
+        $lopHocIds = LopHocYeuCau::where('GiaSuID', $giaSuId)
+                            ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
+                            ->pluck('LopYeuCauID');
+
+        // 3. Lấy các buổi học
+        $lichHocEvents = LichHoc::whereIn('LopYeuCauID', $lopHocIds)
+                            ->with('lop.monHoc', 'lop.nguoiHoc', 'lop.khoiLop')
+                            ->get();
+
+        // 4. Bảng màu chỉ chứa MÀU CHỮ
+        $colorPalette = [
+            '#5B21B6', // Tím
+            '#B45309', // Cam/Vàng đậm
+            '#065F46', // Xanh lá
+            '#1E3A8A', // Xanh dương
+            '#9D174D', // Hồng
+            '#991B1B', // Đỏ
+            '#0F766E', // Teal
+        ];
+        
+        $lopColorMap = [];
+        $colorIndex = 0;
+        foreach ($lopHocIds as $lopId) {
+            $lopColorMap[$lopId] = $colorPalette[$colorIndex % count($colorPalette)];
+            $colorIndex++;
+        }
+
+        // 5. Định dạng dữ liệu cho calendar
+        $events = [];
+        $allSchedules = [];
+        
+        foreach ($lichHocEvents as $lich) {
+            $startDateTime = $lich->NgayHoc->format('Y-m-d') . 'T' . $lich->ThoiGianBatDau;
+            $endDateTime = $lich->NgayHoc->format('Y-m-d') . 'T' . $lich->ThoiGianKetThuc;
+
+            // Lấy màu chữ theo lớp
+            $textColor = $lopColorMap[$lich->LopYeuCauID] ?? $colorPalette[0];
+            
+            $trangThaiText = 'SapToi';
+            if ($lich->TrangThai == 'DaHoanThanh') {
+                $trangThaiText = 'DaHoanThanh';
+                $textColor = '#6B7280'; // Màu xám cho chữ
+            }
+
+            $events[] = [
+                'id' => $lich->LichHocID,
+                'title' => $lich->lop->monHoc->TenMon ?? 'Lịch học',
+                'start' => $startDateTime,
+                'end' => $endDateTime,
+                'textColor' => $textColor, 
+            ];
+            
+            // Thêm vào danh sách tất cả lịch học để hiển thị theo ngày
+            $allSchedules[] = [
+                'date' => $lich->NgayHoc->format('Y-m-d'),
+                'lichHocID' => $lich->LichHocID,
+                'monHoc' => ($lich->lop->monHoc->TenMon ?? 'N/A') . ' ' . ($lich->lop->khoiLop->BacHoc ?? ''),
+                'nguoiHocTen' => $lich->lop->nguoiHoc->HoTen ?? 'Chưa có',
+                'hinhThuc' => $lich->lop->HinhThuc,
+                'trangThai' => $trangThaiText,
+                'duongDan' => $lich->DuongDan,
+                'thoiGianBatDau' => date('H:i', strtotime($lich->ThoiGianBatDau)),
+                'thoiGianKetThuc' => date('H:i', strtotime($lich->ThoiGianKetThuc)),
+            ];
+        }
+
+        // 6. Trả về view cho gia sư
+        return view('giasu.lich-hoc-index', [
+            'calendarDataJson' => json_encode($events),
+            'allSchedulesJson' => json_encode($allSchedules)
+        ]);
+    }
 }
