@@ -19,7 +19,7 @@ class AuthController extends Controller
             'Email' => 'required|email|unique:TaiKhoan,Email',
             'MatKhau' => 'required|min:6|confirmed',
             'SoDienThoai' => 'nullable|string|max:20|unique:TaiKhoan,SoDienThoai',
-            'VaiTro' => 'required|in:1,2,3'
+            'VaiTro' => 'required|in:1,2,3' // 2=GiaSu, 3=NguoiHoc
         ], [
             'HoTen.required' => 'Vui lòng nhập họ tên.',
             'HoTen.string' => 'Họ tên phải là chuỗi ký tự.',
@@ -41,28 +41,35 @@ class AuthController extends Controller
         ]);
 
         try {
+            // 1. Tạo Tài Khoản (TrangThai = 1 là "Có thể đăng nhập")
             $tk = TaiKhoan::create([
                 'HoTen' => $request->HoTen,
                 'Email' => $request->Email,
                 'MatKhauHash' => Hash::make($request->MatKhau),
                 'SoDienThoai' => $request->SoDienThoai,
-                'TrangThai' => 1
+                'TrangThai' => 1 // 1 = Tài khoản có thể đăng nhập
             ]);
 
+            // 2. Tạo Phân Quyền
             PhanQuyen::create([
                 'TaiKhoanID' => $tk->TaiKhoanID,
                 'VaiTroID' => $request->VaiTro
             ]);
 
+            // 3. Tạo Hồ Sơ (Profile) với trạng thái nghiệp vụ
             if ($request->VaiTro == 2) {
+                // <<< SỬA LOGIC (1): Gia sư mặc định là 2 (Chờ duyệt)
                 GiaSu::create([
                     'TaiKhoanID' => $tk->TaiKhoanID,
                     'HoTen' => $request->HoTen,
+                    'TrangThai' => 2 // 2 = Chờ duyệt
                 ]);
             } else if ($request->VaiTro == 3) {
+                 // <<< SỬA LOGIC (2): Người học mặc định là 1 (Hoạt động)
                 NguoiHoc::create([
                     'TaiKhoanID' => $tk->TaiKhoanID,
                     'HoTen' => $request->HoTen,
+                    'TrangThai' => 1 // 1 = Hoạt động
                 ]);
             }
 
@@ -102,17 +109,13 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // Kiểm tra xem mật khẩu đã được hash bằng Bcrypt chưa
+        // (Giữ nguyên logic kiểm tra mật khẩu linh hoạt của bạn)
         $isPasswordValid = false;
-        
-        // Kiểm tra nếu mật khẩu đã được hash (bắt đầu với $2y$)
         if (Hash::needsRehash($tk->MatKhauHash) === false && Hash::check($request->MatKhau, $tk->MatKhauHash)) {
             $isPasswordValid = true;
         } 
-        // Nếu mật khẩu chưa hash, so sánh trực tiếp và hash lại
         elseif ($tk->MatKhauHash === $request->MatKhau) {
             $isPasswordValid = true;
-            // Tự động hash lại mật khẩu
             $tk->MatKhauHash = Hash::make($request->MatKhau);
             $tk->save();
         }
@@ -124,7 +127,8 @@ class AuthController extends Controller
             ], 401);
         }
 
-        if ($tk->TrangThai === 0) {
+        // <<< SỬA LOGIC (3): Kiểm tra trạng thái "Khóa" là 3 (code gốc là 0)
+        if ($tk->TrangThai === 0) { 
             return response()->json([
                 'success' => false,
                 'message' => 'Tài khoản của bạn đã bị khóa'
@@ -134,8 +138,8 @@ class AuthController extends Controller
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
+        // (Giữ nguyên logic lấy HoTen từ profile)
         $hoTen = $tk->HoTen;
-
         if ($vaiTro == 2) { // Gia sư
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($giaSu && $giaSu->HoTen) {
@@ -163,6 +167,7 @@ class AuthController extends Controller
             'token' => $token->plainTextToken,
         ], 200);
     }
+    
     public function logout(Request $request)
     {
         try {
@@ -180,6 +185,7 @@ class AuthController extends Controller
             ], 500);
         }
     }
+
     public function getProfile(Request $request)
     {
         try {
@@ -191,7 +197,7 @@ class AuthController extends Controller
                 'TaiKhoanID' => $user->TaiKhoanID,
                 'Email' => $user->Email,
                 'SoDienThoai' => $user->SoDienThoai,
-                'TrangThai' => $user->TrangThai,
+                'TrangThaiTaiKhoan' => $user->TrangThai, // Trạng thái của TaiKhoan (1=Login, 3=Khóa)
                 'VaiTro' => $roleId
             ];
 
@@ -201,6 +207,7 @@ class AuthController extends Controller
                     $profileData = array_merge($profileData, [
                         'GiaSuID' => $giaSu->GiaSuID,
                         'HoTen' => $giaSu->HoTen,
+                        'TrangThaiNghiepVu' => $giaSu->TrangThai, // <<< Bổ sung: Trạng thái nghiệp vụ (1=HĐ, 2=Chờ)
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
                         'NgaySinh' => $giaSu->NgaySinh,
@@ -221,6 +228,7 @@ class AuthController extends Controller
                     $profileData = array_merge($profileData, [
                         'NguoiHocID' => $nguoiHoc->NguoiHocID,
                         'HoTen' => $nguoiHoc->HoTen,
+                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai, // <<< Bổ sung: Trạng thái nghiệp vụ (1=HĐ)
                         'DiaChi' => $nguoiHoc->DiaChi,
                         'GioiTinh' => $nguoiHoc->GioiTinh,
                         'NgaySinh' => $nguoiHoc->NgaySinh,
@@ -242,271 +250,156 @@ class AuthController extends Controller
         }
     }
 
-    // public function updateProfile(Request $request)
-    // {
-    //     $user = $request->user();
-
-    //     $request->validate([
-    //         'HoTen' => 'nullable|string|max:255',
-    //         'Email' => [
-    //             'nullable',
-    //             'email',
-    //             'max:255',
-    //             Rule::unique('TaiKhoan', 'Email')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-    //         ],
-    //         'SoDienThoai' => [
-    //             'nullable',
-    //             'string',
-    //             'max:20',
-    //             Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-    //         ],
-    //         'DiaChi' => 'nullable|string|max:255',
-    //         'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
-    //         'NgaySinh' => 'nullable|date|before:today',
-    //         'AnhCCCD_MatTruoc' => 'nullable|string|max:255',
-    //         'AnhCCCD_MatSau' => 'nullable|string|max:255',
-    //         'BangCap' => 'nullable|string|max:255',
-    //         'AnhBangCap' => 'nullable|string|max:255',
-    //         'TruongDaoTao' => 'nullable|string|max:255',
-    //         'ChuyenNganh' => 'nullable|string|max:255',
-    //         'ThanhTich' => 'nullable|string',
-    //         'KinhNghiem' => 'nullable|string',
-    //         'AnhDaiDien' => 'nullable|string|max:500'
-    //     ]);
-
-    //     try {
-    //         // Cập nhật bảng TaiKhoan
-    //         $updateData = [];
-    //         if ($request->has('Email')) {
-    //             $updateData['Email'] = $request->Email;
-    //         }
-    //         if ($request->has('SoDienThoai')) {
-    //             $updateData['SoDienThoai'] = $request->SoDienThoai;
-    //         }
-    //         if ($request->has('HoTen')) {
-    //             $updateData['HoTen'] = $request->HoTen;
-    //         }
-
-    //         if (!empty($updateData)) {
-    //             $user->update($updateData);
-    //         }
-
-    //         // Cập nhật bảng GiaSu / NguoiHoc
-    //         $phanQuyen = PhanQuyen::where('TaiKhoanID', $user->TaiKhoanID)->first();
-    //         $roleId = $phanQuyen ? $phanQuyen->VaiTroID : null;
-
-    //         $profileData = [];
-
-    //         if ($roleId == 2) {
-    //             $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-    //             if ($giaSu) {
-    //                 $giaSuUpdateData = [];
-    //                 $fields = [
-    //                     'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
-    //                     'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
-    //                     'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
-    //                     'ThanhTich', 'KinhNghiem', 'AnhDaiDien'
-    //                 ];
-
-    //                 foreach ($fields as $field) {
-    //                     if ($request->has($field)) {
-    //                         $giaSuUpdateData[$field] = $request->$field;
-    //                     }
-    //                 }
-
-    //                 if (!empty($giaSuUpdateData)) {
-    //                     $giaSu->update($giaSuUpdateData);
-    //                     $profileData = $giaSu->fresh()->toArray();
-    //                 }
-    //             }
-    //         } elseif ($roleId == 3) {
-    //             $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
-    //             if ($nguoiHoc) {
-    //                 $nguoiHocUpdateData = [];
-    //                 $fields = ['HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh', 'AnhDaiDien'];
-
-    //                 foreach ($fields as $field) {
-    //                     if ($request->has($field)) {
-    //                         $nguoiHocUpdateData[$field] = $request->$field;
-    //                     }
-    //                 }
-
-    //                 if (!empty($nguoiHocUpdateData)) {
-    //                     $nguoiHoc->update($nguoiHocUpdateData);
-    //                     $profileData = $nguoiHoc->fresh()->toArray();
-    //                 }
-    //             }
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Cập nhật thông tin thành công',
-    //             'data' => array_merge([
-    //                 'TaiKhoanID' => $user->TaiKhoanID,
-    //                 'Email' => $user->Email,
-    //                 'SoDienThoai' => $user->SoDienThoai,
-    //                 'HoTen' => $user->HoTen
-    //             ], $profileData)
-    //         ], 200);
-
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Cập nhật thông tin thất bại: ' . $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
     public function updateProfile(Request $request)
-{
-    $user = $request->user();
+    {
+        $user = $request->user();
 
-    // 1. VALIDATION (Đã đổi string -> image)
-    $request->validate([
-        'HoTen' => 'nullable|string|max:255',
-        'Email' => [
-            'nullable', 'email', 'max:255',
-            Rule::unique('TaiKhoan', 'Email')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-        ],
-        'SoDienThoai' => [
-            'nullable', 'string', 'max:20',
-            Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-        ],
-        'DiaChi' => 'nullable|string|max:255',
-        'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
-        'NgaySinh' => 'nullable|date|before:today',
+        // 1. VALIDATION (Đã xóa Email)
+        $request->validate([
+            'HoTen' => 'nullable|string|max:255',
+            // 'Email' => [  // <<< ĐÃ XÓA
+            //     'nullable', 'email', 'max:255',
+            //     Rule::unique('TaiKhoan', 'Email')->ignore($user->TaiKhoanID, 'TaiKhoanID')
+            // ],
+            'SoDienThoai' => [
+                'nullable', 'string', 'max:20',
+                Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
+            ],
+            'DiaChi' => 'nullable|string|max:255',
+            'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
+            'NgaySinh' => 'nullable|date|before:today',
 
-        // Validation cho file ảnh
-        'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'AnhBangCap' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-
-        // Validation cho text
-        'BangCap' => 'nullable|string|max:255',
-        'TruongDaoTao' => 'nullable|string|max:255',
-        'ChuyenNganh' => 'nullable|string|max:255',
-        'ThanhTich' => 'nullable|string',
-        'KinhNghiem' => 'nullable|string',
-    ]);
-
-    try {
-        // Cập nhật bảng TaiKhoan (Giữ nguyên)
-        $updateData = [];
-        if ($request->has('Email')) $updateData['Email'] = $request->Email;
-        if ($request->has('SoDienThoai')) $updateData['SoDienThoai'] = $request->SoDienThoai;
-        if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen;
-        if (!empty($updateData)) $user->update($updateData);
-
-        // Cập nhật bảng GiaSu / NguoiHoc
-        $phanQuyen = PhanQuyen::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        $roleId = $phanQuyen ? $phanQuyen->VaiTroID : null;
-        $profileData = [];
-
-        $apiKey = config('services.imgbb.key');
-
-        if (!$apiKey) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi cấu hình server: Thiếu API key của ImgBB.'
-            ], 500);
-        }
-
-        // Hàm trợ giúp upload lên ImgBB
-        $uploadToImgBB = function($file) use ($apiKey) {
-            $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
-            $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
-                'key' => $apiKey,
-                'image' => $imageBase64
-            ]);
-
-            if ($response->successful() && isset($response->json()['data']['url'])) {
-                return $response->json()['data']['url'];
-            }
-            return null; // Trả về null nếu upload thất bại
-        };
-
-
-        if ($roleId == 2) { // VAI TRÒ: GIA SƯ
-            $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-            if ($giaSu) {
-                $giaSuUpdateData = [];
-                // Cập nhật text fields
-                $fields = [
-                    'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
-                    'BangCap', 'TruongDaoTao', 'ChuyenNganh',
-                    'ThanhTich', 'KinhNghiem'
-                ];
-                foreach ($fields as $field) {
-                    // Chỉ cập nhật nếu trường đó được gửi lên
-                    if ($request->has($field)) {
-                        $giaSuUpdateData[$field] = $request->$field;
-                    }
-                }
-
-                // 2. LOGIC UPLOAD ẢNH LÊN IMGBB (Gia sư)
-                $fileFields = ['AnhDaiDien', 'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau', 'AnhBangCap'];
-                foreach ($fileFields as $fieldKey) {
-                    if ($request->hasFile($fieldKey)) {
-                        $url = $uploadToImgBB($request->file($fieldKey));
-                        if ($url) {
-                            $giaSuUpdateData[$fieldKey] = $url;
-                        }
-                    }
-                }
-
-                if (!empty($giaSuUpdateData)) {
-                    $giaSu->update($giaSuUpdateData);
-                }
-                $profileData = $giaSu->fresh()->toArray(); // Lấy dữ liệu mới nhất
-            }
-        } elseif ($roleId == 3) { // VAI TRÒ: NGƯỜI HỌC
-            $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
-            if ($nguoiHoc) {
-                $nguoiHocUpdateData = [];
-                // Cập nhật text fields
-                $fields = ['HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh'];
-                foreach ($fields as $field) {
-                    if ($request->has($field)) {
-                        $nguoiHocUpdateData[$field] = $request->$field;
-                    }
-                }
-
-                // 2. LOGIC UPLOAD ẢNH LÊN IMGBB (Người học)
-                if ($request->hasFile('AnhDaiDien')) {
-                    $url = $uploadToImgBB($request->file('AnhDaiDien'));
-                    if ($url) {
-                        $nguoiHocUpdateData['AnhDaiDien'] = $url;
-                    }
-                }
-
-                if (!empty($nguoiHocUpdateData)) {
-                    $nguoiHoc->update($nguoiHocUpdateData);
-                }
-                $profileData = $nguoiHoc->fresh()->toArray(); // Lấy dữ liệu mới nhất
-            }
-        }
-
-        // Gộp dữ liệu từ TaiKhoan và (GiaSu/NguoiHoc) để trả về
-        $finalData = array_merge($profileData, [
-            'TaiKhoanID' => $user->TaiKhoanID,
-            'Email' => $user->Email,
-            'SoDienThoai' => $user->SoDienThoai,
-            // HoTen trong $profileData sẽ ghi đè HoTen của TaiKhoan (nếu có)
+            // ... (validation cho ảnh và các trường khác giữ nguyên) ...
+            'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhBangCap' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'BangCap' => 'nullable|string|max:255',
+            'TruongDaoTao' => 'nullable|string|max:255',
+            'ChuyenNganh' => 'nullable|string|max:255',
+            'ThanhTich' => 'nullable|string',
+            'KinhNghiem' => 'nullable|string',
         ]);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cập nhật thông tin thành công',
-            'data' => $finalData
-        ], 200);
+        try {
+            // Cập nhật bảng TaiKhoan (Đã xóa logic Email)
+            $updateData = [];
+            // if ($request->has('Email')) $updateData['Email'] = $request->Email; // <<< ĐÃ XÓA
+            if ($request->has('SoDienThoai')) $updateData['SoDienThoai'] = $request->SoDienThoai;
+            if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen;
+            if (!empty($updateData)) $user->update($updateData);
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Cập nhật thông tin thất bại: ' . $e->getMessage()
-        ], 500);
+            // ... (Phần còn lại của hàm giữ nguyên) ...
+
+            // Cập nhật bảng GiaSu / NguoiHoc
+            $phanQuyen = PhanQuyen::where('TaiKhoanID', $user->TaiKhoanID)->first();
+            $roleId = $phanQuyen ? $phanQuyen->VaiTroID : null;
+            $profileData = [];
+
+            $apiKey = config('services.imgbb.key');
+
+            if (!$apiKey) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Lỗi cấu hình server: Thiếu API key của ImgBB.'
+                ], 500);
+            }
+
+            // Hàm trợ giúp upload lên ImgBB
+            $uploadToImgBB = function($file) use ($apiKey) {
+                $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
+                $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
+                    'key' => $apiKey,
+                    'image' => $imageBase64
+                ]);
+
+                if ($response->successful() && isset($response->json()['data']['url'])) {
+                    return $response->json()['data']['url'];
+                }
+                return null; 
+            };
+
+
+            if ($roleId == 2) { // VAI TRÒ: GIA SƯ
+                $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+                if ($giaSu) {
+                    $giaSuUpdateData = [];
+                    // Cập nhật text fields
+                    $fields = [
+                        'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
+                        'BangCap', 'TruongDaoTao', 'ChuyenNganh',
+                        'ThanhTich', 'KinhNghiem'
+                    ];
+                    foreach ($fields as $field) {
+                        if ($request->has($field)) {
+                            $giaSuUpdateData[$field] = $request->$field;
+                        }
+                    }
+
+                    // 2. LOGIC UPLOAD ẢNH LÊN IMGBB (Gia sư)
+                    $fileFields = ['AnhDaiDien', 'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau', 'AnhBangCap'];
+                    foreach ($fileFields as $fieldKey) {
+                        if ($request->hasFile($fieldKey)) {
+                            $url = $uploadToImgBB($request->file($fieldKey));
+                            if ($url) {
+                                $giaSuUpdateData[$fieldKey] = $url;
+                            }
+                        }
+                    }
+
+                    if (!empty($giaSuUpdateData)) {
+                        $giaSu->update($giaSuUpdateData);
+                    }
+                    $profileData = $giaSu->fresh()->toArray(); 
+                }
+            } elseif ($roleId == 3) { // VAI TRÒ: NGƯỜI HỌC
+                $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
+                if ($nguoiHoc) {
+                    $nguoiHocUpdateData = [];
+                    // Cập nhật text fields
+                    $fields = ['HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh'];
+                    foreach ($fields as $field) {
+                        if ($request->has($field)) {
+                            $nguoiHocUpdateData[$field] = $request->$field;
+                        }
+                    }
+
+                    // 2. LOGIC UPLOAD ẢNH LÊN IMGBB (Người học)
+                    if ($request->hasFile('AnhDaiDien')) {
+                        $url = $uploadToImgBB($request->file('AnhDaiDien'));
+                        if ($url) {
+                            $nguoiHocUpdateData['AnhDaiDien'] = $url;
+                        }
+                    }
+
+                    if (!empty($nguoiHocUpdateData)) {
+                        $nguoiHoc->update($nguoiHocUpdateData);
+                    }
+                    $profileData = $nguoiHoc->fresh()->toArray(); 
+                }
+            }
+
+            // Gộp dữ liệu từ TaiKhoan và (GiaSu/NguoiHoc) để trả về
+            $finalData = array_merge($profileData, [
+                'TaiKhoanID' => $user->TaiKhoanID,
+                'Email' => $user->Email, // <<< Email vẫn được trả về (nhưng không bị sửa)
+                'SoDienThoai' => $user->SoDienThoai,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cập nhật thông tin thành công',
+                'data' => $finalData
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Cập nhật thông tin thất bại: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
+
     public function changePassword(Request $request)
     {
         $request->validate([

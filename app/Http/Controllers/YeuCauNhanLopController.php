@@ -6,6 +6,8 @@ use App\Http\Resources\LopHocYeuCauResource;
 use App\Http\Resources\YeuCauNhanLopResource;
 use App\Models\LopHocYeuCau;
 use App\Models\YeuCauNhanLop;
+use App\Models\GiaSu;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,52 +88,56 @@ class YeuCauNhanLopController extends Controller
 
     public function giaSuGuiYeuCau(Request $request)
     {
-        $lopId = $this->resolveInput($request, ['LopYeuCauID', 'lop_yeu_cau_id']);
-        $giaSuId = $this->resolveInput($request, ['GiaSuID', 'gia_su_id']);
-        $taiKhoanId = $this->getTaiKhoanId($request);
-
-        if (!$lopId || !$giaSuId || !$taiKhoanId) {
-            return $this->respondError('Thiếu dữ liệu bắt buộc.', 422);
+        // 1. FIX: Lấy người dùng (Tài Khoản) đã xác thực qua API
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['message' => 'Chưa xác thực.'], 401);
         }
 
+        // 2. FIX: Tìm hồ sơ GiaSu tương ứng
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        if (!$giaSu) {
+            // Trường hợp tài khoản đăng nhập không phải là gia sư
+            return response()->json(['message' => 'Bạn không có quyền thực hiện thao tác này.'], 403);
+        }
+
+        // 3. FIX: Áp dụng quy tắc nghiệp vụ của bạn
+        // Chỉ gia sư "Hoạt động" (1) mới được gửi đề nghị
+        if ($giaSu->TrangThai != 1) { // 1 = Hoạt động
+            return response()->json(['message' => 'Tài khoản cảu bạn chưa được duyệt.Vui lòng cập nhật thông tin tài khoản.'], 403);
+        }
+
+        // 4. FIX: Loại bỏ GiaSuID khỏi validate
         $request->validate([
-            'GhiChu' => 'nullable|string|max:500',
+            'LopHocID' => 'required|exists:lop_hoc_yeu_cau,LopHocID',
+            'TrangThai' => 'required|string', // Nên là 'GiaSuGui'
         ]);
 
-        $lop = LopHocYeuCau::find($lopId);
-        if (!$lop) {
-            return $this->respondError('Không tìm thấy lớp học yêu cầu.', 404);
+        $lopHoc = LopHocYeuCau::find($request->LopHocID);
+
+        // Kiểm tra xem lớp học có ở trạng thái "Chờ" không
+        if ($lopHoc->TrangThai != 'Chờ') {
+            return response()->json(['message' => 'Lớp học này không còn ở trạng thái chờ.'], 400);
         }
 
-        $existing = YeuCauNhanLop::where('LopYeuCauID', $lopId)
-            ->where('GiaSuID', $giaSuId)
-            ->whereIn('TrangThai', [self::STATUS_PENDING, self::STATUS_ACCEPTED])
+        // 5. FIX: Dùng $giaSu->GiaSuID (đã xác thực) để kiểm tra
+        $existingYeuCau = YeuCauNhanLop::where('LopHocID', $request->LopHocID)
+            ->where('GiaSuID', $giaSu->GiaSuID) 
             ->first();
 
-        if ($existing) {
-            return $this->respondError('Bạn đã gửi đề nghị cho lớp học này.', 409);
+        if ($existingYeuCau) {
+            return response()->json(['message' => 'Bạn đã gửi yêu cầu cho lớp học này rồi.'], 400);
         }
 
-        if ($lop->GiaSuID && (int) $lop->GiaSuID === (int) $giaSuId) {
-            return $this->respondError('Gia sư này đã được gán cho lớp học.', 409);
-        }
-
+        // 6. FIX: Dùng $giaSu->GiaSuID (đã xác thực) để tạo
         $yeuCau = YeuCauNhanLop::create([
-            'LopYeuCauID' => $lopId,
-            'GiaSuID' => $giaSuId,
-            'NguoiGuiTaiKhoanID' => $taiKhoanId,
-            'VaiTroNguoiGui' => 'GiaSu',
-            'TrangThai' => self::STATUS_PENDING,
-            'GhiChu' => $request->input('GhiChu'),
-            'NgayTao' => Carbon::now(),
-            'NgayCapNhat' => Carbon::now(),
+            'LopHocID' => $request->LopHocID,
+            'GiaSuID' => $giaSu->GiaSuID, 
+            'TrangThai' => $request->TrangThai,
+            'ThoiGianGui' => now(),
         ]);
 
-        return $this->respondSuccess(
-            'Gửi đề nghị dạy thành công.',
-            $this->toResource($yeuCau),
-            201
-        );
+        return response()->json(['message' => 'Gửi yêu cầu thành công', 'data' => new YeuCauNhanLopResource($yeuCau)], 201);
     }
 
     public function nguoiHocMoiGiaSu(Request $request)
