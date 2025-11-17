@@ -14,9 +14,149 @@ use Illuminate\Support\Facades\Auth;
 
 class DanhGiaController extends Controller
 {
+    //=================================================================
+    // HÀM HELPER (PRIVATE)
+    //=================================================================
+
     /**
-     * Tạo hoặc cập nhật đánh giá cho gia sư
+     * Hàm helper private để lấy chi tiết đánh giá của một gia sư
+     * Được sử dụng bởi cả public và auth-gia-su
+     */
+    private function layThongTinDanhGia($giaSuId): array
+    {
+        $giaSu = GiaSu::find($giaSuId);
+
+        if (!$giaSu) {
+            return [
+                'success' => false,
+                'message' => 'Gia sư không tồn tại',
+                'status_code' => 404
+            ];
+        }
+
+        // Lấy tất cả đánh giá của gia sư
+        $danhGiaList = DanhGia::whereHas('lop', function ($q) use ($giaSuId) {
+            $q->where('GiaSuID', $giaSuId);
+        })
+            ->with([
+                'taiKhoan' => function ($q) {
+                    // Chỉ lấy thông tin public của tài khoản
+                    $q->select('TaiKhoanID', 'Email'); // <--- SỬA THÀNH DÒNG NÀY
+                },
+                'lop.nguoiHoc'
+            ])
+            ->orderBy('NgayDanhGia', 'desc')
+            ->get();
+
+        // Tính điểm trung bình
+        $diemTrungBinh = $danhGiaList->avg('DiemSo');
+        $tongSoDanhGia = $danhGiaList->count();
+
+        // Phân bố đánh giá theo số sao
+        $phanBoSao = [];
+        for ($i = 1; $i <= 5; $i++) {
+            $phanBoSao[$i] = $danhGiaList->where('DiemSo', $i)->count();
+        }
+
+        return [
+            'success' => true,
+            'status_code' => 200,
+            'data' => [
+                'danh_gia_list' => $danhGiaList,
+                'diem_trung_binh' => round($diemTrungBinh, 1),
+                'tong_so_danh_gia' => $tongSoDanhGia,
+                'phan_bo_sao' => $phanBoSao,
+            ]
+        ];
+    }
+
+    //=================================================================
+    // PHƯƠNG THỨC CÔNG KHAI (PUBLIC)
+    // (Dùng cho trang profile gia sư, ai cũng xem được)
+    //=================================================================
+
+    /**
+     * Lấy danh sách đánh giá công khai của một gia sư
+     */
+    public function getDanhGiaCongKhaiCuaGiaSu($giaSuId): JsonResponse
+    {
+        try {
+            $result = $this->layThongTinDanhGia($giaSuId);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], $result['status_code']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    //=================================================================
+    // PHƯƠNG THỨC CHO GIA SƯ (AUTH)
+    //=================================================================
+
+    /**
+     * [GIA SƯ] Lấy danh sách đánh giá của chính mình (đã đăng nhập)
+     */
+    public function getDanhGiaCuaToiGiaSu(Request $request): JsonResponse
+    {
+        try {
+            /** @var TaiKhoan $user */
+            $user = Auth::user();
+
+            if (!$user || !$user->giasu) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là gia sư.'
+                ], 403);
+            }
+
+            $giaSuId = $user->giasu->GiaSuID;
+
+            $result = $this->layThongTinDanhGia($giaSuId);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $result['message']
+                ], $result['status_code']);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $result['data']
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    //=================================================================
+    // PHƯƠNG THỨC CHO NGƯỜI HỌC (AUTH)
+    //=================================================================
+
+    /**
+     * [NGƯỜI HỌC] Tạo hoặc cập nhật đánh giá cho gia sư
      * Người học chỉ có thể đánh giá gia sư mà họ đã/đang học
+     * Chỉ được phép cập nhật 1 lần duy nhất.
      */
     public function taoDanhGia(Request $request): JsonResponse
     {
@@ -70,7 +210,7 @@ class DanhGiaController extends Controller
                 ], 403);
             }
 
-            // Kiểm tra đã có đánh giá chưa
+            // Kiểm tra đã có đánh giá chưa (dựa trên Lớp và Tài Khoản)
             $danhGiaExists = DanhGia::where('LopYeuCauID', $lopHoc->LopYeuCauID)
                 ->where('TaiKhoanID', $user->TaiKhoanID)
                 ->first();
@@ -78,9 +218,10 @@ class DanhGiaController extends Controller
             DB::beginTransaction();
 
             if ($danhGiaExists) {
+                // --- CẬP NHẬT ĐÁNH GIÁ ---
                 // Kiểm tra xem đã sửa chưa (LanSua >= 1)
                 $lanSua = $danhGiaExists->LanSua ?? 0;
-                
+
                 if ($lanSua >= 1) {
                     DB::rollBack();
                     return response()->json([
@@ -99,7 +240,7 @@ class DanhGiaController extends Controller
                 $danhGia = $danhGiaExists;
                 $action = 'updated';
             } else {
-                // Tạo đánh giá mới
+                // --- TẠO ĐÁNH GIÁ MỚI ---
                 $danhGia = DanhGia::create([
                     'LopYeuCauID' => $lopHoc->LopYeuCauID,
                     'TaiKhoanID' => $user->TaiKhoanID,
@@ -118,8 +259,8 @@ class DanhGiaController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => $action === 'created' 
-                    ? 'Đánh giá thành công!' 
+                'message' => $action === 'created'
+                    ? 'Đánh giá thành công!'
                     : 'Cập nhật đánh giá thành công!',
                 'data' => $danhGia
             ], $action === 'created' ? 201 : 200);
@@ -134,58 +275,7 @@ class DanhGiaController extends Controller
     }
 
     /**
-     * Lấy danh sách đánh giá của một gia sư
-     */
-    public function getDanhGiaGiaSu($giaSuId): JsonResponse
-    {
-        try {
-            $giaSu = GiaSu::find($giaSuId);
-            
-            if (!$giaSu) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Gia sư không tồn tại'
-                ], 404);
-            }
-
-            // Lấy tất cả đánh giá của gia sư
-            $danhGiaList = DanhGia::whereHas('lop', function($q) use ($giaSuId) {
-                    $q->where('GiaSuID', $giaSuId);
-                })
-                ->with(['taiKhoan', 'lop.nguoiHoc'])
-                ->orderBy('NgayDanhGia', 'desc')
-                ->get();
-
-            // Tính điểm trung bình
-            $diemTrungBinh = $danhGiaList->avg('DiemSo');
-            $tongSoDanhGia = $danhGiaList->count();
-
-            // Phân bố đánh giá theo số sao
-            $phanBoSao = [];
-            for ($i = 1; $i <= 5; $i++) {
-                $phanBoSao[$i] = $danhGiaList->where('DiemSo', $i)->count();
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'danh_gia_list' => $danhGiaList,
-                    'diem_trung_binh' => round($diemTrungBinh, 1),
-                    'tong_so_danh_gia' => $tongSoDanhGia,
-                    'phan_bo_sao' => $phanBoSao,
-                ]
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lỗi server: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Kiểm tra người học đã đánh giá gia sư chưa
+     * [NGƯỜI HỌC] Kiểm tra xem mình đã đánh giá một gia sư cụ thể chưa
      */
     public function kiemTraDaDanhGia($giaSuId): JsonResponse
     {
@@ -202,7 +292,7 @@ class DanhGiaController extends Controller
 
             $nguoiHocId = $user->nguoiHoc->NguoiHocID;
 
-            // Tìm lớp học
+            // Tìm lớp học (đã/đang học) với gia sư này
             $lopHoc = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
                 ->where('GiaSuID', $giaSuId)
                 ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
@@ -220,7 +310,7 @@ class DanhGiaController extends Controller
                 ]);
             }
 
-            // Kiểm tra đã đánh giá chưa
+            // Kiểm tra đã đánh giá cho lớp này chưa
             $danhGia = DanhGia::where('LopYeuCauID', $lopHoc->LopYeuCauID)
                 ->where('TaiKhoanID', $user->TaiKhoanID)
                 ->with(['lop', 'taiKhoan'])
@@ -253,7 +343,53 @@ class DanhGiaController extends Controller
     }
 
     /**
-     * Xóa đánh giá của người học
+     * [NGƯỜI HỌC] Lấy danh sách tất cả đánh giá của chính mình
+     */
+    public function getDanhGiaCuaToiNguoiHoc(Request $request): JsonResponse
+    {
+        try {
+            /** @var TaiKhoan $user */
+            $user = Auth::user();
+
+            if (!$user || !$user->nguoiHoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Bạn không phải là người học.'
+                ], 403);
+            }
+
+            $danhGiaList = DanhGia::where('TaiKhoanID', $user->TaiKhoanID)
+                ->with([
+                    'lop' => function ($q) {
+                        $q->with([
+                            'giaSu' => function ($q2) {
+                                $q2->with('taiKhoan'); // Lấy thông tin tài khoản của gia sư
+                            },
+                            'monHoc',
+                            'khoiLop'
+                        ]);
+                    }
+                ])
+                ->orderBy('NgayDanhGia', 'desc')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $danhGiaList,
+                'total' => $danhGiaList->count()
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi server: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * [NGƯỜI HỌC] Xóa đánh giá của chính mình
      */
     public function xoaDanhGia($danhGiaId): JsonResponse
     {
