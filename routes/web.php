@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Web\GiaSuDashboardController;
+use App\Http\Controllers\Web\GiaSuLopHocController;
 use App\Http\Controllers\Web\NguoiHocDashboardController;
 use App\Http\Controllers\Web\LopHocController;
 use App\Http\Controllers\Web\LichHocWebController;
@@ -57,8 +58,15 @@ Route::middleware(['auth'])->group(function () {
         
         // Lớp học của tôi (các lớp đã được chấp nhận)
         Route::prefix('lop-hoc')->name('lophoc.')->group(function () {
-            Route::get('/', [GiaSuDashboardController::class, 'myClasses'])->name('index');
-            Route::get('/{id}', [GiaSuDashboardController::class, 'showClass'])->name('show');
+            Route::get('/', [GiaSuLopHocController::class, 'index'])->name('index');
+            Route::get('/{id}', [GiaSuLopHocController::class, 'show'])->name('show');
+            
+            // Chấp nhận/từ chối lời mời từ học viên
+            Route::post('/loi-moi/{yeuCauId}/chap-nhan', [GiaSuLopHocController::class, 'acceptInvitation'])->name('invitation.accept');
+            Route::post('/loi-moi/{yeuCauId}/tu-choi', [GiaSuLopHocController::class, 'rejectInvitation'])->name('invitation.reject');
+            
+            // Hủy đề nghị đã gửi
+            Route::post('/de-nghi/{yeuCauId}/huy', [GiaSuLopHocController::class, 'cancelProposal'])->name('proposal.cancel');
         });
         
         // Lịch học

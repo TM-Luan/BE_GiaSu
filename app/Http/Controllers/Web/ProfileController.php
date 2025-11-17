@@ -12,10 +12,10 @@ use Illuminate\Validation\Rules\Password;   // <-- THÊM DÒNG NÀY
 
 class ProfileController extends Controller
 {
-    // ... (Hàm index() và update() của bạn giữ nguyên) ...
+    // ===== NGƯỜI HỌC =====
     public function index()
     {
-        /** @var \App\Models\TaiKhoan $user */ // <--- THÊM DÒNG NÀY
+        /** @var \App\Models\TaiKhoan $user */
         $user = Auth::user();
         $user->load('nguoiHoc');
         return view('nguoihoc.profile-index', compact('user'));
@@ -23,7 +23,6 @@ class ProfileController extends Controller
 
     public function update(Request $request)
     {
-        // ... (Code cũ của bạn giữ nguyên) ...
         $user = Auth::user();
         $nguoiHoc = $user->nguoiHoc;
         $validated = $request->validate([
@@ -34,7 +33,7 @@ class ProfileController extends Controller
             'DiaChi' => 'nullable|string|max:255',
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
-        /** @var \App\Models\TaiKhoan $user */ // <--- THÊM DÒNG NÀY
+        /** @var \App\Models\TaiKhoan $user */
         $user->update(['SoDienThoai' => $validated['SoDienThoai'],]);
         $nguoiHocData = [
             'HoTen' => $validated['HoTen'],
@@ -54,14 +53,12 @@ class ProfileController extends Controller
     }
 
     /**
-     * THÊM HÀM MỚI NÀY VÀO
-     * Cập nhật mật khẩu
+     * Cập nhật mật khẩu người học
      */
     public function updatePassword(Request $request)
     {
         $user = Auth::user();
 
-        // 1. Validate input
         $validated = $request->validate([
             'current_password' => 'required|string',
             'password' => ['required', 'string', 'confirmed', Password::min(8)],
@@ -71,18 +68,96 @@ class ProfileController extends Controller
             'password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.'
         ]);
 
-        // 2. Check mật khẩu hiện tại (dựa trên CSDL sql.sql)
         if (!Hash::check($request->current_password, $user->MatKhauHash)) {
-            // Trả về lỗi nếu mật khẩu cũ không đúng
             return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.']);
         }
-        /** @var \App\Models\TaiKhoan $user */ // <--- THÊM DÒNG NÀY
-        // 3. Cập nhật mật khẩu mới
+        /** @var \App\Models\TaiKhoan $user */
         $user->update([
             'MatKhauHash' => Hash::make($validated['password']),
         ]);
 
-        // Trả về thông báo thành công (với key khác)
         return back()->with('success_password', 'Đổi mật khẩu thành công!');
+    }
+
+    // ===== GIA SƯ =====
+    /**
+     * Hiển thị trang thông tin cá nhân gia sư
+     */
+    public function tutorProfile()
+    {
+        /** @var \App\Models\TaiKhoan $user */
+        $user = Auth::user();
+        $user->load('giaSu');
+        return view('giasu.profile-index', compact('user'));
+    }
+
+    /**
+     * Cập nhật thông tin cá nhân gia sư
+     */
+    public function tutorProfileUpdate(Request $request)
+    {
+        $user = Auth::user();
+        $giaSu = $user->giaSu;
+        
+        // Kiểm tra nếu đang cập nhật mật khẩu
+        if ($request->input('update_type') === 'password') {
+            $validated = $request->validate([
+                'current_password' => 'required|string',
+                'password' => ['required', 'string', 'confirmed', Password::min(8)],
+            ], [
+                'current_password.required' => 'Bạn phải nhập mật khẩu hiện tại.',
+                'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
+                'password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.'
+            ]);
+
+            if (!Hash::check($request->current_password, $user->MatKhauHash)) {
+                return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.']);
+            }
+            /** @var \App\Models\TaiKhoan $user */
+            $user->update([
+                'MatKhauHash' => Hash::make($validated['password']),
+            ]);
+
+            return back()->with('success_password', 'Đổi mật khẩu thành công!');
+        }
+        
+        // Cập nhật thông tin profile bình thường
+        $validated = $request->validate([
+            'HoTen' => 'required|string|max:150',
+            'SoDienThoai' => ['required', 'string', 'max:20', Rule::unique('TaiKhoan')->ignore($user->TaiKhoanID, 'TaiKhoanID')],
+            'NgaySinh' => 'nullable|date',
+            'GioiTinh' => 'nullable|string|max:10',
+            'DiaChi' => 'nullable|string|max:255',
+            'ChuyenNganh' => 'nullable|string|max:255',
+            'TrinhDo' => 'nullable|string|max:100',
+            'KinhNghiem' => 'nullable|integer|min:0',
+            'GioiThieu' => 'nullable|string|max:1000',
+            'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        ]);
+        
+        /** @var \App\Models\TaiKhoan $user */
+        $user->update(['SoDienThoai' => $validated['SoDienThoai']]);
+        
+        $giaSuData = [
+            'HoTen' => $validated['HoTen'],
+            'NgaySinh' => $validated['NgaySinh'],
+            'GioiTinh' => $validated['GioiTinh'],
+            'DiaChi' => $validated['DiaChi'],
+            'ChuyenNganh' => $validated['ChuyenNganh'] ?? null,
+            'TrinhDo' => $validated['TrinhDo'] ?? null,
+            'KinhNghiem' => $validated['KinhNghiem'] ?? null,
+            'GioiThieu' => $validated['GioiThieu'] ?? null,
+        ];
+        
+        if ($request->hasFile('AnhDaiDien')) {
+            if ($giaSu->AnhDaiDien) {
+                Storage::disk('public')->delete($giaSu->AnhDaiDien);
+            }
+            $path = $request->file('AnhDaiDien')->store('avatars', 'public');
+            $giaSuData['AnhDaiDien'] = $path;
+        }
+        
+        $giaSu->update($giaSuData);
+        return back()->with('success_profile', 'Cập nhật thông tin thành công!');
     }
 }

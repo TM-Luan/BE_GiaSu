@@ -40,8 +40,8 @@
 
         <!-- Thông báo -->
         @if(session('success'))
-            <div class="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center">
-                <i data-lucide="check-circle" class="w-5 h-5 mr-3 text-green-600"></i>
+            <div class="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
+                <i data-lucide="check-circle" class="w-5 h-5 mr-3 text-blue-600"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
@@ -63,15 +63,15 @@
                             <!-- Header -->
                             <div class="flex items-start justify-between mb-4">
                                 <div class="flex items-center flex-1">
-                                    <div class="bg-green-100 p-2 rounded-lg mr-3">
-                                        <i data-lucide="book-open" class="w-5 h-5 text-green-600"></i>
+                                    <div class="bg-blue-100 p-2 rounded-lg mr-3">
+                                        <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
                                     </div>
                                     <div class="flex-1">
                                         <h3 class="font-bold text-gray-900 text-lg leading-tight">{{ $lopHoc->TieuDe }}</h3>
                                         <p class="text-sm text-gray-500 mt-0.5">{{ $lopHoc->monhoc->TenMonHoc ?? 'N/A' }}</p>
                                     </div>
                                 </div>
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                                     Đang dạy
                                 </span>
                             </div>
