@@ -2,15 +2,15 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\AuthController;
-use App\Http\Controllers\GiaSuController;
-use App\Http\Controllers\NguoiHocController;
-use App\Http\Controllers\LopHocYeuCauController;
-use App\Http\Controllers\YeuCauNhanLopController;
-use App\Http\Controllers\LichHocController;
-use App\Http\Controllers\DropdownDataController;
-use App\Http\Controllers\KhieuNaiController;
-use App\Http\Controllers\DanhGiaController;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\GiaSuController;
+use App\Http\Controllers\Api\NguoiHocController;
+use App\Http\Controllers\Api\LopHocYeuCauController;
+use App\Http\Controllers\Api\YeuCauNhanLopController;
+use App\Http\Controllers\Api\LichHocController;
+use App\Http\Controllers\Api\DropdownDataController;
+use App\Http\Controllers\Api\KhieuNaiController;
+use App\Http\Controllers\Api\DanhGiaController;
 
 // Admin Controllers
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;

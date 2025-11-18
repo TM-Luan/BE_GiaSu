@@ -1,14 +1,13 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 use App\Models\NguoiHoc;
 use Illuminate\Http\Request;
 use App\Http\Resources\NguoiHocResources;
-use App\Http\Requests\NguoiHocRequest;
 use App\Models\LopHocYeuCau;
 use App\Http\Resources\LopHocYeuCauResource;
 use Illuminate\Support\Facades\Log; // Thêm để debug nếu cần
-
+use App\Http\Controllers\Controller;
 class NguoiHocController extends Controller
 {
     /**

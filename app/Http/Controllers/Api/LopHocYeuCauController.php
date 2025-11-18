@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 use App\Models\LopHocYeuCau;
 use App\Http\Requests\LopHocYeuCauRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\LopHocYeuCauResource;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
 class LopHocYeuCauController extends Controller
 {
     /**

@@ -1,18 +1,11 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\GiaSuRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\GiaSuResource;
 use App\Models\GiaSu;
-use Illuminate\Http\Request; // <-- Đảm bảo bạn đã import Request
-
-// === THÊM CÁC IMPORT CẦN THIẾT ===
-use App\Models\LopHocYeuCau;
-use App\Models\YeuCauNhanLop;
-use App\Http\Resources\LopHocYeuCauResource;
-// === KẾT THÚC THÊM IMPORT ===
 
 class GiaSuController extends Controller
 {

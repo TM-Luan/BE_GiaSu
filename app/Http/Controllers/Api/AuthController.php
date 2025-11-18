@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Models\TaiKhoan;
@@ -9,7 +9,7 @@ use App\Models\NguoiHoc;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
-
+use App\Http\Controllers\Controller;
 class AuthController extends Controller
 {
     public function register(Request $request)

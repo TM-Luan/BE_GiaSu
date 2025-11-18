@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Http\Resources\LopHocYeuCauResource;
 use App\Http\Resources\YeuCauNhanLopResource;
@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
+use App\Http\Controllers\Controller;
 class YeuCauNhanLopController extends Controller
 {
     private const STATUS_PENDING = 'Pending';

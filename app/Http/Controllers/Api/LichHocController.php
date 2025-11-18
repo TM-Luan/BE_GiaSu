@@ -1,5 +1,5 @@
 <?php
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use App\Models\LichHoc;
 use App\Models\LopHocYeuCau;
@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
-use App\Helpers\JsonHelper;
+use App\Http\Controllers\Controller;
 
 class LichHocController extends Controller
 {

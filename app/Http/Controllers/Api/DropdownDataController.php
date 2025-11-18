@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
 use Illuminate\Http\Request;
 use App\Models\MonHoc;
 use App\Models\KhoiLop;
 use App\Models\DoiTuong;
-// SỬA: Xóa 'use App\Models\ThoiGianDay;'
+use App\Http\Controllers\Controller;
 
 class DropdownDataController extends Controller
 {
