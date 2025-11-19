@@ -32,7 +32,7 @@ class GiaSuLopHocController extends Controller
 
         // TAB 1: LỚP ĐANG DẠY
         // Lấy các lớp mà gia sư đang dạy (TrangThai = 'DangHoc')
-        $lopDangDay = LopHocYeuCau::with(['nguoihoc', 'monhoc'])
+        $lopDangDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc'])
             ->where('GiaSuID', $giaSuId)
             ->where('TrangThai', 'DangHoc')
             ->orderBy('NgayTao', 'desc')
@@ -42,7 +42,7 @@ class GiaSuLopHocController extends Controller
         // Lấy các yêu cầu nhận lớp liên quan đến gia sư này
         // - Gia sư GỬI đề nghị (VaiTroNguoiGui = 'GiaSu', TrangThai = 'ChoDuyet' hoặc 'TuChoi')
         // - Học viên MỜI gia sư (VaiTroNguoiGui = 'NguoiHoc', TrangThai = 'ChoDuyet' hoặc 'TuChoi')
-        $yeuCauDeNghi = YeuCauNhanLop::with(['lophoc.nguoihoc', 'lophoc.monhoc'])
+        $yeuCauDeNghi = YeuCauNhanLop::with(['lophoc.nguoiHoc', 'lophoc.monHoc'])
             ->where('GiaSuID', $giaSuId)
             ->whereIn('TrangThai', ['ChoDuyet', 'TuChoi'])
             ->orderBy('NgayTao', 'desc')
@@ -170,6 +170,7 @@ class GiaSuLopHocController extends Controller
 
     /**
      * Xem chi tiết lớp học (cho cả lớp đang dạy và đề nghị)
+     * Gia sư có thể xem chi tiết bất kỳ lớp học nào để quyết định gửi đề nghị
      */
     public function show($id)
     {
@@ -181,30 +182,65 @@ class GiaSuLopHocController extends Controller
         }
 
         // Tìm lớp học
-        $lopHoc = LopHocYeuCau::with(['nguoihoc', 'monhoc', 'giasu'])
+        $lopHoc = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop', 'giaSu'])
             ->findOrFail($id);
 
-        // Kiểm tra quyền xem (phải là gia sư của lớp hoặc có yêu cầu liên quan)
-        $hasAccess = false;
-        
-        // Case 1: Đang dạy lớp này
-        if ($lopHoc->GiaSuID == $giaSu->GiaSuID) {
-            $hasAccess = true;
-        }
-        
-        // Case 2: Có yêu cầu nhận lớp này
+        // Kiểm tra xem gia sư có yêu cầu liên quan đến lớp này không
         $yeuCau = YeuCauNhanLop::where('LopYeuCauID', $id)
             ->where('GiaSuID', $giaSu->GiaSuID)
             ->first();
-        
-        if ($yeuCau) {
-            $hasAccess = true;
-        }
-
-        if (!$hasAccess) {
-            abort(403, 'Bạn không có quyền xem lớp học này.');
-        }
 
         return view('giasu.lop-hoc-show', compact('lopHoc', 'yeuCau'));
+    }
+
+    /**
+     * Xem lịch học của một lớp cụ thể
+     */
+    public function schedule($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học
+        $lopHoc = LopHocYeuCau::with(['nguoiHoc', 'monHoc'])
+            ->findOrFail($id);
+
+        // Kiểm tra quyền (phải là gia sư của lớp)
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền xem lịch học của lớp này.');
+        }
+
+        // Chuyển hướng đến trang lịch học chung với filter
+        return redirect()->route('giasu.lichhoc.index', ['lop' => $id]);
+    }
+
+    /**
+     * Trang thêm lịch học mới
+     */
+    public function addSchedule($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học
+        $lopHoc = LopHocYeuCau::with(['nguoiHoc', 'monHoc'])
+            ->findOrFail($id);
+
+        // Kiểm tra quyền (phải là gia sư của lớp)
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền thêm lịch học cho lớp này.');
+        }
+
+        // Trả về view thêm lịch học (tạm thời chuyển về lịch học)
+        return redirect()->route('giasu.lichhoc.index')
+            ->with('info', 'Chức năng thêm lịch học đang được phát triển.');
     }
 }

@@ -28,15 +28,15 @@
     $tenNguoiHoc = $nguoiHoc?->taiKhoan?->HoTen ?? 'Học sinh';
 @endphp
 
-<div class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-green-300 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
+<div class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-blue-300 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
     
     {{-- Left border accent on hover --}}
-    <div class="absolute left-0 top-4 bottom-4 w-1 bg-green-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+    <div class="absolute left-0 top-4 bottom-4 w-1 bg-blue-500 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
 
     {{-- Header: Class title and level --}}
     <div class="mb-3">
         <div class="flex items-start justify-between gap-2 mb-2">
-            <h3 class="font-bold text-lg text-gray-900 group-hover:text-green-600 transition-colors line-clamp-2 flex-1">
+            <h3 class="font-bold text-lg text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 flex-1">
                 {{ $tenLop }}
             </h3>
             @if($khoiLop)
@@ -73,7 +73,7 @@
         {{-- Fee --}}
         <div class="flex items-center text-sm text-gray-600">
             <i data-lucide="banknote" class="w-4 h-4 mr-2 text-gray-400 flex-shrink-0"></i>
-            <span class="font-semibold text-green-600">
+            <span class="font-semibold text-blue-600">
                 {{ $hienThiHocPhi }}
                 <span class="text-gray-400 font-normal text-xs">/buổi</span>
             </span>
@@ -95,8 +95,8 @@
     {{-- Action buttons --}}
     <div class="grid grid-cols-2 gap-3 mt-auto">
         {{-- View details button --}}
-        <a href="#" 
-           class="flex items-center justify-center py-2.5 px-4 rounded-xl text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-colors text-sm group-hover:bg-green-50 group-hover:text-green-600">
+        <a href="{{ route('giasu.lophoc.show', $lop->LopYeuCauID) }}" 
+           class="flex items-center justify-center py-2.5 px-4 rounded-xl text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-colors text-sm group-hover:bg-blue-50 group-hover:text-blue-600">
             <i data-lucide="eye" class="w-4 h-4 mr-1"></i>
             Chi tiết
         </a>
@@ -104,7 +104,7 @@
         {{-- Propose button --}}
         <button type="button" 
                 onclick="openDeNghiModal({{ $lop->LopYeuCauID }}, '{{ addslashes($tenLop) }}')"
-                class="flex items-center justify-center py-2.5 px-4 rounded-xl text-white font-bold bg-green-600 hover:bg-green-700 transition-colors text-sm shadow-md hover:shadow-lg">
+                class="flex items-center justify-center py-2.5 px-4 rounded-xl text-white font-bold bg-blue-600 hover:bg-blue-700 transition-colors text-sm shadow-md hover:shadow-lg">
             <i data-lucide="send" class="w-4 h-4 mr-1"></i>
             Đề nghị dạy
         </button>

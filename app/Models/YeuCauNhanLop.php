@@ -14,7 +14,15 @@ class YeuCauNhanLop extends Model
         'TrangThai','GhiChu','NgayTao','NgayCapNhat'
     ];
 
-    protected $dates = ['NgayTao','NgayCapNhat'];
+    protected $casts = [
+        'NgayTao' => 'datetime',
+        'NgayCapNhat' => 'datetime'
+    ];
+
+    public function lophoc()
+    {
+        return $this->belongsTo(LopHocYeuCau::class, 'LopYeuCauID', 'LopYeuCauID');
+    }
 
     public function lop()
     {

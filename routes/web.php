@@ -61,6 +61,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [GiaSuLopHocController::class, 'index'])->name('index');
             Route::get('/{id}', [GiaSuLopHocController::class, 'show'])->name('show');
             
+            // Xem lịch học của lớp
+            Route::get('/{id}/lich-hoc', [GiaSuLopHocController::class, 'schedule'])->name('schedule');
+            // Thêm lịch học mới
+            Route::get('/{id}/lich-hoc/them', [GiaSuLopHocController::class, 'addSchedule'])->name('schedule.add');
+            
             // Chấp nhận/từ chối lời mời từ học viên
             Route::post('/loi-moi/{yeuCauId}/chap-nhan', [GiaSuLopHocController::class, 'acceptInvitation'])->name('invitation.accept');
             Route::post('/loi-moi/{yeuCauId}/tu-choi', [GiaSuLopHocController::class, 'rejectInvitation'])->name('invitation.reject');
