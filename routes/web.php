@@ -11,6 +11,7 @@ use App\Http\Controllers\Web\NguoiHocDashboardController;
 use App\Http\Controllers\Web\LopHocController;
 use App\Http\Controllers\Web\LichHocWebController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\LandingController;
 
 // Admin Web Controllers
 use App\Http\Controllers\Admin\Auth\AdminLoginController;
@@ -34,8 +35,8 @@ use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
 
 // ===== PUBLIC ROUTES =====
 
-// Homepage redirect
-Route::get('/', fn() => redirect()->route('login'));
+// Landing page
+Route::get('/', [LandingController::class, 'index'])->name('home');
 
 // Authentication
 Route::get('register', [RegisterController::class, 'showRegisterForm'])->name('register');
