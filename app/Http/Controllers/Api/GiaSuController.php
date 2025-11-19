@@ -11,22 +11,16 @@ class GiaSuController extends Controller
 {
     // ... (Các hàm index, show, store, update, destroy của bạn giữ nguyên) ...
 
-    public function index()
-    {
-        $tutors = GiaSu::with('taiKhoan')->get();
-        return GiaSuResource::collection($tutors);
-    }
+public function index()
+{
+    $tutors = GiaSu::with('taiKhoan')
+        ->where('TrangThai', 1)   // thêm điều kiện trạng thái = 1
+        ->get();
 
-    /**
-     * Tìm kiếm và lọc danh sách gia sư (Dành cho Học Viên)
-     * API: GET /giasu/search
-     * Filters:
-     * - subject_id: Lọc theo chuyên môn (môn học)
-     * - min_rating, max_rating: Lọc theo đánh giá
-     * - experience_level: Lọc theo kinh nghiệm
-     * - gender: Lọc theo giới tính
-     * - keyword: Tìm kiếm theo tên
-     */
+    return GiaSuResource::collection($tutors);
+}
+
+
     public function search(SearchRequest $request)
     {
         try {
