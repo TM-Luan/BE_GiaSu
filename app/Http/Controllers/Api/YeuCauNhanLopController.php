@@ -110,7 +110,7 @@ class YeuCauNhanLopController extends Controller
 
         // 4. <<< SỬA VALIDATION: Đổi 'LopHocID' thành 'LopYeuCauID' và sửa tên bảng
         $request->validate([
-            'LopYeuCauID' => 'required|exists:lophocyeucau,LopYeuCauID',
+            'LopYeuCauID' => 'required|exists:LopHocYeuCau,LopYeuCauID',
             'GhiChu' => 'nullable|string|max:500', // Thêm GhiChu
         ]);
 

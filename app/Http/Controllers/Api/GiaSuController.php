@@ -55,10 +55,10 @@ class GiaSuController extends Controller
                 // Sử dụng join với subquery để tính AVG rating
                 $query->whereExists(function($subQuery) use ($minRating) {
                     $subQuery->selectRaw('AVG(danhgia.DiemSo) as avg_rating')
-                            ->from('lophocyeucau')
-                            ->leftJoin('danhgia', 'lophocyeucau.LopYeuCauID', '=', 'danhgia.LopYeuCauID')
-                            ->whereColumn('lophocyeucau.GiaSuID', 'giasu.GiaSuID')
-                            ->groupBy('lophocyeucau.GiaSuID')
+                            ->from('LopHocYeuCau')
+                            ->leftJoin('danhgia', 'LopHocYeuCau.LopYeuCauID', '=', 'danhgia.LopYeuCauID')
+                            ->whereColumn('LopHocYeuCau.GiaSuID', 'giasu.GiaSuID')
+                            ->groupBy('LopHocYeuCau.GiaSuID')
                             ->havingRaw('AVG(danhgia.DiemSo) >= ?', [$minRating]);
                 });
             }
@@ -68,10 +68,10 @@ class GiaSuController extends Controller
                 
                 $query->whereExists(function($subQuery) use ($maxRating) {
                     $subQuery->selectRaw('AVG(danhgia.DiemSo) as avg_rating')
-                            ->from('lophocyeucau')
-                            ->leftJoin('danhgia', 'lophocyeucau.LopYeuCauID', '=', 'danhgia.LopYeuCauID')
-                            ->whereColumn('lophocyeucau.GiaSuID', 'giasu.GiaSuID')
-                            ->groupBy('lophocyeucau.GiaSuID')
+                            ->from('LopHocYeuCau')
+                            ->leftJoin('danhgia', 'LopHocYeuCau.LopYeuCauID', '=', 'danhgia.LopYeuCauID')
+                            ->whereColumn('LopHocYeuCau.GiaSuID', 'giasu.GiaSuID')
+                            ->groupBy('LopHocYeuCau.GiaSuID')
                             ->havingRaw('AVG(danhgia.DiemSo) <= ?', [$maxRating]);
                 });
             }

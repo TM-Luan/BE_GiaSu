@@ -10,8 +10,13 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\DB; // <<< THÊM DÒNG NÀY
+
 class AuthController extends Controller
 {
+    /**
+     * SỬA 1: SỬ DỤNG DB::TRANSACTION ĐỂ ĐĂNG KÝ
+     */
     public function register(Request $request)
     {
         $fields = $request->validate([
@@ -34,50 +39,60 @@ class AuthController extends Controller
         ]);
 
         try {
-            // 1. Tạo Tài Khoản (TrangThai = 1 là "Có thể đăng nhập")
-            $tk = TaiKhoan::create([
-                'HoTen' => $request->HoTen,
-                'Email' => $request->Email,
-                'MatKhauHash' => Hash::make($request->MatKhau),
-                'SoDienThoai' => $request->SoDienThoai,
-                'TrangThai' => 1 // 1 = Tài khoản có thể đăng nhập
-            ]);
-
-            // 2. Tạo Phân Quyền
-            PhanQuyen::create([
-                'TaiKhoanID' => $tk->TaiKhoanID,
-                'VaiTroID' => $request->VaiTro
-            ]);
-
-            // 3. Tạo Hồ Sơ (Profile) với trạng thái nghiệp vụ
-            if ($request->VaiTro == 2) {
-                // Gia sư mặc định là 2 (Chờ duyệt)
-                GiaSu::create([
-                    'TaiKhoanID' => $tk->TaiKhoanID,
-                    'HoTen' => $request->HoTen,
-                    'TrangThai' => 2 // 2 = Chờ duyệt
+            // Bọc logic bằng transaction
+            $createdData = DB::transaction(function () use ($request) {
+                
+                // 1. Tạo Tài Khoản
+                $tk = TaiKhoan::create([
+                    'HoTen' => $request->HoTen, // Giữ HoTen ở đây để dễ truy vấn (nếu cần)
+                    'Email' => $request->Email,
+                    'MatKhauHash' => Hash::make($request->MatKhau),
+                    'SoDienThoai' => $request->SoDienThoai,
+                    'TrangThai' => 1 
                 ]);
-            } else if ($request->VaiTro == 3) {
-                 // Người học mặc định là 1 (Hoạt động)
-                NguoiHoc::create([
-                    'TaiKhoanID' => $tk->TaiKhoanID,
-                    'HoTen' => $request->HoTen,
-                    'TrangThai' => 1 // 1 = Hoạt động
-                ]);
-            }
 
+                // 2. Tạo Phân Quyền
+                PhanQuyen::create([
+                    'TaiKhoanID' => $tk->TaiKhoanID,
+                    'VaiTroID' => $request->VaiTro
+                ]);
+
+                // 3. Tạo Hồ Sơ (Profile)
+                if ($request->VaiTro == 2) {
+                    GiaSu::create([
+                        'TaiKhoanID' => $tk->TaiKhoanID,
+                        'HoTen' => $request->HoTen, // HoTen này là "nguồn tin cậy"
+                        'TrangThai' => 2 
+                    ]);
+                } else if ($request->VaiTro == 3) {
+                    NguoiHoc::create([
+                        'TaiKhoanID' => $tk->TaiKhoanID,
+                        'HoTen' => $request->HoTen, // HoTen này là "nguồn tin cậy"
+                        'TrangThai' => 1
+                    ]);
+                }
+
+                // Trả về dữ liệu cần thiết
+                return [
+                    'TaiKhoanID' => $tk->TaiKhoanID,
+                    'Email' => $tk->Email,
+                ];
+            });
+
+            // Nếu mọi thứ thành công
             return response()->json([
                 'success' => true,
                 'message' => 'Đăng ký thành công',
                 'data' => [
-                    'TaiKhoanID' => $tk->TaiKhoanID,
-                    'Email' => $tk->Email,
+                    'TaiKhoanID' => $createdData['TaiKhoanID'],
+                    'Email' => $createdData['Email'],
                     'HoTen' => $request->HoTen,
                     'VaiTro' => $request->VaiTro
                 ]
             ], 201);
 
         } catch (\Exception $e) {
+            // Nếu có lỗi, transaction sẽ tự động rollback
             return response()->json([
                 'success' => false,
                 'message' => 'Đăng ký thất bại',
@@ -131,6 +146,7 @@ class AuthController extends Controller
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
+        // Logic lấy HoTen từ bảng GiaSu/NguoiHoc (Đã chính xác)
         $hoTen = $tk->HoTen;
         if ($vaiTro == 2) { 
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
@@ -178,6 +194,9 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * SỬA 2: THÊM LOGIC LẤY THÔNG TIN NGƯỜI HỌC (roleId == 3)
+     */
     public function getProfile(Request $request)
     {
         try {
@@ -194,8 +213,7 @@ class AuthController extends Controller
             ];
 
             if ($roleId == 2) {
-                // ⭐️ SỬA ĐỔI: Thêm ->with('monHoc')
-                $giaSu = GiaSu::with('monHoc') // <<< THÊM DÒNG NÀY
+                $giaSu = GiaSu::with('monHoc') 
                     ->where('TaiKhoanID', $user->TaiKhoanID)
                     ->first();
                     
@@ -217,13 +235,25 @@ class AuthController extends Controller
                         'KinhNghiem' => $giaSu->KinhNghiem,
                         'AnhDaiDien' => $giaSu->AnhDaiDien,
                         'MonID' => $giaSu->MonID,
-                        
-                        // ⭐️ SỬA ĐỔI: Trả về cả tên môn học
                         'TenMon' => $giaSu->monHoc ? $giaSu->monHoc->TenMon : null
                     ]);
                 }
             } elseif ($roleId == 3) {
-                // ... (logic NguoiHoc giữ nguyên)
+                // <<< BẮT ĐẦU SỬA: Thêm logic cho Người Học
+                $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
+                
+                if ($nguoiHoc) {
+                    $profileData = array_merge($profileData, [
+                        'NguoiHocID' => $nguoiHoc->NguoiHocID,
+                        'HoTen' => $nguoiHoc->HoTen,
+                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai, 
+                        'DiaChi' => $nguoiHoc->DiaChi,
+                        'GioiTinh' => $nguoiHoc->GioiTinh,
+                        'NgaySinh' => $nguoiHoc->NgaySinh,
+                        'AnhDaiDien' => $nguoiHoc->AnhDaiDien,
+                    ]);
+                }
+                // <<< KẾT THÚC SỬA
             }
 
             return response()->json([
@@ -239,11 +269,14 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * SỬA 3 & 4: SỬA TÊN BẢNG MonHoc VÀ BỎ CẬP NHẬT HoTen Ở TaiKhoan
+     */
     public function updateProfile(Request $request)
     {
         $user = $request->user();
 
-        // VALIDATION (Đã xóa Email, thêm MonID)
+        // VALIDATION
         $request->validate([
             'HoTen' => 'nullable|string|max:255',
             'SoDienThoai' => [
@@ -253,7 +286,9 @@ class AuthController extends Controller
             'DiaChi' => 'nullable|string|max:255',
             'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
             'NgaySinh' => 'nullable|date|before:today',
-            'MonID' => 'nullable|integer|exists:monhoc,MonID', // <<< ĐÃ THÊM
+
+            // SỬA 3: Sửa 'monhoc' thành 'MonHoc' (chính xác tên bảng CSDL)
+            'MonID' => 'nullable|integer|exists:MonHoc,MonID', 
 
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -268,10 +303,14 @@ class AuthController extends Controller
         ]);
 
         try {
-            // Cập nhật bảng TaiKhoan (Đã xóa logic Email)
+            // Cập nhật bảng TaiKhoan
             $updateData = [];
             if ($request->has('SoDienThoai')) $updateData['SoDienThoai'] = $request->SoDienThoai;
-            if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen;
+            
+            // SỬA 4: Xóa dòng cập nhật HoTen ở đây.
+            // HoTen sẽ được cập nhật vào bảng GiaSu/NguoiHoc
+            // if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen; // <<< XÓA DÒNG NÀY
+
             if (!empty($updateData)) $user->update($updateData);
 
             // Cập nhật bảng GiaSu / NguoiHoc
@@ -307,11 +346,11 @@ class AuthController extends Controller
                 $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($giaSu) {
                     $giaSuUpdateData = [];
-                    // Cập nhật text fields
+                    // Cập nhật text fields (Đã bao gồm HoTen, MonID - Chính xác)
                     $fields = [
                         'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
                         'BangCap', 'TruongDaoTao', 'ChuyenNganh',
-                        'ThanhTich', 'KinhNghiem', 'MonID' // <<< ĐÃ THÊM
+                        'ThanhTich', 'KinhNghiem', 'MonID'
                     ];
                     foreach ($fields as $field) {
                         if ($request->has($field)) {
@@ -339,7 +378,7 @@ class AuthController extends Controller
                 $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
                 if ($nguoiHoc) {
                     $nguoiHocUpdateData = [];
-                    // Cập nhật text fields
+                    // Cập nhật text fields (Đã bao gồm HoTen - Chính xác)
                     $fields = ['HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh'];
                     foreach ($fields as $field) {
                         if ($request->has($field)) {
