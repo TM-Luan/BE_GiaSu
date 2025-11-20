@@ -99,8 +99,9 @@ class GiaSuLopHocController extends Controller
 
             DB::commit();
 
-            return redirect()->route('giasu.lophoc.index', ['tab' => 'danghoc'])
-                ->with('success', 'Đã chấp nhận lời mời dạy học!');
+            // Chuyển đến trang tạo lịch thay vì về danh sách
+            return redirect()->route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID)
+                ->with('success', 'Đã chấp nhận lời mời dạy học! Vui lòng tạo lịch học.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -244,5 +245,377 @@ class GiaSuLopHocController extends Controller
         // Trả về view thêm lịch học (tạm thời chuyển về lịch học)
         return redirect()->route('giasu.lichhoc.index')
             ->with('info', 'Chức năng thêm lịch học đang được phát triển.');
+    }
+
+    /**
+     * Hiển thị trang thanh toán phí nhận lớp
+     */
+    public function showPayment($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học
+        $lopHoc = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])
+            ->findOrFail($id);
+
+        // Kiểm tra quyền
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền thanh toán cho lớp này.');
+        }
+
+        // Kiểm tra đã thanh toán chưa
+        if ($lopHoc->TrangThaiThanhToan === 'Paid') {
+            return redirect()->route('giasu.lophoc.index')
+                ->with('info', 'Lớp học này đã được thanh toán.');
+        }
+
+        // Tính phí nhận lớp (30% học phí * số buổi/tuần * 4 tuần)
+        $phiNhanLop = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
+
+        return view('giasu.payment', compact('lopHoc', 'phiNhanLop'));
+    }
+
+    /**
+     * Xử lý thanh toán phí nhận lớp
+     */
+    public function processPayment(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'loai_giao_dich' => 'required|in:VNPAY,MoMo,ZaloPay,ChuyenKhoan'
+        ]);
+
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học
+        $lopHoc = LopHocYeuCau::findOrFail($id);
+
+        // Kiểm tra quyền
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403);
+        }
+
+        // Kiểm tra đã thanh toán chưa
+        if ($lopHoc->TrangThaiThanhToan === 'Paid') {
+            return redirect()->route('giasu.lophoc.index')
+                ->with('info', 'Lớp học này đã được thanh toán.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Tính phí
+            $soTien = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
+
+            // Tạo giao dịch
+            DB::table('GiaoDich')->insert([
+                'LopYeuCauID' => $lopHoc->LopYeuCauID,
+                'TaiKhoanID' => $user->TaiKhoanID,
+                'SoTien' => $soTien,
+                'LoaiGiaoDich' => $validated['loai_giao_dich'],
+                'GhiChu' => 'Thanh toán phí nhận lớp #' . $lopHoc->LopYeuCauID,
+                'ThoiGian' => now(),
+                'TrangThai' => 'Thành công',
+                'MaGiaoDich' => 'TXN_' . time() . '_' . $user->TaiKhoanID
+            ]);
+
+            // Cập nhật trạng thái thanh toán
+            $lopHoc->update(['TrangThaiThanhToan' => 'Paid']);
+
+            DB::commit();
+
+            // Kiểm tra xem có dữ liệu lịch học trong session không
+            $scheduleData = session('schedule_data');
+            
+            if ($scheduleData && $scheduleData['lop_id'] == $id) {
+                // Có dữ liệu lịch từ session → Tự động lưu lịch học
+                session()->forget('schedule_data'); // Xóa session
+                
+                // Redirect đến hàm lưu lịch với dữ liệu từ session
+                return $this->saveScheduleFromSession($id, $scheduleData);
+            }
+
+            // Nếu không có dữ liệu lịch → Chuyển đến trang tạo lịch
+            return redirect()->route('giasu.lophoc.schedule.create', $id)
+                ->with('success', 'Thanh toán thành công! Vui lòng tạo lịch học.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hiển thị trang tạo lịch học tự động
+     */
+    public function showCreateSchedule($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học
+        $lopHoc = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])
+            ->findOrFail($id);
+
+        // Kiểm tra quyền
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền tạo lịch cho lớp này.');
+        }
+
+        // Cho phép vào trang tạo lịch kể cả chưa thanh toán
+        // Khi submit sẽ kiểm tra và yêu cầu thanh toán
+
+        return view('giasu.create-schedule', compact('lopHoc'));
+    }
+
+    /**
+     * Lưu lịch học tự động
+     */
+    public function storeSchedule(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'ngay_bat_dau' => 'required|date|after_or_equal:today',
+            'so_tuan' => 'required|integer|min:1|max:52',
+            'duong_dan' => 'nullable|url',
+            'buoi_hoc' => 'required|array|min:1',
+            'buoi_hoc.*.thu' => 'required|integer|between:1,7',
+            'buoi_hoc.*.gio' => 'required|date_format:H:i'
+        ]);
+
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $lopHoc = LopHocYeuCau::findOrFail($id);
+
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403);
+        }
+
+        // Kiểm tra trạng thái thanh toán
+        if ($lopHoc->TrangThaiThanhToan !== 'Paid') {
+            // Lưu thông tin lịch học vào session để dùng sau khi thanh toán
+            session([
+                'schedule_data' => [
+                    'lop_id' => $id,
+                    'ngay_bat_dau' => $validated['ngay_bat_dau'],
+                    'so_tuan' => $validated['so_tuan'],
+                    'duong_dan' => $validated['duong_dan'] ?? null,
+                    'buoi_hoc' => $validated['buoi_hoc']
+                ]
+            ]);
+
+            // Chuyển đến trang thanh toán
+            return redirect()->route('giasu.lophoc.payment', $id)
+                ->with('info', 'Vui lòng thanh toán phí nhận lớp để hoàn tất tạo lịch.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $ngayBatDau = \Carbon\Carbon::parse($validated['ngay_bat_dau']);
+            $soTuan = $validated['so_tuan'];
+            $duongDan = $validated['duong_dan'] ?? null;
+            $buoiHoc = $validated['buoi_hoc'];
+
+            // Tạo lịch học theo tuần
+            for ($tuan = 0; $tuan < $soTuan; $tuan++) {
+                foreach ($buoiHoc as $buoi) {
+                    $thu = $buoi['thu']; // 1=CN, 2=T2, 3=T3,...7=T7
+                    $gio = $buoi['gio'];
+
+                    // Tính ngày học
+                    $ngayHoc = $ngayBatDau->copy()->addWeeks($tuan);
+                    
+                    // Điều chỉnh sang đúng thứ
+                    $currentDayOfWeek = $ngayHoc->dayOfWeek == 0 ? 7 : $ngayHoc->dayOfWeek; // Carbon: 0=CN
+                    $targetDayOfWeek = $thu == 1 ? 7 : $thu - 1; // Chuyển về format Carbon
+                    $diff = $targetDayOfWeek - $currentDayOfWeek;
+                    $ngayHoc->addDays($diff);
+
+                    DB::table('LichHoc')->insert([
+                        'LopYeuCauID' => $lopHoc->LopYeuCauID,
+                        'NgayHoc' => $ngayHoc->format('Y-m-d'),
+                        'ThoiGianBatDau' => $gio,
+                        'ThoiGianKetThuc' => \Carbon\Carbon::parse($gio)->addMinutes($lopHoc->ThoiLuong ?? 90)->format('H:i'),
+                        'DuongDan' => $duongDan,
+                        'TrangThai' => 'ChuaDienRa',
+                        'NgayTao' => now()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('giasu.lophoc.index')
+                ->with('success', 'Tạo lịch học thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Cập nhật ghi chú cho đề nghị
+     */
+    public function updateProposalNote(Request $request, $yeuCauId)
+    {
+        $validated = $request->validate([
+            'ghi_chu' => 'nullable|string|max:500'
+        ]);
+
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $yeuCau = YeuCauNhanLop::findOrFail($yeuCauId);
+
+        if ($yeuCau->GiaSuID != $giaSu->GiaSuID) {
+            abort(403);
+        }
+
+        try {
+            $yeuCau->update([
+                'GhiChu' => $validated['ghi_chu'],
+                'NgayCapNhat' => now()
+            ]);
+
+            return back()->with('success', 'Cập nhật ghi chú thành công!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hủy lớp học chưa thanh toán
+     */
+    public function cancelClass($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $lopHoc = LopHocYeuCau::findOrFail($id);
+
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403);
+        }
+
+        // Chỉ cho phép hủy nếu chưa thanh toán
+        if ($lopHoc->TrangThaiThanhToan === 'Paid') {
+            return back()->with('error', 'Không thể hủy lớp đã thanh toán. Vui lòng liên hệ quản trị viên.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Cập nhật trạng thái lớp học về TimGiaSu
+            $lopHoc->update([
+                'TrangThai' => 'TimGiaSu',
+                'GiaSuID' => null // Bỏ gia sư khỏi lớp
+            ]);
+
+            // Cập nhật hoặc xóa yêu cầu nhận lớp
+            YeuCauNhanLop::where('LopYeuCauID', $id)
+                ->where('GiaSuID', $giaSu->GiaSuID)
+                ->delete();
+
+            DB::commit();
+
+            return redirect()->route('giasu.lophoc.index')
+                ->with('success', 'Đã hủy lớp học thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Lưu lịch học từ dữ liệu session (sau khi thanh toán)
+     */
+    private function saveScheduleFromSession($id, $scheduleData)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $lopHoc = LopHocYeuCau::findOrFail($id);
+
+        if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
+            abort(403);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $ngayBatDau = \Carbon\Carbon::parse($scheduleData['ngay_bat_dau']);
+            $soTuan = $scheduleData['so_tuan'];
+            $duongDan = $scheduleData['duong_dan'] ?? null;
+            $buoiHoc = $scheduleData['buoi_hoc'];
+
+            // Tạo lịch học theo tuần
+            for ($tuan = 0; $tuan < $soTuan; $tuan++) {
+                foreach ($buoiHoc as $buoi) {
+                    $thu = $buoi['thu']; // 1=CN, 2=T2, 3=T3,...7=T7
+                    $gio = $buoi['gio'];
+
+                    // Tính ngày học
+                    $ngayHoc = $ngayBatDau->copy()->addWeeks($tuan);
+                    
+                    // Điều chỉnh sang đúng thứ
+                    $currentDayOfWeek = $ngayHoc->dayOfWeek == 0 ? 7 : $ngayHoc->dayOfWeek; // Carbon: 0=CN
+                    $targetDayOfWeek = $thu == 1 ? 7 : $thu - 1; // Chuyển về format Carbon
+                    $diff = $targetDayOfWeek - $currentDayOfWeek;
+                    $ngayHoc->addDays($diff);
+
+                    DB::table('LichHoc')->insert([
+                        'LopYeuCauID' => $lopHoc->LopYeuCauID,
+                        'NgayHoc' => $ngayHoc->format('Y-m-d'),
+                        'ThoiGianBatDau' => $gio,
+                        'ThoiGianKetThuc' => \Carbon\Carbon::parse($gio)->addMinutes($lopHoc->ThoiLuong ?? 90)->format('H:i'),
+                        'DuongDan' => $duongDan,
+                        'TrangThai' => 'ChuaDienRa',
+                        'NgayTao' => now()
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('giasu.lophoc.index')
+                ->with('success', 'Thanh toán và tạo lịch học thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->route('giasu.lophoc.index')
+                ->with('error', 'Thanh toán thành công nhưng có lỗi khi tạo lịch: ' . $e->getMessage());
+        }
     }
 }

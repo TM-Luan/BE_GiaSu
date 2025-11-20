@@ -101,18 +101,59 @@
                                 @endif
                             </div>
 
+                            <!-- Badge trạng thái thanh toán -->
+                            @php
+                                $isPaid = $lopHoc->TrangThaiThanhToan === 'Paid';
+                                $phiNhanLop = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
+                            @endphp
+                            
+                            @if(!$isPaid)
+                            <div class="mb-3 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center text-sm">
+                                        <i data-lucide="alert-circle" class="w-4 h-4 mr-2 text-orange-600"></i>
+                                        <span class="font-medium text-orange-800">Chưa thanh toán phí nhận lớp</span>
+                                    </div>
+                                    <span class="text-sm font-bold text-red-600">{{ number_format($phiNhanLop, 0, ',', '.') }} VNĐ</span>
+                                </div>
+                            </div>
+                            @endif
+
                             <!-- Actions -->
-                            <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+                            <div class="flex items-center gap-2 pt-4 border-t border-gray-100">
                                 <a href="{{ route('giasu.lophoc.show', $lopHoc->LopYeuCauID) }}" 
-                                   class="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors">
-                                    Xem chi tiết
-                                    <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                                   class="inline-flex items-center px-3 py-1.5 text-sm font-medium text-blue-600 hover:text-blue-700 transition-colors border border-blue-300 rounded-lg hover:bg-blue-50">
+                                    <i data-lucide="eye" class="w-4 h-4 mr-1.5"></i>
+                                    Chi tiết
                                 </a>
-                                <a href="{{ route('giasu.lophoc.schedule', $lopHoc->LopYeuCauID) }}" 
-                                   class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors">
-                                    <i data-lucide="calendar" class="w-4 h-4 mr-1.5"></i>
-                                    Lịch học
-                                </a>
+                                
+                                @if($isPaid)
+                                    <!-- Đã thanh toán: hiển thị nút Tạo lịch và Xem lịch -->
+                                    <a href="{{ route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                                        <i data-lucide="calendar-plus" class="w-4 h-4 mr-1.5"></i>
+                                        Tạo lịch
+                                    </a>
+                                    <a href="{{ route('giasu.lophoc.schedule', $lopHoc->LopYeuCauID) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                                        <i data-lucide="calendar" class="w-4 h-4 mr-1.5"></i>
+                                        Xem lịch
+                                    </a>
+                                @else
+                                    <!-- Chưa thanh toán: hiển thị nút Tạo lịch (sẽ yêu cầu thanh toán) + Hủy lớp -->
+                                    <a href="{{ route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                                        <i data-lucide="calendar-plus" class="w-4 h-4 mr-1.5"></i>
+                                        Tạo lịch
+                                    </a>
+                                    <form action="{{ route('giasu.lophoc.cancel', $lopHoc->LopYeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy lớp này? Lớp sẽ trở về trạng thái tìm gia sư.');">
+                                        @csrf
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-700 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
+                                            <i data-lucide="x-circle" class="w-4 h-4 mr-1.5"></i>
+                                            Hủy lớp
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -225,36 +266,41 @@
                                 <a href="{{ route('giasu.lophoc.show', $lopHoc->LopYeuCauID) }}" 
                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                                     <i data-lucide="eye" class="w-4 h-4 mr-1.5"></i>
-                                    Xem chi tiết
+                                    Chi tiết
                                 </a>
+
+                                <!-- Nút Sửa ghi chú -->
+                                <button type="button" onclick="showEditNoteModal{{ $yeuCau->YeuCauID }}()" 
+                                        class="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 transition-colors">
+                                    <i data-lucide="edit" class="w-4 h-4 mr-1.5"></i>
+                                    Sửa
+                                </button>
 
                                 @if($trangThai === 'Pending')
                                     @if($isReceived)
                                         <!-- Học viên mời → Gia sư có thể Chấp nhận/Từ chối -->
-                                        <form action="{{ route('giasu.lophoc.invitation.reject', $yeuCau->YeuCauID) }}" method="POST" class="inline">
+                                        <form action="{{ route('giasu.lophoc.invitation.reject', $yeuCau->YeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn từ chối lời mời này?');">
                                             @csrf
-                                            <button type="submit" onclick="return confirm('Bạn chắc chắn muốn từ chối lời mời này?')"
-                                                    class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                                                 <i data-lucide="x" class="w-4 h-4 mr-1.5"></i>
                                                 Từ chối
                                             </button>
                                         </form>
-                                        <form action="{{ route('giasu.lophoc.invitation.accept', $yeuCau->YeuCauID) }}" method="POST" class="inline">
+
+                                        <form action="{{ route('giasu.lophoc.invitation.accept', $yeuCau->YeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn chấp nhận dạy lớp này?');">
                                             @csrf
-                                            <button type="submit" onclick="return confirm('Bạn chắc chắn muốn chấp nhận dạy lớp này?')"
-                                                    class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                                                 <i data-lucide="check" class="w-4 h-4 mr-1.5"></i>
                                                 Chấp nhận
                                             </button>
                                         </form>
                                     @else
                                         <!-- Gia sư gửi → Có thể Hủy -->
-                                        <form action="{{ route('giasu.lophoc.proposal.cancel', $yeuCau->YeuCauID) }}" method="POST" class="inline">
+                                        <form action="{{ route('giasu.lophoc.proposal.cancel', $yeuCau->YeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy đề nghị này?');">
                                             @csrf
-                                            <button type="submit" onclick="return confirm('Bạn chắc chắn muốn hủy đề nghị này?')"
-                                                    class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
+                                            <button type="submit" class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
                                                 <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
-                                                Hủy đề nghị
+                                                Hủy
                                             </button>
                                         </form>
                                     @endif
@@ -262,6 +308,38 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Modal Sửa ghi chú -->
+                    <div id="editNoteModal{{ $yeuCau->YeuCauID }}" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full">
+                            <div class="bg-gradient-to-r from-blue-600 to-blue-700 p-6 rounded-t-2xl">
+                                <h3 class="text-xl font-bold text-white flex items-center">
+                                    <i data-lucide="edit" class="w-6 h-6 mr-2"></i>
+                                    Sửa ghi chú
+                                </h3>
+                            </div>
+                            <form action="{{ route('giasu.lophoc.proposal.update-note', $yeuCau->YeuCauID) }}" method="POST" class="p-6">
+                                @csrf
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Ghi chú của bạn</label>
+                                    <textarea name="ghi_chu" rows="4" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Nhập ghi chú...">{{ $yeuCau->GhiChu }}</textarea>
+                                </div>
+                                <div class="flex gap-3">
+                                    <button type="button" onclick="hideEditNoteModal{{ $yeuCau->YeuCauID }}()" class="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Hủy</button>
+                                    <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Lưu</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <script>
+                        function showEditNoteModal{{ $yeuCau->YeuCauID }}() {
+                            document.getElementById('editNoteModal{{ $yeuCau->YeuCauID }}').classList.remove('hidden');
+                            lucide.createIcons();
+                        }
+                        function hideEditNoteModal{{ $yeuCau->YeuCauID }}() {
+                            document.getElementById('editNoteModal{{ $yeuCau->YeuCauID }}').classList.add('hidden');
+                        }
+                    </script>
 
                 @empty
                     <div class="flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100">
@@ -289,12 +367,35 @@
 <script>
     // Auto-hide success/error messages
     setTimeout(() => {
-        const alerts = document.querySelectorAll('[class*="bg-green-50"], [class*="bg-red-50"]');
+        const alerts = document.querySelectorAll('[class*="bg-blue-50"], [class*="bg-red-50"]');
         alerts.forEach(alert => {
             alert.style.transition = 'opacity 0.5s';
             alert.style.opacity = '0';
             setTimeout(() => alert.remove(), 500);
         });
     }, 5000);
+
+    // Ensure Lucide icons are rendered on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+
+    // Fix browser back/forward button - force reload to prevent button disappearing
+    let isBackForward = false;
+    
+    // Detect if navigating via browser back/forward
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted || isBackForward) {
+            // Page restored from bfcache - force reload to fix UI issues
+            window.location.reload();
+        }
+    });
+    
+    // Mark that we're potentially going to another page
+    window.addEventListener('beforeunload', function() {
+        isBackForward = true;
+    });
 </script>
 @endpush

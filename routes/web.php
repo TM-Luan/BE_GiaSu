@@ -62,6 +62,14 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [GiaSuLopHocController::class, 'index'])->name('index');
             Route::get('/{id}', [GiaSuLopHocController::class, 'show'])->name('show');
             
+            // Thanh toán phí nhận lớp
+            Route::get('/{id}/thanh-toan', [GiaSuLopHocController::class, 'showPayment'])->name('payment');
+            Route::post('/{id}/thanh-toan', [GiaSuLopHocController::class, 'processPayment'])->name('payment.process');
+            
+            // Tạo lịch học
+            Route::get('/{id}/tao-lich', [GiaSuLopHocController::class, 'showCreateSchedule'])->name('schedule.create');
+            Route::post('/{id}/tao-lich', [GiaSuLopHocController::class, 'storeSchedule'])->name('schedule.store');
+            
             // Xem lịch học của lớp
             Route::get('/{id}/lich-hoc', [GiaSuLopHocController::class, 'schedule'])->name('schedule');
             // Thêm lịch học mới
@@ -73,6 +81,12 @@ Route::middleware(['auth'])->group(function () {
             
             // Hủy đề nghị đã gửi
             Route::post('/de-nghi/{yeuCauId}/huy', [GiaSuLopHocController::class, 'cancelProposal'])->name('proposal.cancel');
+            
+            // Cập nhật ghi chú đề nghị
+            Route::post('/de-nghi/{yeuCauId}/cap-nhat-ghi-chu', [GiaSuLopHocController::class, 'updateProposalNote'])->name('proposal.update-note');
+            
+            // Hủy lớp chưa thanh toán
+            Route::post('/{id}/huy-lop', [GiaSuLopHocController::class, 'cancelClass'])->name('cancel');
         });
         
         // Lịch học
