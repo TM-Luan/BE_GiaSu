@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DropdownDataController;
 use App\Http\Controllers\Api\KhieuNaiController;
 use App\Http\Controllers\Api\DanhGiaController;
 use App\Http\Controllers\Api\GiaoDichController;
+use App\Http\Controllers\Api\NotificationController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
@@ -66,6 +67,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/nguoihoc/lopcuatoi', [NguoiHocController::class, 'getLopHocCuaNguoiHoc']);
     Route::put('/lophocyeucau/{id}', [LopHocYeuCauController::class, 'update']);
     Route::post('/giao-dich', [GiaoDichController::class, 'store']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    
+    // Đánh dấu đã đọc 1 thông báo
+    Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
 });
 // Search & Filter routes (public)
 Route::get('/giasu/search', [GiaSuController::class, 'search']);

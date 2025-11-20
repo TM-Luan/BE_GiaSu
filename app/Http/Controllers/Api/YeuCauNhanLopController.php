@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\Notification;
 class YeuCauNhanLopController extends Controller
 {
     private const STATUS_PENDING = 'Pending';
@@ -124,7 +125,7 @@ class YeuCauNhanLopController extends Controller
 
         // 6. <<< SỬA LOGIC: Dùng 'LopYeuCauID'
         $existingYeuCau = YeuCauNhanLop::where('LopYeuCauID', $request->LopYeuCauID)
-            ->where('GiaSuID', $giaSu->GiaSuID) 
+            ->where('GiaSuID', $giaSu->GiaSuID)
             ->where('TrangThai', self::STATUS_PENDING) // Chỉ kiểm tra nếu đang chờ
             ->first();
 
@@ -135,7 +136,7 @@ class YeuCauNhanLopController extends Controller
         // 7. <<< SỬA LOGIC: Sửa 'LopHocID' và thêm các trường còn thiếu
         $yeuCau = YeuCauNhanLop::create([
             'LopYeuCauID' => $request->LopYeuCauID,
-            'GiaSuID' => $giaSu->GiaSuID, 
+            'GiaSuID' => $giaSu->GiaSuID,
             'NguoiGuiTaiKhoanID' => $user->TaiKhoanID, // <<< THÊM
             'VaiTroNguoiGui' => 'GiaSu', // <<< THÊM
             'TrangThai' => self::STATUS_PENDING, // <<< SỬA (Gán trạng thái chuẩn)
@@ -144,13 +145,31 @@ class YeuCauNhanLopController extends Controller
             'NgayCapNhat' => Carbon::now(),
         ]);
 
+        // --- [BẮT ĐẦU ĐOẠN CODE THÊM VÀO] ---
+        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID);
+
+        if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
+            $tenGiaSu = $user->HoTen ?? 'Một gia sư';
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Môn học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+
+            Notification::create([
+                'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
+                'title' => 'Yêu cầu dạy mới',
+                'message' => "$tenGiaSu đã đăng ký dạy lớp: $tenLop", // Hiện rõ tên người và lớp
+                'type' => 'request_received',
+                'related_id' => $lopHocInfo->LopYeuCauID, // QUAN TRỌNG: Lưu ID Lớp để chuyển trang
+                'is_read' => false,
+            ]);
+        }
+        // --- [KẾT THÚC ĐOẠN CODE THÊM VÀO] ---
+
         return $this->respondSuccess(
             'Gửi đề nghị dạy thành công.',
             $this->toResource($yeuCau),
             201
         );
     }
-    
+
     // ... (Các hàm còn lại của YeuCauNhanLopController giữ nguyên) ...
 
     public function nguoiHocMoiGiaSu(Request $request)
@@ -191,6 +210,31 @@ class YeuCauNhanLopController extends Controller
             'NgayTao' => Carbon::now(),
             'NgayCapNhat' => Carbon::now(),
         ]);
+        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID); // Thêm .taiKhoan để lấy SĐT nếu cần
+
+        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID);
+
+        // Lấy tên người thực hiện hành động (Người học)
+        $tenNguoiGui = Auth::user()->HoTen ?? 'Người dùng';
+
+        // --- SỬA LỖI: Lấy thông tin Gia Sư để gửi thông báo ---
+        $giaSuNhan = GiaSu::find($giaSuId);
+
+        if ($lopHocInfo && $giaSuNhan) {
+            // Tạo nội dung thông báo
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            $message = "$tenNguoiGui đã mời bạn dạy lớp: $tenLop";
+
+            Notification::create([
+                'user_id' => $giaSuNhan->TaiKhoanID, // <--- SỬA: Gửi đến Tài khoản ID của Gia Sư
+                'title' => 'Lời mời dạy mới',      // <--- SỬA: Tiêu đề rõ ràng hơn
+                'message' => $message,
+                'type' => 'invitation_received',  // <--- NÊN DÙNG: Loại riêng để FE hiển thị icon khác (nếu có) hoặc dùng 'request_received'
+                'related_id' => $lopHocInfo->LopYeuCauID,
+                'is_read' => false,
+                'created_at' => Carbon::now(), // Thêm thời gian tạo nếu model không tự động
+            ]);
+        }   
 
         return $this->respondSuccess(
             'Đã gửi lời mời tới gia sư.',
@@ -253,7 +297,20 @@ class YeuCauNhanLopController extends Controller
                 'TrangThai' => self::STATUS_REJECTED,
                 'NgayCapNhat' => Carbon::now(),
             ]);
+        if ($yeuCau->NguoiGuiTaiKhoanID) {
+            // Lấy thông tin lớp để hiển thị trong thông báo
+            $lopHoc = $yeuCau->lopHoc;
+            $tenLop = ($lopHoc->monHoc->TenMon ?? 'lớp học') . ' ' . ($lopHoc->khoiLop->TenKhoiLop ?? '');
 
+            Notification::create([
+                'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
+                'title' => 'Yêu cầu được chấp nhận',
+                'message' => "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
+                'type' => 'request_accepted',
+                'related_id' => $yeuCau->LopYeuCauID, // Lưu ID Lớp
+                'is_read' => false,
+            ]);
+        }
         return $this->respondSuccess('Đã xác nhận đề nghị.', $this->toResource($yeuCau));
     }
 
@@ -271,7 +328,17 @@ class YeuCauNhanLopController extends Controller
         $yeuCau->TrangThai = self::STATUS_REJECTED;
         $yeuCau->NgayCapNhat = Carbon::now();
         $yeuCau->save();
-
+        // --- [BẮT ĐẦU ĐOẠN CODE THÊM VÀO] ---
+        if ($yeuCau->NguoiGuiTaiKhoanID) {
+            Notification::create([
+                'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
+                'title' => 'Yêu cầu bị từ chối',
+                'message' => 'Yêu cầu kết nối lớp học của bạn đã bị từ chối.',
+                'type' => 'request_rejected',
+                'related_id' => $yeuCau->LopYeuCauID,
+                'is_read' => false,
+            ]);
+        }
         return $this->respondSuccess('Đã từ chối đề nghị.', $this->toResource($yeuCau));
     }
 

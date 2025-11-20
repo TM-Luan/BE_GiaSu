@@ -1,9 +1,8 @@
-
-CREATE DATABASE  IF NOT EXISTS `giasu` 
+CREATE DATABASE IF NOT EXISTS `giasu` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `giasu`;
 -- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
 --
--- Host: 127.0.0.1    Database: giasu
+-- Host: 127.0.0.1    Database: giasu1
 -- ------------------------------------------------------
 -- Server version	8.0.43
 
@@ -47,7 +46,6 @@ CREATE TABLE `danhgia` (
 
 LOCK TABLES `danhgia` WRITE;
 /*!40000 ALTER TABLE `danhgia` DISABLE KEYS */;
-INSERT INTO `danhgia` VALUES (3,6,12,5,'hehehehe','2025-11-17 08:14:15',0);
 /*!40000 ALTER TABLE `danhgia` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -91,12 +89,14 @@ CREATE TABLE `giaodich` (
   `ThoiGian` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `TrangThai` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'ChoXacNhan',
   `GhiChu` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `MaGiaoDich` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `LoaiGiaoDich` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   PRIMARY KEY (`GiaoDichID`),
   KEY `LopYeuCauID` (`LopYeuCauID`),
   KEY `TaiKhoanID` (`TaiKhoanID`),
   CONSTRAINT `GiaoDich_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `lophocyeucau` (`LopYeuCauID`) ON DELETE CASCADE,
   CONSTRAINT `GiaoDich_ibfk_2` FOREIGN KEY (`TaiKhoanID`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -138,7 +138,7 @@ CREATE TABLE `giasu` (
   KEY `fk_giasu_monhoc` (`MonID`),
   CONSTRAINT `fk_giasu_monhoc` FOREIGN KEY (`MonID`) REFERENCES `monhoc` (`MonID`) ON DELETE SET NULL,
   CONSTRAINT `GiaSu_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -147,7 +147,7 @@ CREATE TABLE `giasu` (
 
 LOCK TABLES `giasu` WRITE;
 /*!40000 ALTER TABLE `giasu` DISABLE KEYS */;
-INSERT INTO `giasu` VALUES (6,11,'Tran Minh Luan',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,1),(7,13,'Le Van Minh',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2);
+INSERT INTO `giasu` VALUES (6,11,'Tran Minh Luan','ap 5','Nam','2003-11-21','https://i.ibb.co/1JsvnMvS/ff9014ee2161.jpg','https://i.ibb.co/qM1mjpkk/37a04e86e013.jpg','Bằng cử nhân','https://i.ibb.co/RGgs6CMy/d8aa1f216ff1.jpg','HUIT','CNPM','11111','2 năm','https://i.ibb.co/JjD261y8/1aa9463a4abf.jpg',7,1),(7,13,'Le Van Minh',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2),(8,14,'llllll',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2),(9,16,'hhhh',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,2);
 /*!40000 ALTER TABLE `giasu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -235,7 +235,7 @@ CREATE TABLE `lichhoc` (
   KEY `idx_lichhoc_lap_lai` (`IsLapLai`),
   CONSTRAINT `fk_lichhoc_lichhocgoc` FOREIGN KEY (`LichHocGocID`) REFERENCES `lichhoc` (`LichHocID`) ON DELETE CASCADE,
   CONSTRAINT `LichHoc_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `lophocyeucau` (`LopYeuCauID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=113 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -244,7 +244,6 @@ CREATE TABLE `lichhoc` (
 
 LOCK TABLES `lichhoc` WRITE;
 /*!40000 ALTER TABLE `lichhoc` DISABLE KEYS */;
-INSERT INTO `lichhoc` VALUES (81,81,6,'19:00:00','20:00:00','2025-11-19','SapToi','https://1.com','2025-11-17 03:48:46',1),(82,81,6,'19:00:00','20:00:00','2025-11-26','SapToi',NULL,'2025-11-17 03:48:46',1),(83,81,6,'19:00:00','20:00:00','2025-12-03','SapToi',NULL,'2025-11-17 03:48:46',1),(84,81,6,'19:00:00','20:00:00','2025-12-10','SapToi',NULL,'2025-11-17 03:48:46',1),(85,81,6,'19:00:00','20:00:00','2025-11-20','SapToi',NULL,'2025-11-17 03:48:46',1),(86,81,6,'19:00:00','20:00:00','2025-11-27','SapToi',NULL,'2025-11-17 03:48:46',1),(87,81,6,'19:00:00','20:00:00','2025-12-04','SapToi',NULL,'2025-11-17 03:48:46',1),(88,81,6,'19:00:00','20:00:00','2025-12-11','SapToi',NULL,'2025-11-17 03:48:46',1),(89,81,6,'19:00:00','20:00:00','2025-11-22','SapToi',NULL,'2025-11-17 03:48:46',1),(90,81,6,'19:00:00','20:00:00','2025-11-29','SapToi',NULL,'2025-11-17 03:48:46',1),(91,81,6,'19:00:00','20:00:00','2025-12-06','SapToi',NULL,'2025-11-17 03:48:46',1),(92,81,6,'19:00:00','20:00:00','2025-12-13','SapToi',NULL,'2025-11-17 03:48:46',1);
 /*!40000 ALTER TABLE `lichhoc` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -282,7 +281,7 @@ CREATE TABLE `lophocyeucau` (
   CONSTRAINT `LopHocYeuCau_ibfk_3` FOREIGN KEY (`MonID`) REFERENCES `monhoc` (`MonID`),
   CONSTRAINT `LopHocYeuCau_ibfk_4` FOREIGN KEY (`KhoiLopID`) REFERENCES `khoilop` (`KhoiLopID`),
   CONSTRAINT `LopHocYeuCau_ibfk_5` FOREIGN KEY (`DoiTuongID`) REFERENCES `doituong` (`DoiTuongID`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -291,7 +290,6 @@ CREATE TABLE `lophocyeucau` (
 
 LOCK TABLES `lophocyeucau` WRITE;
 /*!40000 ALTER TABLE `lophocyeucau` DISABLE KEYS */;
-INSERT INTO `lophocyeucau` VALUES (6,5,6,'Online',90000,60,'DangHoc',1,'a',29,8,1,3,'sang t4 t5 t6 t7','2025-11-17 10:28:38'),(7,5,NULL,'Offline',333333,60,'TimGiaSu',1,'aaaaaaa',15,4,2,3,'t5','2025-11-17 16:43:12');
 /*!40000 ALTER TABLE `lophocyeucau` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -363,7 +361,7 @@ CREATE TABLE `nguoihoc` (
   PRIMARY KEY (`NguoiHocID`),
   KEY `TaiKhoanID` (`TaiKhoanID`),
   CONSTRAINT `NguoiHoc_ibfk_1` FOREIGN KEY (`TaiKhoanID`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -372,8 +370,40 @@ CREATE TABLE `nguoihoc` (
 
 LOCK TABLES `nguoihoc` WRITE;
 /*!40000 ALTER TABLE `nguoihoc` DISABLE KEYS */;
-INSERT INTO `nguoihoc` VALUES (5,12,'Tran Minh Hieu',NULL,NULL,NULL,NULL,1);
+INSERT INTO `nguoihoc` VALUES (5,12,'Tran Minh Hieu',NULL,NULL,NULL,NULL,1),(6,15,'1',NULL,'Nữ',NULL,NULL,1);
 /*!40000 ALTER TABLE `nguoihoc` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `notifications`
+--
+
+DROP TABLE IF EXISTS `notifications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `notifications` (
+  `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL COMMENT 'Liên kết với TaiKhoanID',
+  `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'system' COMMENT 'Loại thông báo: request_received, invite_received, request_result...',
+  `related_id` int DEFAULT NULL COMMENT 'ID của đối tượng liên quan (Lớp học, Yêu cầu...)',
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `notifications_user_id_foreign` (`user_id`),
+  CONSTRAINT `notifications_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `notifications`
+--
+
+LOCK TABLES `notifications` WRITE;
+/*!40000 ALTER TABLE `notifications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `notifications` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -398,7 +428,7 @@ CREATE TABLE `personal_access_tokens` (
   UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`),
   KEY `personal_access_tokens_expires_at_index` (`expires_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=56 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -407,7 +437,7 @@ CREATE TABLE `personal_access_tokens` (
 
 LOCK TABLES `personal_access_tokens` WRITE;
 /*!40000 ALTER TABLE `personal_access_tokens` DISABLE KEYS */;
-INSERT INTO `personal_access_tokens` VALUES (30,'App\\Models\\TaiKhoan',11,'1@gmail.com','8cbd7ae17cc885e28096a76960a4b775ec9f81ce5a900f155b2e528febda8db3','[\"*\"]','2025-11-17 05:22:51',NULL,'2025-11-17 05:18:47','2025-11-17 05:22:51');
+INSERT INTO `personal_access_tokens` VALUES (33,'App\\Models\\TaiKhoan',11,'1@gmail.com','31ce1058bd84834f2ff17465168cfe49b8d99655853340bbb24862462bc89948','[\"*\"]','2025-11-17 22:19:17',NULL,'2025-11-17 21:29:28','2025-11-17 22:19:17'),(55,'App\\Models\\TaiKhoan',11,'1@gmail.com','22c8870a1977203e06d5aa5c7e7043ec817a6a6707690e06a7527be143660d81','[\"*\"]','2025-11-20 08:02:57',NULL,'2025-11-20 08:00:54','2025-11-20 08:02:57');
 /*!40000 ALTER TABLE `personal_access_tokens` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -434,7 +464,7 @@ CREATE TABLE `phanquyen` (
 
 LOCK TABLES `phanquyen` WRITE;
 /*!40000 ALTER TABLE `phanquyen` DISABLE KEYS */;
-INSERT INTO `phanquyen` VALUES (10,1),(11,2),(13,2),(12,3);
+INSERT INTO `phanquyen` VALUES (10,1),(11,2),(13,2),(14,2),(16,2),(12,3),(15,3);
 /*!40000 ALTER TABLE `phanquyen` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -464,6 +494,7 @@ CREATE TABLE `sessions` (
 
 LOCK TABLES `sessions` WRITE;
 /*!40000 ALTER TABLE `sessions` DISABLE KEYS */;
+INSERT INTO `sessions` VALUES ('dUGO682bjsRoZCt3MkH72GEp32K1bnHqIWJj4xPA',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0','YTozOntzOjY6Il90b2tlbiI7czo0MDoibmVtT3N4Z0RDSkRvWGc2S1R2cVlTTjk4MENNVWRiU0ZmazBDSUcyZyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1763639634),('NSWfwc5anBxL2szLSc48eW7EPX1szJ989ZPSOPGC',10,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0','YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZjdjQ1hVYnlIaE5Ib1J6Q04xa21GTm1mNzNrV3ZmU25RaUczMU1jZiI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9hZG1pbi9kYXNoYm9hcmQiO31zOjUyOiJsb2dpbl9hZG1pbl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjEwO30=',1763639750),('YhBnWKCpf7ZVCCbtebaD7RuaOgSq6ETX4PTOllhd',NULL,'127.0.0.1','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0','YTozOntzOjY6Il90b2tlbiI7czo0MDoiZVVlaXJpZWh5RkU3dkptcmIzcHhFQWFFVGVXdGJFand4V3BQbGNRTiI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MjE6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMCI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fX0=',1763639634);
 /*!40000 ALTER TABLE `sessions` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -484,7 +515,7 @@ CREATE TABLE `taikhoan` (
   PRIMARY KEY (`TaiKhoanID`),
   UNIQUE KEY `Email` (`Email`),
   UNIQUE KEY `SoDienThoai` (`SoDienThoai`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -493,7 +524,7 @@ CREATE TABLE `taikhoan` (
 
 LOCK TABLES `taikhoan` WRITE;
 /*!40000 ALTER TABLE `taikhoan` DISABLE KEYS */;
-INSERT INTO `taikhoan` VALUES (10,'admin@gmail.com','$2y$12$6ZT9eCdNoTweRCOqGC6ngeL6MeGuM9kaYylBo/Udv6OFgCArUGdbi','0000000000',1,'2025-11-17 10:23:44'),(11,'1@gmail.com','$2y$12$BHno8O5vtiKKjtW4K35lD.SciReY32aKAT3J9ayhPWeV94UR4769.','0934140224',2,'2025-11-17 10:26:23'),(12,'2@gmail.com','$2y$12$62fZ092TPltCH9LUiwYBd.uiB0fq16zGdvVjVQBu9Z.AbBFKt5.cu','0934140225',1,'2025-11-17 10:26:41'),(13,'3@gmail.com','$2y$12$VlAWaBMgRyLysM7JEju0VOPSWXPyj2C36wLGy/RKfGfWRV7H7.gyu','0934140226',1,'2025-11-17 17:01:05');
+INSERT INTO `taikhoan` VALUES (10,'admin@gmail.com','$2y$12$6ZT9eCdNoTweRCOqGC6ngeL6MeGuM9kaYylBo/Udv6OFgCArUGdbi','0000000000',1,'2025-11-17 10:23:44'),(11,'1@gmail.com','$2y$12$BHno8O5vtiKKjtW4K35lD.SciReY32aKAT3J9ayhPWeV94UR4769.','0934140224',2,'2025-11-17 10:26:23'),(12,'2@gmail.com','$2y$12$62fZ092TPltCH9LUiwYBd.uiB0fq16zGdvVjVQBu9Z.AbBFKt5.cu','0934140225',1,'2025-11-17 10:26:41'),(13,'3@gmail.com','$2y$12$VlAWaBMgRyLysM7JEju0VOPSWXPyj2C36wLGy/RKfGfWRV7H7.gyu','0934140226',1,'2025-11-17 17:01:05'),(14,'8@gmail.com','$2y$12$PUZpi54WJyk6D7.nYbJaDerGs.S2iQCk3ncJYripAqxaN.k2dYqRy','0120318729',1,'2025-11-18 12:55:58'),(15,'9@gmail.com','$2y$12$29ik6kO/2VybyA2rvWeCW.XzF4.Gdl6zZJBqfTYpMBDA/vhBgjuJi','01974912231',1,'2025-11-18 13:29:04'),(16,'1@gmail','$2y$12$sF/AlTTWvDPJQePDKQ/6QOSNvCNXlbQdtlQcI6qhFtT8rkResq6Qe','0987654321',1,'2025-11-20 09:18:28');
 /*!40000 ALTER TABLE `taikhoan` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -571,7 +602,7 @@ CREATE TABLE `yeucaunhanlop` (
   CONSTRAINT `YeuCauNhanLop_ibfk_1` FOREIGN KEY (`LopYeuCauID`) REFERENCES `lophocyeucau` (`LopYeuCauID`) ON DELETE CASCADE,
   CONSTRAINT `YeuCauNhanLop_ibfk_2` FOREIGN KEY (`GiaSuID`) REFERENCES `giasu` (`GiaSuID`) ON DELETE CASCADE,
   CONSTRAINT `YeuCauNhanLop_ibfk_3` FOREIGN KEY (`NguoiGuiTaiKhoanID`) REFERENCES `taikhoan` (`TaiKhoanID`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -580,7 +611,6 @@ CREATE TABLE `yeucaunhanlop` (
 
 LOCK TABLES `yeucaunhanlop` WRITE;
 /*!40000 ALTER TABLE `yeucaunhanlop` DISABLE KEYS */;
-INSERT INTO `yeucaunhanlop` VALUES (8,6,6,11,'GiaSu','Accepted',NULL,'2025-11-17 03:29:15','2025-11-17 03:30:25'),(9,7,6,11,'GiaSu','Pending',NULL,'2025-11-17 12:22:48','2025-11-17 12:22:48');
 /*!40000 ALTER TABLE `yeucaunhanlop` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -593,4 +623,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-17 19:24:47
+-- Dump completed on 2025-11-20 22:04:36
