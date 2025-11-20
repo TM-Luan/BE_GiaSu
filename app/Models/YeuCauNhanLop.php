@@ -29,6 +29,12 @@ class YeuCauNhanLop extends Model
         return $this->belongsTo(LopHocYeuCau::class, 'LopYeuCauID', 'LopYeuCauID');
     }
 
+    // Alias để đồng bộ với controller/view
+    public function lopHocYeuCau()
+    {
+        return $this->belongsTo(LopHocYeuCau::class, 'LopYeuCauID', 'LopYeuCauID');
+    }
+
     public function giaSu()
     {
         return $this->belongsTo(GiaSu::class, 'GiaSuID', 'GiaSuID');

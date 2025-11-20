@@ -28,6 +28,7 @@
       --border-color: #374151;  /* Viền xám đậm */
       --accent-blue: #3b82f6; /* Xanh dương làm điểm nhấn */
       --accent-green: #10b981; /* Xanh lá */
+      --accent-yellow: #eab308; /* Vàng cảnh báo */
     }
     body { 
         background-color: var(--main-bg); 
@@ -41,6 +42,7 @@
         position: fixed; 
         padding-top: 20px;
         box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+        overflow-y: auto; /* Cho phép cuộn nếu menu dài */
     }
     .sidebar .admin-profile {
         padding: 1rem 1.5rem;
@@ -75,10 +77,7 @@
         width: 1.25em; 
     }
     .sidebar .logout-btn {
-        position: absolute;
-        bottom: 20px;
-        width: calc(100% - 40px);
-        margin: 0 20px;
+        margin: 20px;
     }
     .main-content { 
         margin-left: var(--sidebar-width); 
@@ -101,7 +100,7 @@
         color: #fff;
     }
 
-    /* CSS cho Form và Phân trang (ĐÃ ĐẶT ĐÚNG VỊ TRÍ) */
+    /* CSS cho Form và Phân trang */
     .form-control-dark, .form-select-dark {
         background-color: #374151;
         color: #fff;
@@ -136,47 +135,78 @@
 </head>
 <body>
 <div class="d-flex">
-    <div class="sidebar">
-        <div class="admin-profile d-flex align-items-center">
-            <i class="fa-solid fa-circle-user text-white me-3"></i>
-            <div>
-                <h6 class="mb-0 text-white">{{ Auth::user()->HoTen ?? 'Admin Name' }}</h6>
-                <p class="small text-muted mb-0">{{ Auth::user()->Email ?? 'admin@email.com' }}</p>
+    <div class="sidebar d-flex flex-column justify-content-between">
+        <div>
+            <div class="admin-profile d-flex align-items-center">
+                <i class="fa-solid fa-circle-user text-white me-3"></i>
+                <div>
+                    <h6 class="mb-0 text-white">{{ Auth::user()->HoTen ?? 'Admin Name' }}</h6>
+                    <p class="small text-muted mb-0">{{ Auth::user()->Email ?? 'admin@email.com' }}</p>
+                </div>
             </div>
-        </div>
 
-        <ul class="nav flex-column px-2">
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
-                    <i class="fa-solid fa-chart-line fa-fw me-2"></i>Dashboard
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.giasu.*') ? 'active' : '' }}" href="{{ route('admin.giasu.index') }}">
-                    <i class="fa-solid fa-chalkboard-user fa-fw me-2"></i>Quản lý Gia sư
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.nguoihoc.*') ? 'active' : '' }}" href="{{ route('admin.nguoihoc.index') }}">
-                    <i class="fa-solid fa-user-graduate fa-fw me-2"></i>Quản lý Người học
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.lophoc.*') ? 'active' : '' }}" href="{{ route('admin.lophoc.index') }}">
-                    <i class="fa-solid fa-book fa-fw me-2"></i>Quản lý Khóa học
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.giaodich.*') ? 'active' : '' }}" href="{{ route('admin.giaodich.index') }}">
-                    <i class="fa-solid fa-credit-card fa-fw me-2"></i>Quản lý Giao dịch
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link {{ Request::routeIs('admin.khieunai.*') ? 'active' : '' }}" href="{{ route('admin.khieunai.index') }}">
-                    <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>Khiếu nại
-                </a>
-            </li>
-        </ul>
+            <ul class="nav flex-column px-2">
+                {{-- 1. Dashboard --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                        <i class="fa-solid fa-chart-line fa-fw me-2"></i>Dashboard
+                    </a>
+                </li>
+                
+                {{-- 2. Quản lý Gia sư (Chỉ hiện danh sách đã duyệt) --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.giasu.index') ? 'active' : '' }}" 
+                       href="{{ route('admin.giasu.index') }}">
+                        <i class="fa-solid fa-chalkboard-user fa-fw me-2"></i>Quản lý Gia sư
+                    </a>
+                </li>
+
+                {{-- 3. Quản lý Người học --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.nguoihoc.*') ? 'active' : '' }}" href="{{ route('admin.nguoihoc.index') }}">
+                        <i class="fa-solid fa-user-graduate fa-fw me-2"></i>Quản lý Người học
+                    </a>
+                </li>
+
+                {{-- 4. Quản lý Khóa học --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.lophoc.*') ? 'active' : '' }}" href="{{ route('admin.lophoc.index') }}">
+                        <i class="fa-solid fa-book fa-fw me-2"></i>Quản lý Khóa học
+                    </a>
+                </li>
+
+                {{-- 5. Quản lý Giao dịch --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.giaodich.*') ? 'active' : '' }}" href="{{ route('admin.giaodich.index') }}">
+                        <i class="fa-solid fa-credit-card fa-fw me-2"></i>Quản lý Giao dịch
+                    </a>
+                </li>
+
+                {{-- 6. Khiếu nại --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.khieunai.*') ? 'active' : '' }}" href="{{ route('admin.khieunai.index') }}">
+                        <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>Khiếu nại
+                    </a>
+                </li>
+
+                {{-- 7. DUYỆT HỒ SƠ GIA SƯ (Nằm cuối, đã xóa gạch ngang) --}}
+                <li class="nav-item">
+                    <a class="nav-link d-flex justify-content-between align-items-center {{ Request::routeIs('admin.giasu.pending') ? 'active' : '' }}" 
+                       href="{{ route('admin.giasu.pending') }}">
+                        <span>
+                            <i class="fa-solid fa-user-check fa-fw me-2"></i>Duyệt hồ sơ gia sư
+                        </span>
+                        @php
+                            // Tính số lượng gia sư chờ duyệt (TrangThai = 2)
+                            $countPendingGiaSu = \App\Models\GiaSu::where('TrangThai', 2)->count();
+                        @endphp
+                        @if($countPendingGiaSu > 0)
+                            <span class="badge bg-danger rounded-pill">{{ $countPendingGiaSu }}</span>
+                        @endif
+                    </a>
+                </li>
+            </ul>
+        </div>
         
         <form action="{{ route('admin.logout') }}" method="POST" class="logout-btn">
             @csrf

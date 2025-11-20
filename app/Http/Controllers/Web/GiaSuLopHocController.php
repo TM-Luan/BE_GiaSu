@@ -31,22 +31,20 @@ class GiaSuLopHocController extends Controller
         $tab = $request->get('tab', 'danghoc'); // 'danghoc' hoặc 'denghi'
 
         // TAB 1: LỚP ĐANG DẠY
-        // Lấy các lớp mà gia sư đang dạy (TrangThai = 'DangHoc')
-        $lopDangDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc'])
+        // Đồng bộ với API mobile getLopCuaGiaSu - lopDangDay
+        $lopDangDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay'])
             ->where('GiaSuID', $giaSuId)
-            ->where('TrangThai', 'DangHoc')
-            ->orderBy('NgayTao', 'desc')
-            ->paginate(10, ['*'], 'danghoc_page');
+            ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
+            ->orderByDesc('NgayTao')
+            ->paginate(12, ['*'], 'danghoc_page');
 
         // TAB 2: ĐỀ NGHỊ
-        // Lấy các yêu cầu nhận lớp liên quan đến gia sư này
-        // - Gia sư GỬI đề nghị (VaiTroNguoiGui = 'GiaSu', TrangThai = 'ChoDuyet' hoặc 'TuChoi')
-        // - Học viên MỜI gia sư (VaiTroNguoiGui = 'NguoiHoc', TrangThai = 'ChoDuyet' hoặc 'TuChoi')
-        $yeuCauDeNghi = YeuCauNhanLop::with(['lophoc.nguoiHoc', 'lophoc.monHoc'])
+        // Đồng bộ với API mobile getLopCuaGiaSu - lopDeNghi
+        $yeuCauDeNghi = YeuCauNhanLop::with(['lop.monHoc', 'lop.khoiLop', 'lop.nguoiHoc', 'giaSu', 'nguoiGuiTaiKhoan'])
             ->where('GiaSuID', $giaSuId)
-            ->whereIn('TrangThai', ['ChoDuyet', 'TuChoi'])
-            ->orderBy('NgayTao', 'desc')
-            ->paginate(10, ['*'], 'denghi_page');
+            ->where('TrangThai', 'Pending')
+            ->orderByDesc('NgayTao')
+            ->paginate(12, ['*'], 'denghi_page');
 
         return view('giasu.lop-hoc-index', compact(
             'lopDangDay',
@@ -67,7 +65,7 @@ class GiaSuLopHocController extends Controller
             return back()->with('error', 'Bạn không có quyền thực hiện thao tác này.');
         }
 
-        $yeuCau = YeuCauNhanLop::with('lophoc')->findOrFail($yeuCauId);
+        $yeuCau = YeuCauNhanLop::with('lop')->findOrFail($yeuCauId);
 
         // Kiểm tra quyền (phải là gia sư được mời)
         if ($yeuCau->GiaSuID != $giaSu->GiaSuID) {
@@ -75,19 +73,20 @@ class GiaSuLopHocController extends Controller
         }
 
         // Kiểm tra trạng thái
-        if ($yeuCau->TrangThai != 'ChoDuyet') {
+        if ($yeuCau->TrangThai != 'Pending') {
             return back()->with('error', 'Yêu cầu này đã được xử lý rồi.');
         }
 
         try {
             DB::beginTransaction();
 
-            // Cập nhật yêu cầu thành ChapNhan
-            $yeuCau->TrangThai = 'ChapNhan';
+            // Cập nhật yêu cầu thành Accepted
+            $yeuCau->TrangThai = 'Accepted';
+            $yeuCau->NgayCapNhat = now();
             $yeuCau->save();
 
             // Cập nhật lớp học: gán gia sư và chuyển trạng thái sang DangHoc
-            $lopHoc = $yeuCau->lophoc;
+            $lopHoc = $yeuCau->lop;
             $lopHoc->GiaSuID = $giaSu->GiaSuID;
             $lopHoc->TrangThai = 'DangHoc';
             $lopHoc->save();
@@ -95,8 +94,8 @@ class GiaSuLopHocController extends Controller
             // Từ chối tất cả các yêu cầu khác cho lớp này
             YeuCauNhanLop::where('LopYeuCauID', $lopHoc->LopYeuCauID)
                 ->where('YeuCauID', '!=', $yeuCauId)
-                ->where('TrangThai', 'ChoDuyet')
-                ->update(['TrangThai' => 'TuChoi']);
+                ->where('TrangThai', 'Pending')
+                ->update(['TrangThai' => 'Rejected', 'NgayCapNhat' => now()]);
 
             DB::commit();
 
@@ -129,11 +128,12 @@ class GiaSuLopHocController extends Controller
         }
 
         // Kiểm tra trạng thái
-        if ($yeuCau->TrangThai != 'ChoDuyet') {
+        if ($yeuCau->TrangThai != 'Pending') {
             return back()->with('error', 'Yêu cầu này đã được xử lý rồi.');
         }
 
-        $yeuCau->TrangThai = 'TuChoi';
+        $yeuCau->TrangThai = 'Rejected';
+        $yeuCau->NgayCapNhat = now();
         $yeuCau->save();
 
         return back()->with('success', 'Đã từ chối lời mời.');
@@ -158,12 +158,14 @@ class GiaSuLopHocController extends Controller
             return back()->with('error', 'Bạn không có quyền hủy yêu cầu này.');
         }
 
-        // Chỉ được hủy khi còn ChoDuyet
-        if ($yeuCau->TrangThai != 'ChoDuyet') {
+        // Chỉ được hủy khi còn Pending
+        if ($yeuCau->TrangThai != 'Pending') {
             return back()->with('error', 'Không thể hủy yêu cầu đã được xử lý.');
         }
 
-        $yeuCau->delete();
+        $yeuCau->TrangThai = 'Cancelled';
+        $yeuCau->NgayCapNhat = now();
+        $yeuCau->save();
 
         return back()->with('success', 'Đã hủy đề nghị dạy.');
     }

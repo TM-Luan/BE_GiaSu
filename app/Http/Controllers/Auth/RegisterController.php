@@ -76,11 +76,7 @@ class RegisterController extends Controller
                     'HoTen' => $validated['HoTen'],
                     'NgaySinh' => null,
                     'GioiTinh' => null,
-                    'DiaChi' => null,
-                    'TrinhDoHocVan' => null,
-                    'KinhNghiemGiangDay' => null,
-                    'GioiThieuBanThan' => null,
-                    'TrangThai' => 1
+                    'DiaChi' => null
                 ]);
             } else {
                 // Tạo hồ sơ Người học
@@ -89,8 +85,7 @@ class RegisterController extends Controller
                     'HoTen' => $validated['HoTen'],
                     'NgaySinh' => null,
                     'GioiTinh' => null,
-                    'DiaChi' => null,
-                    'TrangThai' => 1
+                    'DiaChi' => null
                 ]);
             }
 

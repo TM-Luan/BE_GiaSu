@@ -19,24 +19,28 @@ class GiaSuController extends Controller
     // =============================================
     // ===== HÀM INDEX() ĐANG BỊ THIẾU CỦA BẠN =====
     // =============================================
+    // File: app/Http/Controllers/Admin/GiaSuController.php
+
     public function index(Request $request)
     {
+        // Lấy danh sách TaiKhoan có vai trò GiaSu
         $query = TaiKhoan::with('giasu', 'phanquyen')
-            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
+            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2)) // VaiTroID = 2 là Gia sư
             ->orderByDesc('TaiKhoanID');
 
-        // Logic lọc (đã có trong file cũ)
+        // --- LỌC THEO TRẠNG THÁI TÀI KHOẢN (1: Hoạt động, 2: Bị khóa) ---
+        if ($trangthai = $request->input('trangthai')) {
+            // Vì bảng TaiKhoan có cột TrangThai trực tiếp
+            $query->where('TrangThai', (int)$trangthai);
+        }
+
+        // Tìm kiếm
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('Email', 'like', "%$search%")
-                  ->orWhere('SoDienThoai', 'like', "%$search%")
-                  ->orWhereHas('giasu', fn($q) => $q->where('HoTen', 'like', "%$search%"));
+                ->orWhere('SoDienThoai', 'like', "%$search%")
+                ->orWhereHas('giasu', fn($q) => $q->where('HoTen', 'like', "%$search%"));
             });
-        }
-        if ($trangthai = $request->input('trangthai')) {
-            if ($trangthai === '0' || $trangthai === '1') {
-                $query->where('TrangThai', (int)$trangthai);
-            }
         }
         
         $giasuList = $query->paginate(10)->withQueryString(); 
@@ -45,7 +49,53 @@ class GiaSuController extends Controller
             'giasuList' => $giasuList 
         ]);
     }
-    // =============================================
+
+    public function pending(Request $request)
+    {
+        // Lấy danh sách Gia sư có hồ sơ đang CHỜ DUYỆT (GiaSu.TrangThai = 2)
+        $query = TaiKhoan::with('giasu', 'phanquyen')
+            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2))
+            ->whereHas('giasu', fn($q) => $q->where('TrangThai', 2)) // Lọc theo bảng GiaSu
+            ->orderByDesc('TaiKhoanID');
+
+        // (Giữ nguyên phần tìm kiếm giống index)...
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('Email', 'like', "%$search%")
+                ->orWhere('SoDienThoai', 'like', "%$search%")
+                ->orWhereHas('giasu', fn($q) => $q->where('HoTen', 'like', "%$search%"));
+            });
+        }
+
+        $giasuList = $query->paginate(10)->withQueryString(); 
+
+        // Biến $isPending = true để View biết đây là trang duyệt
+        return view('admin.giasu.index', [ 
+            'giasuList' => $giasuList,
+            'isPending' => true 
+        ]);
+    }
+
+    public function approve($id)
+    {
+        try {
+            $taiKhoan = TaiKhoan::with('giasu')->findOrFail($id);
+
+            // Chỉ cập nhật bảng GiaSu từ 2 (Chờ duyệt) -> 1 (Đã duyệt)
+            if ($taiKhoan->giasu) {
+                $taiKhoan->giasu->update(['TrangThai' => 1]);
+            }
+            
+            // Tùy chọn: Nếu muốn duyệt xong tài khoản hoạt động luôn thì set TaiKhoan->TrangThai = 1
+            // $taiKhoan->update(['TrangThai' => 1]); 
+
+            return redirect()->route('admin.giasu.pending')
+                ->with('success', 'Đã duyệt hồ sơ gia sư thành công!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Lỗi: ' . $e->getMessage());
+        }
+    }
+        // =============================================
     // =============================================
 
 

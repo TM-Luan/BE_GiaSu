@@ -7,6 +7,13 @@
     <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Lớp học của tôi</h1>
         <p class="text-gray-500 mt-2 text-base font-medium">Quản lý các lớp học bạn đang dạy</p>
+        <div class="bg-red-100 border border-red-300 rounded-lg p-3 mt-3">
+            <p class="text-sm font-bold text-red-900">🔍 DEBUG INFO:</p>
+            <p class="text-xs text-red-700 mt-1">- GiaSuID hiện tại: <strong>{{ $giaSu->GiaSuID }}</strong></p>
+            <p class="text-xs text-red-700">- TaiKhoanID: <strong>{{ $giaSu->TaiKhoanID }}</strong></p>
+            <p class="text-xs text-red-700">- Họ tên: <strong>{{ $giaSu->HoTen }}</strong></p>
+            <p class="text-xs text-red-700">- Số proposals pending: <strong>{{ $pendingProposals->count() }}</strong></p>
+        </div>
     </div>
 
     {{-- Pending Proposals --}}
@@ -19,20 +26,43 @@
             <div class="space-y-3">
                 @foreach($pendingProposals as $proposal)
                     @php
-                        $lop = $proposal->lopHocYeuCau;
+                        // Đồng bộ với API mobile: dùng relation 'lop' thay vì 'lopHocYeuCau'
+                        $lop = $proposal->lop;
                         $monHoc = $lop->monHoc->TenMon ?? 'N/A';
                         $khoiLop = $lop->khoiLop->BacHoc ?? '';
+                        $isGiaSuSent = $proposal->VaiTroNguoiGui === 'GiaSu';
+                        // Ưu tiên lấy HoTen từ NguoiHoc
+                        $tenHocSinh = $lop->nguoiHoc->HoTen ?? 'Học sinh';
+                        // Lấy tên người gửi từ relation
+                        $tenNguoiGui = $proposal->nguoiGuiTaiKhoan->HoTen ?? ($isGiaSuSent ? $giaSu->HoTen : $tenHocSinh);
                     @endphp
                     <div class="bg-white rounded-lg p-4 flex items-center justify-between">
                         <div class="flex-1">
-                            <h3 class="font-semibold text-gray-900">{{ $monHoc }} @if($khoiLop) - {{ $khoiLop }} @endif</h3>
+                            <div class="flex items-center gap-2 mb-2">
+                                <h3 class="font-semibold text-gray-900">{{ $monHoc }} @if($khoiLop) - {{ $khoiLop }} @endif</h3>
+                                @if($isGiaSuSent)
+                                    <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-xs font-medium">Bạn đã gửi</span>
+                                @else
+                                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-xs font-medium">Học viên mời</span>
+                                @endif
+                            </div>
                             <p class="text-sm text-gray-600 mt-1">
                                 <i data-lucide="user" class="w-4 h-4 inline mr-1"></i>
-                                {{ $lop->nguoiHoc->taiKhoan->HoTen ?? 'Học sinh' }}
+                                {{ $tenHocSinh }}
                             </p>
                             <p class="text-sm text-gray-500 mt-1">
-                                Gửi lúc: {{ \Carbon\Carbon::parse($proposal->NgayTao)->format('d/m/Y H:i') }}
+                                @if($isGiaSuSent)
+                                    Bạn gửi lúc: {{ $proposal->NgayTao->format('d/m/Y H:i') }}
+                                @else
+                                    Học viên mời lúc: {{ $proposal->NgayTao->format('d/m/Y H:i') }}
+                                @endif
                             </p>
+                            @if($proposal->GhiChu)
+                                <p class="text-sm text-gray-600 mt-2 italic">
+                                    <i data-lucide="message-square" class="w-4 h-4 inline mr-1"></i>
+                                    "{{ $proposal->GhiChu }}"
+                                </p>
+                            @endif
                         </div>
                         <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-medium">
                             Chờ duyệt
@@ -101,6 +131,20 @@
                         <div class="flex items-center text-sm text-gray-600">
                             <i data-lucide="monitor" class="w-4 h-4 mr-2 text-gray-400"></i>
                             <span>{{ $lop->HinhThuc }}</span>
+                        </div>
+                    @endif
+
+                    @if($lop->SoBuoiTuan)
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i data-lucide="calendar" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            <span>{{ $lop->SoBuoiTuan }} buổi/tuần</span>
+                        </div>
+                    @endif
+
+                    @if($lop->doiTuong)
+                        <div class="flex items-center text-sm text-gray-600">
+                            <i data-lucide="users" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            <span>{{ $lop->doiTuong->TenDoiTuong }}</span>
                         </div>
                     @endif
                 </div>

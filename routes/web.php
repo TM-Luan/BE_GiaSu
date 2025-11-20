@@ -143,6 +143,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware(['auth:admin'])->group(function () {
         // Dashboard
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+         // 1. Route cho trang Duyệt hồ sơ (QUAN TRỌNG: Đặt trước resource để tránh xung đột)
+        Route::get('/giasu/cho-duyet', [AdminGiaSuController::class, 'pending'])->name('giasu.pending');
+        
+        // 2. Route Resource quản lý chung
+        Route::resource('/giasu', AdminGiaSuController::class);
+        
+        // 3. Route xử lý hành động Duyệt
+        Route::put('/giasu/{id}/approve', [AdminGiaSuController::class, 'approve'])->name('giasu.approve');
         
         // Resource Management
         Route::resource('/giasu', AdminGiaSuController::class);

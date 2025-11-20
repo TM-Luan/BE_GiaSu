@@ -67,8 +67,13 @@
                                         <i data-lucide="book-open" class="w-5 h-5 text-blue-600"></i>
                                     </div>
                                     <div class="flex-1">
-                                        <h3 class="font-bold text-gray-900 text-lg leading-tight">{{ $lopHoc->TieuDe }}</h3>
-                                        <p class="text-sm text-gray-500 mt-0.5">{{ $lopHoc->monhoc->TenMonHoc ?? 'N/A' }}</p>
+                                        <h3 class="font-bold text-gray-900 text-lg leading-tight">
+                                            {{ $lopHoc->monHoc->TenMon ?? 'N/A' }}
+                                            @if($lopHoc->khoiLop)
+                                                - {{ $lopHoc->khoiLop->BacHoc }}
+                                            @endif
+                                        </h3>
+                                        <p class="text-sm text-gray-500 mt-0.5">{{ $lopHoc->MoTa ?? '' }}</p>
                                     </div>
                                 </div>
                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
@@ -81,7 +86,7 @@
                                 <div class="flex items-center text-sm text-gray-600">
                                     <i data-lucide="user" class="w-4 h-4 mr-2 text-gray-400"></i>
                                     <span class="font-medium">Học viên:</span>
-                                    <span class="ml-2">{{ $lopHoc->nguoihoc->HoTen ?? 'N/A' }}</span>
+                                    <span class="ml-2">{{ $lopHoc->nguoiHoc->HoTen ?? 'N/A' }}</span>
                                 </div>
                                 <div class="flex items-center text-sm text-gray-600">
                                     <i data-lucide="dollar-sign" class="w-4 h-4 mr-2 text-gray-400"></i>
@@ -134,7 +139,8 @@
             <div class="space-y-4">
                 @forelse($yeuCauDeNghi as $yeuCau)
                     @php
-                        $lopHoc = $yeuCau->lophoc;
+                        // Đồng bộ với API mobile: dùng relation 'lop' thay vì 'lophoc'
+                        $lopHoc = $yeuCau->lop;
                         $isReceived = $yeuCau->VaiTroNguoiGui === 'NguoiHoc'; // Học viên mời
                         $isSent = $yeuCau->VaiTroNguoiGui === 'GiaSu'; // Gia sư gửi
                         $trangThai = $yeuCau->TrangThai;
@@ -151,17 +157,26 @@
                                             <i data-lucide="{{ $isReceived ? 'mail' : 'send' }}" class="w-5 h-5 text-{{ $isReceived ? 'blue' : 'orange' }}-600"></i>
                                         </div>
                                         <div class="flex-1">
-                                            <h3 class="font-bold text-gray-900 text-lg leading-tight">{{ $lopHoc->TieuDe }}</h3>
-                                            <p class="text-sm text-gray-500 mt-0.5">{{ $lopHoc->monhoc->TenMonHoc ?? 'N/A' }}</p>
+                                            <h3 class="font-bold text-gray-900 text-lg leading-tight">
+                                                {{ $lopHoc->monHoc->TenMon ?? 'N/A' }}
+                                                @if($lopHoc->khoiLop)
+                                                    - {{ $lopHoc->khoiLop->BacHoc }}
+                                                @endif
+                                            </h3>
+                                            <p class="text-sm text-gray-500 mt-0.5">{{ $lopHoc->MoTa ?? '' }}</p>
                                         </div>
                                         <div class="ml-3">
-                                            @if($trangThai === 'ChoDuyet')
+                                            @if($trangThai === 'Pending')
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
                                                     Chờ duyệt
                                                 </span>
-                                            @elseif($trangThai === 'TuChoi')
+                                            @elseif($trangThai === 'Rejected')
                                                 <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
                                                     Đã từ chối
+                                                </span>
+                                            @elseif($trangThai === 'Cancelled')
+                                                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700">
+                                                    Đã hủy
                                                 </span>
                                             @endif
                                         </div>
@@ -205,8 +220,15 @@
                             </div>
 
                             <!-- Actions -->
-                            @if($trangThai === 'ChoDuyet')
-                                <div class="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                            <div class="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-gray-100">
+                                <!-- Nút Xem chi tiết -->
+                                <a href="{{ route('giasu.lophoc.show', $lopHoc->LopYeuCauID) }}" 
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4 mr-1.5"></i>
+                                    Xem chi tiết
+                                </a>
+
+                                @if($trangThai === 'Pending')
                                     @if($isReceived)
                                         <!-- Học viên mời → Gia sư có thể Chấp nhận/Từ chối -->
                                         <form action="{{ route('giasu.lophoc.invitation.reject', $yeuCau->YeuCauID) }}" method="POST" class="inline">
@@ -229,7 +251,6 @@
                                         <!-- Gia sư gửi → Có thể Hủy -->
                                         <form action="{{ route('giasu.lophoc.proposal.cancel', $yeuCau->YeuCauID) }}" method="POST" class="inline">
                                             @csrf
-                                            @method('DELETE')
                                             <button type="submit" onclick="return confirm('Bạn chắc chắn muốn hủy đề nghị này?')"
                                                     class="inline-flex items-center px-4 py-2 border border-red-300 rounded-lg text-sm font-medium text-red-700 bg-white hover:bg-red-50 transition-colors">
                                                 <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
@@ -237,10 +258,11 @@
                                             </button>
                                         </form>
                                     @endif
-                                </div>
-                            @endif
+                                @endif
+                            </div>
                         </div>
                     </div>
+
                 @empty
                     <div class="flex flex-col items-center justify-center py-16 text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100">
                         <div class="bg-gray-100 p-4 rounded-full mb-4">
