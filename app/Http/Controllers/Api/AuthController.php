@@ -60,7 +60,6 @@ class AuthController extends Controller
 
                 // 1. Tạo Tài Khoản
                 $tk = TaiKhoan::create([
-                    'HoTen' => $request->HoTen, // Giữ HoTen ở đây để dễ truy vấn (nếu cần)
                     'Email' => $request->Email,
                     'MatKhauHash' => Hash::make($request->MatKhau),
                     'SoDienThoai' => $request->SoDienThoai,
@@ -161,8 +160,8 @@ class AuthController extends Controller
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
-        // Logic lấy HoTen từ bảng GiaSu/NguoiHoc (Đã chính xác)
-        $hoTen = $tk->HoTen;
+        // Logic lấy HoTen từ bảng GiaSu/NguoiHoc
+        $hoTen = null;
         if ($vaiTro == 2) {
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($giaSu && $giaSu->HoTen) {
