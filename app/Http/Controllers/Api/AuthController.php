@@ -21,34 +21,50 @@ class AuthController extends Controller
     {
         $fields = $request->validate([
             'HoTen' => 'required|string|max:255',
-            'Email' => 'required|email|unique:TaiKhoan,Email',
+            'Email' => 'required|email|unique:TaiKhoan,email',
             'MatKhau' => 'required|min:6|confirmed',
-            'SoDienThoai' => 'nullable|string|max:20|unique:TaiKhoan,SoDienThoai',
+            'SoDienThoai' => ['required', 'regex:/^(03|05|07|08|09)[0-9]{8}$/', 'unique:TaiKhoan,SoDienThoai'],
             'VaiTro' => 'required|in:1,2,3' // 2=GiaSu, 3=NguoiHoc
         ], [
+            // Họ tên
             'HoTen.required' => 'Vui lòng nhập họ tên.',
+            'HoTen.string' => 'Họ tên phải là chuỗi ký tự.',
+            'HoTen.max' => 'Họ tên không được vượt quá 255 ký tự.',
+
+            // Email
             'Email.required' => 'Vui lòng nhập email.',
-            'Email.email' => 'Email không hợp lệ.',
-            'Email.unique' => 'Email này đã được sử dụng.',
+            'Email.email' => 'Địa chỉ email không đúng định dạng.',
+            'Email.unique' => 'Email này đã được đăng ký trong hệ thống.',
+            'Email.max' => 'Email không được vượt quá 255 ký tự.',
+
+            // Mật khẩu
             'MatKhau.required' => 'Vui lòng nhập mật khẩu.',
-            'MatKhau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
-            'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-            'SoDienThoai.unique' => 'Số điện thoại đã tồn tại.',
+            'MatKhau.string' => 'Mật khẩu phải là chuỗi ký tự.',
+            'MatKhau.min' => 'Mật khẩu phải có ít nhất 8 ký tự để đảm bảo an toàn.',
+            'MatKhau.confirmed' => 'Mật khẩu xác nhận không khớp.',
+
+            // Số điện thoại
+            'SoDienThoai.required' => 'Vui lòng nhập số điện thoại.',
+            'SoDienThoai.unique' => 'Số điện thoại này đã được sử dụng.',
+            'SoDienThoai.regex' => 'Số điện thoại không hợp lệ (phải gồm 10 số và bắt đầu bằng 03, 05, 07, 08, 09).',
+
+            // Vai trò
             'VaiTro.required' => 'Vui lòng chọn vai trò.',
-            'VaiTro.in' => 'Vai trò không hợp lệ.'
+            'VaiTro.integer' => 'Dữ liệu vai trò không hợp lệ.',
+            'VaiTro.in' => 'Vai trò được chọn không tồn tại trong hệ thống.'
         ]);
 
         try {
             // Bọc logic bằng transaction
             $createdData = DB::transaction(function () use ($request) {
-                
+
                 // 1. Tạo Tài Khoản
                 $tk = TaiKhoan::create([
                     'HoTen' => $request->HoTen, // Giữ HoTen ở đây để dễ truy vấn (nếu cần)
                     'Email' => $request->Email,
                     'MatKhauHash' => Hash::make($request->MatKhau),
                     'SoDienThoai' => $request->SoDienThoai,
-                    'TrangThai' => 1 
+                    'TrangThai' => 1
                 ]);
 
                 // 2. Tạo Phân Quyền
@@ -62,7 +78,7 @@ class AuthController extends Controller
                     GiaSu::create([
                         'TaiKhoanID' => $tk->TaiKhoanID,
                         'HoTen' => $request->HoTen, // HoTen này là "nguồn tin cậy"
-                        'TrangThai' => 2 
+                        'TrangThai' => 2
                     ]);
                 } else if ($request->VaiTro == 3) {
                     NguoiHoc::create([
@@ -121,8 +137,7 @@ class AuthController extends Controller
         $isPasswordValid = false;
         if (Hash::needsRehash($tk->MatKhauHash) === false && Hash::check($request->MatKhau, $tk->MatKhauHash)) {
             $isPasswordValid = true;
-        } 
-        elseif ($tk->MatKhauHash === $request->MatKhau) {
+        } elseif ($tk->MatKhauHash === $request->MatKhau) {
             $isPasswordValid = true;
             $tk->MatKhauHash = Hash::make($request->MatKhau);
             $tk->save();
@@ -136,7 +151,7 @@ class AuthController extends Controller
         }
 
         // <<< SỬA LOGIC (QUAN TRỌNG): Kiểm tra trạng thái "Khóa" là 3
-        if ($tk->TrangThai === 3) { 
+        if ($tk->TrangThai === 3) {
             return response()->json([
                 'success' => false,
                 'message' => 'Tài khoản của bạn đã bị khóa'
@@ -148,7 +163,7 @@ class AuthController extends Controller
 
         // Logic lấy HoTen từ bảng GiaSu/NguoiHoc (Đã chính xác)
         $hoTen = $tk->HoTen;
-        if ($vaiTro == 2) { 
+        if ($vaiTro == 2) {
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($giaSu && $giaSu->HoTen) {
                 $hoTen = $giaSu->HoTen;
@@ -166,16 +181,16 @@ class AuthController extends Controller
             'success' => true,
             'message' => 'Đăng nhập thành công',
             'data' => [
-                'TaiKhoanID' => $tk->TaiKhoanID,
-                'Email' => $tk->Email,
-                'HoTen' => $hoTen,
-                'SoDienThoai' => $tk->SoDienThoai,
-                'VaiTro' => $vaiTro,
-            ],
+                    'TaiKhoanID' => $tk->TaiKhoanID,
+                    'Email' => $tk->Email,
+                    'HoTen' => $hoTen,
+                    'SoDienThoai' => $tk->SoDienThoai,
+                    'VaiTro' => $vaiTro,
+                ],
             'token' => $token->plainTextToken,
         ], 200);
     }
-    
+
     public function logout(Request $request)
     {
         try {
@@ -208,20 +223,20 @@ class AuthController extends Controller
                 'TaiKhoanID' => $user->TaiKhoanID,
                 'Email' => $user->Email,
                 'SoDienThoai' => $user->SoDienThoai,
-                'TrangThaiTaiKhoan' => $user->TrangThai, 
+                'TrangThaiTaiKhoan' => $user->TrangThai,
                 'VaiTro' => $roleId
             ];
 
             if ($roleId == 2) {
-                $giaSu = GiaSu::with('monHoc') 
+                $giaSu = GiaSu::with('monHoc')
                     ->where('TaiKhoanID', $user->TaiKhoanID)
                     ->first();
-                    
+
                 if ($giaSu) {
                     $profileData = array_merge($profileData, [
                         'GiaSuID' => $giaSu->GiaSuID,
                         'HoTen' => $giaSu->HoTen,
-                        'TrangThaiNghiepVu' => $giaSu->TrangThai, 
+                        'TrangThaiNghiepVu' => $giaSu->TrangThai,
                         'DiaChi' => $giaSu->DiaChi,
                         'GioiTinh' => $giaSu->GioiTinh,
                         'NgaySinh' => $giaSu->NgaySinh,
@@ -241,12 +256,12 @@ class AuthController extends Controller
             } elseif ($roleId == 3) {
                 // <<< BẮT ĐẦU SỬA: Thêm logic cho Người Học
                 $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
-                
+
                 if ($nguoiHoc) {
                     $profileData = array_merge($profileData, [
                         'NguoiHocID' => $nguoiHoc->NguoiHocID,
                         'HoTen' => $nguoiHoc->HoTen,
-                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai, 
+                        'TrangThaiNghiepVu' => $nguoiHoc->TrangThai,
                         'DiaChi' => $nguoiHoc->DiaChi,
                         'GioiTinh' => $nguoiHoc->GioiTinh,
                         'NgaySinh' => $nguoiHoc->NgaySinh,
@@ -280,15 +295,17 @@ class AuthController extends Controller
         $request->validate([
             'HoTen' => 'nullable|string|max:255',
             'SoDienThoai' => [
-                'nullable', 'string', 'max:20',
-                Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
-            ],
+                    'nullable',
+                    'string',
+                    'max:20',
+                    Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($user->TaiKhoanID, 'TaiKhoanID')
+                ],
             'DiaChi' => 'nullable|string|max:255',
             'GioiTinh' => 'nullable|in:Nam,Nữ,Khác',
             'NgaySinh' => 'nullable|date|before:today',
 
             // SỬA 3: Sửa 'monhoc' thành 'MonHoc' (chính xác tên bảng CSDL)
-            'MonID' => 'nullable|integer|exists:MonHoc,MonID', 
+            'MonID' => 'nullable|integer|exists:MonHoc,MonID',
 
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -305,13 +322,15 @@ class AuthController extends Controller
         try {
             // Cập nhật bảng TaiKhoan
             $updateData = [];
-            if ($request->has('SoDienThoai')) $updateData['SoDienThoai'] = $request->SoDienThoai;
-            
+            if ($request->has('SoDienThoai'))
+                $updateData['SoDienThoai'] = $request->SoDienThoai;
+
             // SỬA 4: Xóa dòng cập nhật HoTen ở đây.
             // HoTen sẽ được cập nhật vào bảng GiaSu/NguoiHoc
             // if ($request->has('HoTen')) $updateData['HoTen'] = $request->HoTen; // <<< XÓA DÒNG NÀY
 
-            if (!empty($updateData)) $user->update($updateData);
+            if (!empty($updateData))
+                $user->update($updateData);
 
             // Cập nhật bảng GiaSu / NguoiHoc
             $phanQuyen = PhanQuyen::where('TaiKhoanID', $user->TaiKhoanID)->first();
@@ -328,7 +347,7 @@ class AuthController extends Controller
             }
 
             // Hàm trợ giúp upload lên ImgBB
-            $uploadToImgBB = function($file) use ($apiKey) {
+            $uploadToImgBB = function ($file) use ($apiKey) {
                 $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
                 $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
                     'key' => $apiKey,
@@ -338,7 +357,7 @@ class AuthController extends Controller
                 if ($response->successful() && isset($response->json()['data']['url'])) {
                     return $response->json()['data']['url'];
                 }
-                return null; 
+                return null;
             };
 
 
@@ -348,9 +367,16 @@ class AuthController extends Controller
                     $giaSuUpdateData = [];
                     // Cập nhật text fields (Đã bao gồm HoTen, MonID - Chính xác)
                     $fields = [
-                        'HoTen', 'DiaChi', 'GioiTinh', 'NgaySinh',
-                        'BangCap', 'TruongDaoTao', 'ChuyenNganh',
-                        'ThanhTich', 'KinhNghiem', 'MonID'
+                        'HoTen',
+                        'DiaChi',
+                        'GioiTinh',
+                        'NgaySinh',
+                        'BangCap',
+                        'TruongDaoTao',
+                        'ChuyenNganh',
+                        'ThanhTich',
+                        'KinhNghiem',
+                        'MonID'
                     ];
                     foreach ($fields as $field) {
                         if ($request->has($field)) {
@@ -372,7 +398,7 @@ class AuthController extends Controller
                     if (!empty($giaSuUpdateData)) {
                         $giaSu->update($giaSuUpdateData);
                     }
-                    $profileData = $giaSu->fresh()->toArray(); 
+                    $profileData = $giaSu->fresh()->toArray();
                 }
             } elseif ($roleId == 3) { // VAI TRÒ: NGƯỜI HỌC
                 $nguoiHoc = NguoiHoc::where('TaiKhoanID', $user->TaiKhoanID)->first();
@@ -396,7 +422,7 @@ class AuthController extends Controller
                     if (!empty($nguoiHocUpdateData)) {
                         $nguoiHoc->update($nguoiHocUpdateData);
                     }
-                    $profileData = $nguoiHoc->fresh()->toArray(); 
+                    $profileData = $nguoiHoc->fresh()->toArray();
                 }
             }
 
