@@ -68,7 +68,7 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $gd->taiKhoan->Email ?? 'N/A' }}</span>
-                                    <small class="text-muted">ID: {{ $gd->TaiKhoanID }}</small>
+                                    <small class="text-white-50">ID: {{ $gd->TaiKhoanID }}</small>
                                 </div>
                             </td>
                             <td>
@@ -88,7 +88,7 @@
                                 @if($gd->ThoiGian)
                                     <small>{{ \Carbon\Carbon::parse($gd->ThoiGian)->format('d/m/Y H:i') }}</small>
                                 @else
-                                    <small class="text-muted">N/A</small>
+                                    <small class="text-white-50">N/A</small>
                                 @endif
                             </td>
                             <td>
@@ -130,8 +130,8 @@
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">
-                                <i class="fa-solid fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                                <p class="text-muted mb-0">Không tìm thấy giao dịch nào</p>
+                                <i class="fa-solid fa-inbox fa-3x text-white-50 mb-3 d-block"></i>
+                                <p class="text-white-50 mb-0">Không tìm thấy giao dịch nào</p>
                             </td>
                         </tr>
                         @endforelse
