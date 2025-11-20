@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\LopHocYeuCau;
 use App\Models\YeuCauNhanLop;
+use Illuminate\Support\Facades\Log;
 
 class GiaSuDashboardController extends Controller
 {
@@ -192,19 +193,37 @@ class GiaSuDashboardController extends Controller
         }
 
         // Lấy các lớp học đã được chấp nhận (GiaSuID = current user)
-        $lopHocList = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])
+        $lopHocList = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop', 'doiTuong'])
             ->where('GiaSuID', $giaSu->GiaSuID)
             ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
             ->orderBy('NgayTao', 'desc')
             ->paginate(12);
 
-        // Lấy các đề nghị đang chờ duyệt
-        $pendingProposals = YeuCauNhanLop::with(['lopHocYeuCau.monHoc', 'lopHocYeuCau.khoiLop', 'lopHocYeuCau.nguoiHoc.taiKhoan'])
+        // Lấy TẤT CẢ các đề nghị đang chờ duyệt (cả gia sư gửi và học viên mời)
+        // Đồng bộ 100% với API mobile getLopCuaGiaSu
+        $pendingProposals = YeuCauNhanLop::with([
+                'lop.monHoc', 
+                'lop.khoiLop', 
+                'lop.nguoiHoc',
+                'giaSu',
+                'nguoiGuiTaiKhoan'
+            ])
             ->where('GiaSuID', $giaSu->GiaSuID)
-            ->where('VaiTroNguoiGui', 'GiaSu')
             ->where('TrangThai', 'Pending')
-            ->orderBy('NgayTao', 'desc')
+            ->orderByDesc('NgayTao')
             ->get();
+
+        // Debug logging
+        Log::info("MyClasses Debug", [
+            'GiaSuID' => $giaSu->GiaSuID,
+            'PendingCount' => $pendingProposals->count(),
+            'Proposals' => $pendingProposals->map(fn($p) => [
+                'YeuCauID' => $p->YeuCauID,
+                'LopYeuCauID' => $p->LopYeuCauID,
+                'HasLop' => $p->lop ? 'Yes' : 'No',
+                'MonHoc' => $p->lop->monHoc->TenMon ?? 'NULL'
+            ])
+        ]);
 
         return view('giasu.my-classes', compact('giaSu', 'lopHocList', 'pendingProposals'));
     }

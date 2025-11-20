@@ -72,50 +72,64 @@
 
                     <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Họ tên</label>
-                            <input type="text" name="HoTen" value="{{ old('HoTen', $user->giaSu->HoTen) }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Họ tên</label>
+                            <input type="text" name="HoTen" value="{{ old('HoTen', $user->giaSu->HoTen) }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                             @error('HoTen') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                            <input type="email" value="{{ $user->Email }}" disabled class="w-full rounded-xl border-gray-200 bg-gray-100 text-gray-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email</label>
+                            <input type="email" value="{{ $user->Email }}" disabled 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 bg-gray-100 text-gray-500">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Số điện thoại</label>
-                            <input type="text" name="SoDienThoai" value="{{ old('SoDienThoai', $user->SoDienThoai) }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Số điện thoại</label>
+                            <input type="text" name="SoDienThoai" value="{{ old('SoDienThoai', $user->SoDienThoai) }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                             @error('SoDienThoai') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Ngày sinh</label>
-                            <input type="date" name="NgaySinh" value="{{ old('NgaySinh', $user->giaSu->NgaySinh ? \Carbon\Carbon::parse($user->giaSu->NgaySinh)->format('Y-m-d') : '') }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Ngày sinh</label>
+                            <input type="date" name="NgaySinh" value="{{ old('NgaySinh', $user->giaSu->NgaySinh ? \Carbon\Carbon::parse($user->giaSu->NgaySinh)->format('Y-m-d') : '') }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Giới tính</label>
-                            <select name="GioiTinh" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Giới tính</label>
+                            <select name="GioiTinh" 
+                                    class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 <option value="Nam" {{ old('GioiTinh', $user->giaSu->GioiTinh) == 'Nam' ? 'selected' : '' }}>Nam</option>
                                 <option value="Nữ" {{ old('GioiTinh', $user->giaSu->GioiTinh) == 'Nữ' ? 'selected' : '' }}>Nữ</option>
                                 <option value="Khác" {{ old('GioiTinh', $user->giaSu->GioiTinh) == 'Khác' ? 'selected' : '' }}>Khác</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Trình độ</label>
-                            <input type="text" name="TrinhDo" value="{{ old('TrinhDo', $user->giaSu->TrinhDo) }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500" placeholder="VD: Đại học, Thạc sĩ...">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Trình độ</label>
+                            <input type="text" name="TrinhDo" value="{{ old('TrinhDo', $user->giaSu->TrinhDo) }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                   placeholder="VD: Đại học, Thạc sĩ...">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Chuyên ngành</label>
-                            <input type="text" name="ChuyenNganh" value="{{ old('ChuyenNganh', $user->giaSu->ChuyenNganh) }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500" placeholder="VD: Toán học, Vật lý...">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Chuyên ngành</label>
+                            <input type="text" name="ChuyenNganh" value="{{ old('ChuyenNganh', $user->giaSu->ChuyenNganh) }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                   placeholder="VD: Toán học, Vật lý...">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Kinh nghiệm (năm)</label>
-                            <input type="number" name="KinhNghiem" value="{{ old('KinhNghiem', $user->giaSu->KinhNghiem) }}" min="0" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Kinh nghiệm (năm)</label>
+                            <input type="number" name="KinhNghiem" value="{{ old('KinhNghiem', $user->giaSu->KinhNghiem) }}" min="0" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Địa chỉ</label>
-                            <input type="text" name="DiaChi" value="{{ old('DiaChi', $user->giaSu->DiaChi) }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500" placeholder="Ví dụ: Q.1, TP.HCM">
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Địa chỉ</label>
+                            <input type="text" name="DiaChi" value="{{ old('DiaChi', $user->giaSu->DiaChi) }}" 
+                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                   placeholder="Ví dụ: Q.1, TP.HCM">
                         </div>
                         <div class="md:col-span-2">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Giới thiệu bản thân</label>
-                            <textarea name="GioiThieu" rows="4" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500" placeholder="Viết vài dòng giới thiệu về bản thân...">{{ old('GioiThieu', $user->giaSu->GioiThieu) }}</textarea>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Giới thiệu bản thân</label>
+                            <textarea name="GioiThieu" rows="4" 
+                                      class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+                                      placeholder="Viết vài dòng giới thiệu về bản thân...">{{ old('GioiThieu', $user->giaSu->GioiThieu) }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -141,35 +155,38 @@
             <input type="hidden" name="update_type" value="password">
             <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
                 <div class="max-w-md mx-auto">
-                    <h3 class="text-xl font-bold text-gray-900 mb-6">Thay đổi mật khẩu</h3>
+                    <h3 class="text-xl font-bold text-gray-900 mb-8">Thay đổi mật khẩu</h3>
                     
-                    <div class="mb-5">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu hiện tại</label>
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu hiện tại</label>
                         <input type="password" name="current_password" required
-                               class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500 
-                               @error('current_password') border-red-500 @enderror">
+                               class="w-full px-4 py-3 text-base rounded-xl border-2 
+                               @error('current_password') border-red-500 @else border-gray-300 @enderror
+                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         @error('current_password') 
-                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p> 
+                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p> 
                         @enderror
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Mật khẩu mới</label>
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mật khẩu mới</label>
                         <input type="password" name="password" required
-                               class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500
-                               @error('password') border-red-500 @enderror">
+                               class="w-full px-4 py-3 text-base rounded-xl border-2
+                               @error('password') border-red-500 @else border-gray-300 @enderror
+                               focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                         @error('password') 
-                            <p class="text-sm text-red-600 mt-1">{{ $message }}</p> 
+                            <p class="text-sm text-red-600 mt-2">{{ $message }}</p> 
                         @enderror
+                        <p class="text-xs text-gray-500 mt-2">Mật khẩu phải có ít nhất 8 ký tự</p>
                     </div>
 
-                    <div class="mb-5">
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
+                    <div class="mb-8">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Xác nhận mật khẩu mới</label>
                         <input type="password" name="password_confirmation" required
-                               class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+                               class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                     </div>
 
-                    <button type="submit" class="w-full px-6 py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
+                    <button type="submit" class="w-full px-6 py-4 text-base rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition-all">
                         Cập nhật mật khẩu
                     </button>
                 </div>
