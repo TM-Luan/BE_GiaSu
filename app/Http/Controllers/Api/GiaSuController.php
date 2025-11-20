@@ -186,9 +186,10 @@ class GiaSuController extends Controller
 
     public function show($id)
     {
-        $tutor = GiaSu::with('taiKhoan')->findOrFail($id);
+        $tutor = GiaSu::with(['taiKhoan', 'monHoc'])->findOrFail($id);
         return new GiaSuResource($tutor);
     }
+    
 
     public function store(GiaSuRequest $request)
     {

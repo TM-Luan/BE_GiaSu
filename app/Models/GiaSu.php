@@ -18,8 +18,8 @@ class GiaSu extends Model
         'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau',
         'BangCap', 'AnhBangCap', 'TruongDaoTao', 'ChuyenNganh',
         'ThanhTich', 'KinhNghiem', 'AnhDaiDien',
-        'TrangThai', // <<< ĐÃ THÊM
-        'MonID' // <<< THÊM DÒNG NÀY
+        'TrangThai', 
+        'MonID' 
     ];
 
     // Quan hệ

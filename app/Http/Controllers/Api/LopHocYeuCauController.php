@@ -13,19 +13,18 @@ class LopHocYeuCauController extends Controller
      * Display a listing of the resource.
      */
     public function index(Request $request)
-    {
-        $query = LopHocYeuCau::query();
+{
+    $query = LopHocYeuCau::query();
+    // Thêm 'nguoiHoc.taiKhoan'
+    $query->with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong']);
 
-        // SỬA: Xóa 'thoiGianDay'
-        $query->with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong']);
-
-        if ($request->has('trang_thai')) {
-            $query->where('TrangThai', $request->query('trang_thai'));
-        }
-        
-        $lopHocList = $query->get();
-        return LopHocYeuCauResource::collection($lopHocList);
+    if ($request->has('trang_thai')) {
+        $query->where('TrangThai', $request->query('trang_thai'));
     }
+    
+    $lopHocList = $query->get();
+    return LopHocYeuCauResource::collection($lopHocList);
+}
 
     /**
      * Tìm kiếm và lọc danh sách lớp học (Dành cho Gia Sư)
@@ -133,14 +132,19 @@ class LopHocYeuCauController extends Controller
         return response()->noContent();
     }
     
-    public function show($id)
-    {
-        // SỬA: Xóa 'thoiGianDay'
-        $lopHoc = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong'])
-                        ->findOrFail($id); 
+public function show($id)
+{
+    // SỬA: Thêm 'nguoiHoc.taiKhoan' vào danh sách with
+    $lopHoc = LopHocYeuCau::with([
+        'nguoiHoc.taiKhoan', // <--- QUAN TRỌNG: Để lấy SĐT
+        'monHoc', 
+        'khoiLop', 
+        'giaSu', 
+        'doiTuong'
+    ])->findOrFail($id); 
 
-        return new LopHocYeuCauResource($lopHoc);
-    }
+    return new LopHocYeuCauResource($lopHoc);
+}
     public function search(SearchRequest $request)
 {
     try {
