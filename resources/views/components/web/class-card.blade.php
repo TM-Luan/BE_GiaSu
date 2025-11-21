@@ -27,8 +27,9 @@
     $nguoiHoc = $lop->nguoiHoc ?? null;
     $tenNguoiHoc = $nguoiHoc?->taiKhoan?->HoTen ?? 'Học sinh';
     
-    // 8. Kiểm tra trạng thái duyệt của gia sư từ session
-    $giaSu = session('giasu');
+    // 8. Kiểm tra trạng thái duyệt của gia sư
+    $currentUser = Auth::user();
+    $giaSu = $currentUser?->giaSu;
     $isDuyet = $giaSu && $giaSu->TrangThai == 1;
 @endphp
 

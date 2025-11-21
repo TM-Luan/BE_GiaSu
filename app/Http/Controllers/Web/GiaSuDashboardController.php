@@ -124,7 +124,13 @@ class GiaSuDashboardController extends Controller
         }
 
         // Kiểm tra gia sư đã được duyệt chưa
-        if ($giaSu->TrangThai != 1) {
+        \Log::info('Checking TrangThai', [
+            'GiaSuID' => $giaSu->GiaSuID,
+            'TrangThai' => $giaSu->TrangThai,
+            'TrangThai_Type' => gettype($giaSu->TrangThai)
+        ]);
+        
+        if ($giaSu->TrangThai != 1 && $giaSu->TrangThai != '1') {
             return response()->json([
                 'success' => false,
                 'message' => 'Tài khoản của bạn đang chờ duyệt. Vui lòng hoàn thiện hồ sơ và chờ quản trị viên phê duyệt.'

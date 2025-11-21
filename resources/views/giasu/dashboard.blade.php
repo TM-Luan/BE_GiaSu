@@ -6,7 +6,8 @@
     
     {{-- Thông báo chờ duyệt nếu TrangThai != 1 --}}
     @php
-        $giaSu = session('giasu');
+        $currentUser = Auth::user();
+        $giaSu = $currentUser?->giaSu;
     @endphp
     
     @if($giaSu && $giaSu->TrangThai != 1)

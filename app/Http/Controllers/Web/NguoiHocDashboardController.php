@@ -33,6 +33,7 @@ class NguoiHocDashboardController extends Controller
             }])
             ->withAvg('danhGia', 'DiemSo') 
             ->withCount('danhGia')
+            ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->whereHas('taiKhoan', fn($q) => $q->where('TrangThai', 1))
             ->paginate(6);
 
@@ -66,8 +67,9 @@ class NguoiHocDashboardController extends Controller
      */
     public function show($id)
     {
-        // ... (Code cũ lấy $giasu, $rating, $hocPhi, $relatedTutors giữ nguyên)
+        // Lấy thông tin gia sư - CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
         $giasu = GiaSu::with(['taiKhoan', 'danhGia.taiKhoan', 'lopHocYeuCau'])
+            ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->withAvg('danhGia', 'DiemSo')
             ->withCount('danhGia')
             ->findOrFail($id);
@@ -77,6 +79,7 @@ class NguoiHocDashboardController extends Controller
         $hocPhi = $avgHocPhi > 0 ? number_format($avgHocPhi, 0, ',', '.') . 'đ/buổi' : 'Thỏa thuận';
         $relatedTutors = GiaSu::where('ChuyenNganh', 'LIKE', "%{$giasu->ChuyenNganh}%")
             ->where('GiaSuID', '!=', $id)
+            ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->limit(3)
             ->get();
             
