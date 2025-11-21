@@ -51,12 +51,18 @@ Route::middleware(['auth'])->group(function () {
     
     // ===== GIA SƯ (TUTOR) ROUTES =====
     Route::prefix('giasu')->name('giasu.')->group(function () {
-        // Dashboard - Browse available classes marketplace
+        
+        // Dashboard - Browse available classes marketplace (Xem được cả khi chưa duyệt)
         Route::get('/dashboard', [GiaSuDashboardController::class, 'index'])->name('dashboard');
         
-        // Gửi đề nghị dạy lớp học
+        // Thông tin cá nhân (Xem và cập nhật được cả khi chưa duyệt)
+        Route::get('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfile'])->name('profile.index');
+        Route::put('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfileUpdate'])->name('profile.update');
+        
+        // Gửi đề nghị dạy - kiểm tra TrangThai trong controller
         Route::post('/de-nghi-day', [GiaSuDashboardController::class, 'deNghiDay'])->name('de_nghi_day');
         
+        // Các routes khác KHÔNG CẦN kiểm tra duyệt (xem được cả khi chờ duyệt)
         // Lớp học của tôi (các lớp đã được chấp nhận)
         Route::prefix('lop-hoc')->name('lophoc.')->group(function () {
             Route::get('/', [GiaSuLopHocController::class, 'index'])->name('index');
@@ -86,16 +92,15 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/de-nghi/{yeuCauId}/cap-nhat-ghi-chu', [GiaSuLopHocController::class, 'updateProposalNote'])->name('proposal.update-note');
             
             // Hủy lớp chưa thanh toán
-            Route::post('/{id}/huy-lop', [GiaSuLopHocController::class, 'cancelClass'])->name('cancel');
+            Route::delete('/{id}/huy-lop', [GiaSuLopHocController::class, 'cancelClass'])->name('cancel');
+            
+            // Xóa tất cả lịch học (để tạo lịch mới)
+            Route::delete('/{id}/xoa-lich', [GiaSuLopHocController::class, 'deleteAllSchedules'])->name('schedule.delete-all');
         });
         
         // Lịch học
         Route::get('/lich-hoc', [LichHocWebController::class, 'tutorSchedule'])->name('lichhoc.index');
-        
-        // Thông tin cá nhân
-        Route::get('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfile'])->name('profile.index');
-        Route::put('/thong-tin-ca-nhan', [ProfileController::class, 'tutorProfileUpdate'])->name('profile.update');
-    });
+    }); // Đóng prefix giasu
 
     // ===== NGƯỜI HỌC (STUDENT) ROUTES =====
     Route::prefix('nguoihoc')->name('nguoihoc.')->group(function () {

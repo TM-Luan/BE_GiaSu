@@ -70,22 +70,24 @@ class RegisterController extends Controller
 
             // 4. Tạo hồ sơ tương ứng dựa trên vai trò
             if ($validated['VaiTro'] == 2) {
-                // Tạo hồ sơ Gia sư
+                // Tạo hồ sơ Gia sư - TrangThai = 2 (Chờ duyệt) - Đồng bộ với mobile
                 GiaSu::create([
                     'TaiKhoanID' => $taiKhoan->TaiKhoanID,
                     'HoTen' => $validated['HoTen'],
                     'NgaySinh' => null,
                     'GioiTinh' => null,
-                    'DiaChi' => null
+                    'DiaChi' => null,
+                    'TrangThai' => 2 // Chờ admin duyệt (Đồng bộ với mobile)
                 ]);
             } else {
-                // Tạo hồ sơ Người học
+                // Tạo hồ sơ Người học - TrangThai = 1 (Đã kích hoạt)
                 NguoiHoc::create([
                     'TaiKhoanID' => $taiKhoan->TaiKhoanID,
                     'HoTen' => $validated['HoTen'],
                     'NgaySinh' => null,
                     'GioiTinh' => null,
-                    'DiaChi' => null
+                    'DiaChi' => null,
+                    'TrangThai' => 1 // Kích hoạt ngay
                 ]);
             }
 

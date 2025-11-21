@@ -14,12 +14,19 @@ class LopHocYeuCauResource extends JsonResource
      */
     public function toArray($request)
     {
-        // 1. Kiểm tra xem lớp này đã được thanh toán thành công hay chưa
-        // Dựa vào mối quan hệ 'giaoDiches' trong Model LopHocYeuCau
-        $isPaid = $this->giaoDiches->contains(function ($giaoDich) {
-            // So sánh chuỗi 'Thành công' khớp với dữ liệu trong database (bảng GiaoDich)
-            return $giaoDich->TrangThai === 'Thành công';
-        });
+        // ĐỒNG BỘ VỚI MOBILE: Kiểm tra thanh toán từ cột TrangThaiThanhToan
+        // Fallback: Nếu cột chưa có, kiểm tra qua bảng GiaoDich
+        $isPaid = false;
+        
+        if (isset($this->TrangThaiThanhToan)) {
+            // Cách mới: Dùng cột TrangThaiThanhToan
+            $isPaid = $this->TrangThaiThanhToan === 'DaThanhToan';
+        } else {
+            // Cách cũ: Kiểm tra qua bảng GiaoDich (backward compatibility)
+            $isPaid = $this->giaoDiches->contains(function ($giaoDich) {
+                return $giaoDich->TrangThai === 'Thành công';
+            });
+        }
 
         return [
             'MaLop' => $this->LopYeuCauID,

@@ -26,6 +26,10 @@
     // 7. Xử lý thông tin học sinh
     $nguoiHoc = $lop->nguoiHoc ?? null;
     $tenNguoiHoc = $nguoiHoc?->taiKhoan?->HoTen ?? 'Học sinh';
+    
+    // 8. Kiểm tra trạng thái duyệt của gia sư từ session
+    $giaSu = session('giasu');
+    $isDuyet = $giaSu && $giaSu->TrangThai == 1;
 @endphp
 
 <div class="bg-white p-5 rounded-2xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)] border border-gray-100 hover:border-blue-300 transition-all duration-300 group flex flex-col h-full relative overflow-hidden">
@@ -102,12 +106,22 @@
         </a>
         
         {{-- Propose button --}}
-        <button type="button" 
-                onclick="openDeNghiModal({{ $lop->LopYeuCauID }}, '{{ addslashes($tenLop) }}')"
-                class="flex items-center justify-center py-2.5 px-4 rounded-xl text-white font-bold bg-blue-600 hover:bg-blue-700 transition-colors text-sm shadow-md hover:shadow-lg">
-            <i data-lucide="send" class="w-4 h-4 mr-1"></i>
-            Đề nghị dạy
-        </button>
+        @if($isDuyet)
+            <button type="button" 
+                    onclick="openDeNghiModal({{ $lop->LopYeuCauID }}, '{{ addslashes($tenLop) }}')"
+                    class="flex items-center justify-center py-2.5 px-4 rounded-xl text-white font-bold bg-blue-600 hover:bg-blue-700 transition-colors text-sm shadow-md hover:shadow-lg">
+                <i data-lucide="send" class="w-4 h-4 mr-1"></i>
+                Đề nghị dạy
+            </button>
+        @else
+            <button type="button" 
+                    disabled
+                    title="Tài khoản của bạn đang chờ duyệt"
+                    class="flex items-center justify-center py-2.5 px-4 rounded-xl text-gray-400 font-bold bg-gray-100 cursor-not-allowed text-sm opacity-60">
+                <i data-lucide="lock" class="w-4 h-4 mr-1"></i>
+                Chờ duyệt
+            </button>
+        @endif
     </div>
 
     {{-- Posted date (small footer) --}}

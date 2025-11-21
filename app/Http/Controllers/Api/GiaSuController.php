@@ -186,7 +186,9 @@ class GiaSuController extends Controller
 
     public function show($id)
     {
-        $tutor = GiaSu::with(['taiKhoan', 'monHoc'])->findOrFail($id);
+        $tutor = GiaSu::with(['taiKhoan', 'monHoc'])
+            ->where('TrangThai', 1) // Chỉ hiển thị gia sư đã duyệt
+            ->findOrFail($id);
         return new GiaSuResource($tutor);
     }
     
@@ -294,8 +296,8 @@ class GiaSuController extends Controller
                     $query->orderBy('GiaSuID', 'desc');
             }
 
-            // Chỉ lấy gia sư đang hoạt động (nếu có cột TrangThai)
-            // $query->where('TrangThai', 1); 
+            // Chỉ lấy gia sư đã được admin duyệt
+            $query->where('TrangThai', 1);
 
             $tutors = $query->paginate($request->get('per_page', 10));
 

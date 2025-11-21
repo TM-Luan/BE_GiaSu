@@ -43,24 +43,6 @@
                 </div>
             </div>
 
-            @php
-                $isPaid = $lopHoc->TrangThaiThanhToan === 'Paid';
-                $phiNhanLop = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
-            @endphp
-
-            @if(!$isPaid)
-            <!-- Cảnh báo chưa thanh toán -->
-            <div class="mt-4 p-4 bg-orange-50 border border-orange-200 rounded-lg">
-                <div class="flex items-start">
-                    <i data-lucide="alert-circle" class="w-5 h-5 text-orange-600 mr-3 mt-0.5 flex-shrink-0"></i>
-                    <div>
-                        <p class="font-semibold text-orange-800">Chưa thanh toán phí nhận lớp</p>
-                        <p class="text-sm text-orange-700 mt-1">Bạn cần thanh toán <span class="font-bold">{{ number_format($phiNhanLop, 0, ',', '.') }} VNĐ</span> để hoàn tất việc tạo lịch học. Sau khi nhấn nút "Thanh toán & Tạo lịch", bạn sẽ được chuyển đến trang thanh toán.</p>
-                    </div>
-                </div>
-            </div>
-            @endif
-
             @if($lopHoc->LichHocMongMuon)
             <div class="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                 <p class="text-sm text-gray-700"><span class="font-semibold">Lịch mong muốn:</span> {{ $lopHoc->LichHocMongMuon }}</p>
@@ -71,6 +53,31 @@
         <!-- Form tạo lịch -->
         <form action="{{ route('giasu.lophoc.schedule.store', $lopHoc->LopYeuCauID) }}" method="POST" class="p-6">
             @csrf
+
+            <!-- Thông báo lỗi/thành công -->
+            @if(session('error'))
+                <div class="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+                    <div class="flex items-start">
+                        <i data-lucide="alert-circle" class="w-5 h-5 text-red-600 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <div class="flex-1">
+                            <p class="font-semibold text-red-800">Lỗi!</p>
+                            <p class="text-sm text-red-700 mt-1">{{ session('error') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            @if(session('success'))
+                <div class="mb-6 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+                    <div class="flex items-start">
+                        <i data-lucide="check-circle" class="w-5 h-5 text-green-600 mr-3 mt-0.5 flex-shrink-0"></i>
+                        <div class="flex-1">
+                            <p class="font-semibold text-green-800">Thành công!</p>
+                            <p class="text-sm text-green-700 mt-1">{{ session('success') }}</p>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
             <!-- Ngày bắt đầu -->
             <div class="mb-6">
@@ -155,28 +162,18 @@
                 </button>
             </div>
 
-            <!-- Nút submit -->
+            <!-- Nút submit - ĐỒNG BỘ VỚI MOBILE: Luôn cho phép tạo lịch -->
             <div class="flex gap-3 pt-4 border-t border-gray-200">
                 <a href="{{ route('giasu.lophoc.index') }}" 
                    class="flex-1 inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
                     <i data-lucide="x" class="w-5 h-5 mr-2"></i>
                     Hủy
                 </a>
-                @if($isPaid)
-                    <!-- Đã thanh toán: Chỉ cần tạo lịch -->
-                    <button type="submit" 
-                            class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
-                        <i data-lucide="save" class="w-5 h-5 mr-2"></i>
-                        Tạo lịch học
-                    </button>
-                @else
-                    <!-- Chưa thanh toán: Thanh toán & Tạo lịch -->
-                    <button type="submit" 
-                            class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all shadow-lg">
-                        <i data-lucide="credit-card" class="w-5 h-5 mr-2"></i>
-                        Thanh toán & Tạo lịch
-                    </button>
-                @endif
+                <button type="submit" 
+                        class="flex-1 inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
+                    <i data-lucide="calendar-check" class="w-5 h-5 mr-2"></i>
+                    Tạo lịch học
+                </button>
             </div>
         </form>
     </div>

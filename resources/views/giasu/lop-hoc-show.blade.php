@@ -14,116 +14,127 @@
         
         <!-- Main Content -->
         <div class="lg:col-span-2 space-y-6">
-            <!-- Header Card -->
-            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="h-48 bg-gradient-to-r from-blue-500 to-cyan-600 relative">
-                    <div class="absolute bottom-0 left-0 p-6 w-full bg-gradient-to-t from-black/60 to-transparent">
-                        <h1 class="text-3xl font-bold text-white">{{ $lopHoc->TieuDe }}</h1>
-                        <p class="text-blue-100 mt-1 flex items-center">
-                            <i data-lucide="book" class="w-4 h-4 mr-2"></i>
-                            {{ $lopHoc->monHoc->TenMon ?? 'Môn học' }}
-                        </p>
+            <!-- Header Card - Simplified -->
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h1 class="text-2xl font-bold text-gray-900 mb-2">{{ $lopHoc->TieuDe }}</h1>
+                        <div class="flex items-center gap-4 text-sm text-gray-600">
+                            <span class="inline-flex items-center">
+                                <i data-lucide="book" class="w-4 h-4 mr-1.5 text-blue-500"></i>
+                                {{ $lopHoc->monHoc->TenMon ?? 'Môn học' }}
+                            </span>
+                            @if($lopHoc->khoiLop)
+                            <span class="inline-flex items-center">
+                                <i data-lucide="graduation-cap" class="w-4 h-4 mr-1.5 text-purple-500"></i>
+                                {{ $lopHoc->khoiLop->TenKhoi ?? 'Khối lớp' }}
+                            </span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="text-right">
+                            <p class="text-sm text-gray-500 mb-1">Học phí</p>
+                            <p class="text-2xl font-bold text-blue-600">{{ number_format($lopHoc->HocPhi, 0, ',', '.') }}đ</p>
+                            <p class="text-xs text-gray-500">/ buổi</p>
+                        </div>
                     </div>
                 </div>
-                <div class="p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">Mô tả lớp học</h3>
-                    <div class="prose text-gray-600">
-                        @if($lopHoc->MoTa)
-                            {!! nl2br(e($lopHoc->MoTa)) !!}
-                        @else
-                            <em class="text-gray-400">Không có mô tả thêm.</em>
-                        @endif
+                
+                @if($lopHoc->MoTa)
+                <div class="pt-4 border-t border-gray-100">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-2">Mô tả lớp học</h3>
+                    <div class="text-gray-600 text-sm leading-relaxed">
+                        {!! nl2br(e($lopHoc->MoTa)) !!}
                     </div>
                 </div>
+                @endif
             </div>
 
-            <!-- Thông tin chi tiết -->
+            <!-- Thông tin chi tiết - Simplified -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Thông tin lớp học</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Hình thức học</p>
-                        <p class="font-semibold text-gray-800 flex items-center">
-                            <i data-lucide="monitor" class="w-4 h-4 mr-2 text-blue-500"></i>
-                            {{ $lopHoc->HinhThuc ?? 'Chưa cập nhật' }}
-                        </p>
+                <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
+                    <i data-lucide="info" class="w-5 h-5 mr-2 text-blue-500"></i>
+                    Thông tin chi tiết
+                </h3>
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600 text-sm flex items-center">
+                            <i data-lucide="monitor" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            Hình thức học
+                        </span>
+                        <span class="font-semibold text-gray-900">{{ $lopHoc->HinhThuc ?? 'Chưa cập nhật' }}</span>
                     </div>
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Học phí</p>
-                        <p class="font-bold text-blue-600 text-lg flex items-center">
-                            <i data-lucide="banknote" class="w-4 h-4 mr-2"></i>
-                            {{ number_format($lopHoc->HocPhi, 0, ',', '.') }} VNĐ/buổi
-                        </p>
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600 text-sm flex items-center">
+                            <i data-lucide="clock" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            Thời lượng
+                        </span>
+                        <span class="font-semibold text-gray-900">{{ $lopHoc->ThoiLuong ? $lopHoc->ThoiLuong . ' phút/buổi' : 'N/A' }}</span>
                     </div>
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Thời lượng</p>
-                        <p class="font-semibold text-gray-800">
-                            {{ $lopHoc->ThoiLuong ? $lopHoc->ThoiLuong . ' phút/buổi' : 'N/A' }}
-                        </p>
-                    </div>
-                    <div>
-                        <p class="text-gray-500 text-sm mb-1">Số buổi/tuần</p>
-                        <p class="font-semibold text-gray-800">
-                            {{ $lopHoc->SoBuoiTuan ? $lopHoc->SoBuoiTuan . ' buổi' : 'N/A' }}
-                        </p>
+                    <div class="flex items-center justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600 text-sm flex items-center">
+                            <i data-lucide="calendar-days" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            Số buổi/tuần
+                        </span>
+                        <span class="font-semibold text-gray-900">{{ $lopHoc->SoBuoiTuan ? $lopHoc->SoBuoiTuan . ' buổi' : 'N/A' }}</span>
                     </div>
                     @if($lopHoc->DiaChi)
-                        <div class="md:col-span-2">
-                            <p class="text-gray-500 text-sm mb-1">Địa chỉ</p>
-                            <p class="font-semibold text-gray-800 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                <i data-lucide="map-pin" class="w-4 h-4 inline mr-2 text-red-500"></i>
-                                {{ $lopHoc->DiaChi }}
-                            </p>
-                        </div>
+                    <div class="flex items-start justify-between py-2 border-b border-gray-100">
+                        <span class="text-gray-600 text-sm flex items-center">
+                            <i data-lucide="map-pin" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            Địa chỉ
+                        </span>
+                        <span class="font-semibold text-gray-900 text-right max-w-xs">{{ $lopHoc->DiaChi }}</span>
+                    </div>
                     @endif
                     @if($lopHoc->LichHocMongMuon)
-                        <div class="md:col-span-2">
-                            <p class="text-gray-500 text-sm mb-1">Lịch học</p>
-                            <p class="font-semibold text-gray-800 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                                <i data-lucide="calendar" class="w-4 h-4 inline mr-2 text-orange-500"></i>
-                                {{ $lopHoc->LichHocMongMuon }}
-                            </p>
-                        </div>
+                    <div class="flex items-start justify-between py-2">
+                        <span class="text-gray-600 text-sm flex items-center">
+                            <i data-lucide="calendar" class="w-4 h-4 mr-2 text-gray-400"></i>
+                            Lịch học mong muốn
+                        </span>
+                        <span class="font-semibold text-gray-900 text-right max-w-xs">{{ $lopHoc->LichHocMongMuon }}</span>
+                    </div>
                     @endif
                 </div>
             </div>
 
-            <!-- Yêu cầu (nếu có) -->
+            <!-- Yêu cầu (nếu có) - Simplified -->
             @if(isset($yeuCau) && $yeuCau)
-                <div class="bg-blue-50 rounded-2xl border border-blue-200 p-6">
-                    <h3 class="text-lg font-bold text-blue-900 mb-3">Thông tin đề nghị</h3>
-                    <div class="space-y-2">
-                        <div class="flex items-center text-sm">
-                            <span class="text-blue-600 font-medium w-32">Loại:</span>
-                            <span class="text-blue-900">
-                                @if($yeuCau->VaiTroNguoiGui === 'GiaSu')
-                                    <span class="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-medium">Bạn đã gửi đề nghị</span>
-                                @else
-                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">Nhận lời mời từ học viên</span>
-                                @endif
-                            </span>
+                <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl border border-blue-200 p-6">
+                    <h3 class="text-base font-bold text-blue-900 mb-4 flex items-center">
+                        <i data-lucide="file-text" class="w-5 h-5 mr-2"></i>
+                        Thông tin đề nghị
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-blue-700">Loại đề nghị</span>
+                            @if($yeuCau->VaiTroNguoiGui === 'GiaSu')
+                                <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">Bạn đã gửi</span>
+                            @else
+                                <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Nhận lời mời</span>
+                            @endif
                         </div>
-                        <div class="flex items-center text-sm">
-                            <span class="text-blue-600 font-medium w-32">Trạng thái:</span>
-                            <span class="text-blue-900 font-semibold">
-                                @if($yeuCau->TrangThai === 'ChoDuyet')
-                                    <span class="bg-yellow-100 text-yellow-700 px-2 py-1 rounded text-xs font-medium">Chờ duyệt</span>
-                                @elseif($yeuCau->TrangThai === 'ChapNhan')
-                                    <span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-medium">Đã chấp nhận</span>
-                                @elseif($yeuCau->TrangThai === 'TuChoi')
-                                    <span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-medium">Đã từ chối</span>
-                                @endif
-                            </span>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-blue-700">Trạng thái</span>
+                            @if($yeuCau->TrangThai === 'ChoDuyet')
+                                <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-semibold">Chờ duyệt</span>
+                            @elseif($yeuCau->TrangThai === 'ChapNhan')
+                                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Đã chấp nhận</span>
+                            @elseif($yeuCau->TrangThai === 'TuChoi')
+                                <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold">Đã từ chối</span>
+                            @endif
                         </div>
                         @if($yeuCau->GhiChu)
-                            <div class="flex items-start text-sm">
-                                <span class="text-blue-600 font-medium w-32">Ghi chú:</span>
-                                <span class="text-blue-900 italic">{{ $yeuCau->GhiChu }}</span>
-                            </div>
+                        <div class="pt-3 border-t border-blue-200">
+                            <p class="text-xs text-blue-600 mb-1">Ghi chú</p>
+                            <p class="text-sm text-blue-900 italic">{{ $yeuCau->GhiChu }}</p>
+                        </div>
                         @endif
-                        <div class="flex items-center text-sm">
-                            <span class="text-blue-600 font-medium w-32">Ngày gửi:</span>
-                            <span class="text-blue-900">
+                        <div class="pt-3 border-t border-blue-200 flex items-center justify-between">
+                            <span class="text-xs text-blue-600">Ngày gửi</span>
+                            <span class="text-sm text-blue-900 font-medium">
                                 {{ $yeuCau->NgayTao instanceof \Carbon\Carbon ? $yeuCau->NgayTao->format('d/m/Y H:i') : \Carbon\Carbon::parse($yeuCau->NgayTao)->format('d/m/Y H:i') }}
                             </span>
                         </div>

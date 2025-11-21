@@ -88,7 +88,11 @@ class ProfileController extends Controller
         /** @var \App\Models\TaiKhoan $user */
         $user = Auth::user();
         $user->load('giaSu');
-        return view('giasu.profile-index', compact('user'));
+        
+        // Lấy danh sách môn học cho dropdown
+        $monHocs = \App\Models\MonHoc::orderBy('TenMon')->get();
+        
+        return view('giasu.profile-index', compact('user', 'monHocs'));
     }
 
     /**
@@ -121,18 +125,27 @@ class ProfileController extends Controller
             return back()->with('success_password', 'Đổi mật khẩu thành công!');
         }
         
-        // Cập nhật thông tin profile bình thường
+        // Cập nhật thông tin profile bình thường - Đồng bộ với mobile
         $validated = $request->validate([
             'HoTen' => 'required|string|max:150',
             'SoDienThoai' => ['required', 'string', 'max:20', Rule::unique('TaiKhoan')->ignore($user->TaiKhoanID, 'TaiKhoanID')],
             'NgaySinh' => 'nullable|date',
             'GioiTinh' => 'nullable|string|max:10',
             'DiaChi' => 'nullable|string|max:255',
+            
+            // Thông tin học vấn - Đồng bộ với mobile
+            'BangCap' => 'nullable|string|max:255',
+            'TruongDaoTao' => 'nullable|string|max:255',
             'ChuyenNganh' => 'nullable|string|max:255',
-            'TrinhDo' => 'nullable|string|max:100',
-            'KinhNghiem' => 'nullable|integer|min:0',
-            'GioiThieu' => 'nullable|string|max:1000',
+            'ThanhTich' => 'nullable|string|max:1000',
+            'KinhNghiem' => 'nullable|string|max:255',
+            'MonID' => 'nullable|integer|exists:MonHoc,MonID',
+            
+            // Upload ảnh - Đồng bộ với mobile
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'AnhBangCap' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
         
         /** @var \App\Models\TaiKhoan $user */
@@ -143,18 +156,48 @@ class ProfileController extends Controller
             'NgaySinh' => $validated['NgaySinh'],
             'GioiTinh' => $validated['GioiTinh'],
             'DiaChi' => $validated['DiaChi'],
+            'BangCap' => $validated['BangCap'] ?? null,
+            'TruongDaoTao' => $validated['TruongDaoTao'] ?? null,
             'ChuyenNganh' => $validated['ChuyenNganh'] ?? null,
-            'TrinhDo' => $validated['TrinhDo'] ?? null,
+            'ThanhTich' => $validated['ThanhTich'] ?? null,
             'KinhNghiem' => $validated['KinhNghiem'] ?? null,
-            'GioiThieu' => $validated['GioiThieu'] ?? null,
+            'MonID' => $validated['MonID'] ?? null,
         ];
         
+        // Upload ảnh đại diện - Đồng bộ với mobile
         if ($request->hasFile('AnhDaiDien')) {
             if ($giaSu->AnhDaiDien) {
                 Storage::disk('public')->delete($giaSu->AnhDaiDien);
             }
             $path = $request->file('AnhDaiDien')->store('avatars', 'public');
             $giaSuData['AnhDaiDien'] = $path;
+        }
+        
+        // Upload CCCD mặt trước - Đồng bộ với mobile
+        if ($request->hasFile('AnhCCCD_MatTruoc')) {
+            if ($giaSu->AnhCCCD_MatTruoc) {
+                Storage::disk('public')->delete($giaSu->AnhCCCD_MatTruoc);
+            }
+            $path = $request->file('AnhCCCD_MatTruoc')->store('cccd', 'public');
+            $giaSuData['AnhCCCD_MatTruoc'] = $path;
+        }
+        
+        // Upload CCCD mặt sau - Đồng bộ với mobile
+        if ($request->hasFile('AnhCCCD_MatSau')) {
+            if ($giaSu->AnhCCCD_MatSau) {
+                Storage::disk('public')->delete($giaSu->AnhCCCD_MatSau);
+            }
+            $path = $request->file('AnhCCCD_MatSau')->store('cccd', 'public');
+            $giaSuData['AnhCCCD_MatSau'] = $path;
+        }
+        
+        // Upload ảnh bằng cấp - Đồng bộ với mobile
+        if ($request->hasFile('AnhBangCap')) {
+            if ($giaSu->AnhBangCap) {
+                Storage::disk('public')->delete($giaSu->AnhBangCap);
+            }
+            $path = $request->file('AnhBangCap')->store('degrees', 'public');
+            $giaSuData['AnhBangCap'] = $path;
         }
         
         $giaSu->update($giaSuData);

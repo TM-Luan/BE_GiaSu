@@ -38,6 +38,16 @@ return [
             'driver' => 'session',
             'provider' => 'users', // Dùng provider 'users' vì nó trỏ đến TaiKhoan
         ],
+
+        'giasu' => [
+            'driver' => 'session',
+            'provider' => 'giasu',
+        ],
+
+        'nguoihoc' => [
+            'driver' => 'session',
+            'provider' => 'nguoihoc',
+        ],
     ],
 
     /*
@@ -53,6 +63,16 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\TaiKhoan::class),
+        ],
+
+        'giasu' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\GiaSu::class,
+        ],
+
+        'nguoihoc' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\NguoiHoc::class,
         ],
 
         // 'users' => [

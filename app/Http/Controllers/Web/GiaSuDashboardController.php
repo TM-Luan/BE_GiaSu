@@ -123,6 +123,14 @@ class GiaSuDashboardController extends Controller
             ], 403);
         }
 
+        // Kiểm tra gia sư đã được duyệt chưa
+        if ($giaSu->TrangThai != 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tài khoản của bạn đang chờ duyệt. Vui lòng hoàn thiện hồ sơ và chờ quản trị viên phê duyệt.'
+            ], 403);
+        }
+
         $validated = $request->validate([
             'lop_hoc_id' => 'required|exists:LopHocYeuCau,LopYeuCauID',
             'ghi_chu' => 'nullable|string|max:500'

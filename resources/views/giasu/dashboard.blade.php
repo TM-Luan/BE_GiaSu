@@ -4,6 +4,35 @@
 
 @section('content')
     
+    {{-- Thông báo chờ duyệt nếu TrangThai != 1 --}}
+    @php
+        $giaSu = session('giasu');
+    @endphp
+    
+    @if($giaSu && $giaSu->TrangThai != 1)
+        <div class="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-5 rounded-lg shadow-sm">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i data-lucide="alert-circle" class="h-6 w-6 text-yellow-400"></i>
+                </div>
+                <div class="ml-3 flex-1">
+                    <h3 class="text-base font-semibold text-yellow-800">
+                        Tài khoản đang chờ duyệt
+                    </h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <p>Tài khoản của bạn đang được xem xét. Bạn có thể xem danh sách lớp học và cập nhật thông tin cá nhân, nhưng <strong>chưa thể gửi đề nghị dạy</strong> cho đến khi tài khoản được phê duyệt.</p>
+                    </div>
+                    <div class="mt-3">
+                        <a href="{{ route('giasu.profile.index') }}" class="inline-flex items-center px-4 py-2 border border-yellow-400 text-sm font-medium rounded-md text-yellow-800 bg-yellow-100 hover:bg-yellow-200 transition-colors">
+                            <i data-lucide="user-check" class="w-4 h-4 mr-2"></i>
+                            Hoàn thiện hồ sơ để được duyệt nhanh hơn
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+    
     <div class="mb-8">
         <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Chào mừng trở lại!</h1>
         <p class="text-gray-500 mt-2 text-base font-medium">Tìm kiếm lớp học phù hợp nhất cho bạn.</p>

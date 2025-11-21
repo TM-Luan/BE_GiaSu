@@ -15,6 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         
+        // Đăng ký middleware alias cho route
+        $middleware->alias([
+            'giasu.approved' => \App\Http\Middleware\CheckGiaSuApproved::class,
+        ]);
+        
         // === THÊM ĐOẠN CODE NÀY VÀO ===
         $middleware->redirectGuestsTo(function (Request $request) {
             // Nếu request (yêu cầu) KHÔNG mong muốn JSON (ví dụ: là trình duyệt web)

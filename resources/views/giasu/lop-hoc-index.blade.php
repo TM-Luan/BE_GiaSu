@@ -40,14 +40,14 @@
 
         <!-- Thông báo -->
         @if(session('success'))
-            <div class="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
+            <div class="alert-message mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
                 <i data-lucide="check-circle" class="w-5 h-5 mr-3 text-blue-600"></i>
                 <span>{{ session('success') }}</span>
             </div>
         @endif
 
         @if(session('error'))
-            <div class="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+            <div class="alert-message mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
                 <i data-lucide="alert-circle" class="w-5 h-5 mr-3 text-red-600"></i>
                 <span>{{ session('error') }}</span>
             </div>
@@ -101,9 +101,9 @@
                                 @endif
                             </div>
 
-                            <!-- Badge trạng thái thanh toán -->
+                            <!-- Badge trạng thái thanh toán - Đồng bộ với mobile -->
                             @php
-                                $isPaid = $lopHoc->TrangThaiThanhToan === 'Paid';
+                                $isPaid = $lopHoc->TrangThaiThanhToan === 'DaThanhToan';
                                 $phiNhanLop = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
                             @endphp
                             
@@ -127,32 +127,41 @@
                                     Chi tiết
                                 </a>
                                 
-                                @if($isPaid)
-                                    <!-- Đã thanh toán: hiển thị nút Tạo lịch và Xem lịch -->
-                                    <a href="{{ route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID) }}" 
-                                       class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
-                                        <i data-lucide="calendar-plus" class="w-4 h-4 mr-1.5"></i>
-                                        Tạo lịch
+                                @if(!$isPaid)
+                                    <!-- Chưa thanh toán: Chi tiết + Thanh toán + Hủy lớp -->
+                                    <a href="{{ route('giasu.lophoc.payment', $lopHoc->LopYeuCauID) }}" 
+                                       class="inline-flex items-center px-3 py-1.5 bg-orange-600 text-white rounded-lg text-sm font-medium hover:bg-orange-700 transition-colors">
+                                        <i data-lucide="credit-card" class="w-4 h-4 mr-1.5"></i>
+                                        Thanh toán
                                     </a>
+                                    <form action="{{ route('giasu.lophoc.cancel', $lopHoc->LopYeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy lớp này? Lớp sẽ trở về trạng thái tìm gia sư.');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                                            <i data-lucide="x-circle" class="w-4 h-4 mr-1.5"></i>
+                                            Hủy lớp
+                                        </button>
+                                    </form>
+                                @else
+                                    <!-- Đã thanh toán: Chi tiết + Xem lịch + Hủy lịch + Tạo lịch (Đồng bộ mobile) -->
                                     <a href="{{ route('giasu.lophoc.schedule', $lopHoc->LopYeuCauID) }}" 
                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
                                         <i data-lucide="calendar" class="w-4 h-4 mr-1.5"></i>
                                         Xem lịch
                                     </a>
-                                @else
-                                    <!-- Chưa thanh toán: hiển thị nút Tạo lịch (sẽ yêu cầu thanh toán) + Hủy lớp -->
+                                    <form action="{{ route('giasu.lophoc.schedule.delete-all', $lopHoc->LopYeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn xóa tất cả lịch học hiện tại?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-colors">
+                                            <i data-lucide="trash-2" class="w-4 h-4 mr-1.5"></i>
+                                            Hủy lịch
+                                        </button>
+                                    </form>
                                     <a href="{{ route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID) }}" 
-                                       class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                                       class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
                                         <i data-lucide="calendar-plus" class="w-4 h-4 mr-1.5"></i>
                                         Tạo lịch
                                     </a>
-                                    <form action="{{ route('giasu.lophoc.cancel', $lopHoc->LopYeuCauID) }}" method="POST" class="inline" onsubmit="return confirm('Bạn chắc chắn muốn hủy lớp này? Lớp sẽ trở về trạng thái tìm gia sư.');">
-                                        @csrf
-                                        <button type="submit" class="inline-flex items-center px-3 py-1.5 border border-red-300 text-red-700 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors">
-                                            <i data-lucide="x-circle" class="w-4 h-4 mr-1.5"></i>
-                                            Hủy lớp
-                                        </button>
-                                    </form>
                                 @endif
                             </div>
                         </div>
@@ -365,9 +374,10 @@
 
 @push('scripts')
 <script>
-    // Auto-hide success/error messages
+    // Auto-hide success/error messages after 5 seconds
     setTimeout(() => {
-        const alerts = document.querySelectorAll('[class*="bg-blue-50"], [class*="bg-red-50"]');
+        // Only select alert messages, not other UI elements
+        const alerts = document.querySelectorAll('.alert-message');
         alerts.forEach(alert => {
             alert.style.transition = 'opacity 0.5s';
             alert.style.opacity = '0';

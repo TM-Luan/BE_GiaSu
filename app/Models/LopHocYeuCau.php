@@ -13,7 +13,7 @@ class LopHocYeuCau extends Model
         'NguoiHocID','GiaSuID','HinhThuc','HocPhi','ThoiLuong','TrangThai','SoLuong','MoTa',
         'MonID','KhoiLopID','DoiTuongID',
         'SoBuoiTuan',
-        'LichHocMongMuon','NgayTao'
+        'LichHocMongMuon','NgayTao','TrangThaiThanhToan'
     ];
 
     protected $casts = [

@@ -164,6 +164,7 @@ class DropdownDataController extends Controller
 
             if ($type === 'tutors' || $type === 'all') {
                 $tutorNames = \App\Models\GiaSu::where('HoTen', 'LIKE', "%{$query}%")
+                    ->where('TrangThai', 1) // Chỉ hiển thị gia sư đã duyệt
                     ->limit(5)
                     ->pluck('HoTen')
                     ->toArray();
