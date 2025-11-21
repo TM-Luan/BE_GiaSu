@@ -207,49 +207,37 @@ class LopHocController extends Controller
      * Xóa lớp học
      * DELETE /api/admin/lophoc/{id}
      */
-    public function destroy(Request $request, $id)
-    {
-        try {
-            $lopHoc = LopHocYeuCau::findOrFail($id);
-            
-            // Kiểm tra xem lớp có lịch học không
-            if ($lopHoc->lichHocs()->count() > 0) {
-                $message = 'Không thể xóa lớp đã có lịch học. Vui lòng đổi trạng thái thành "Đã hủy" thay vì xóa.';
-                
-                if ($request->wantsJson() || $request->is('api/*')) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $message,
-                    ], 400);
-                }
+  public function destroy(Request $request, $id)
+{
+    try {
+        $lopHoc = LopHocYeuCau::findOrFail($id);
 
-                return redirect()->back()->with('error', $message);
-            }
+        // Không cần kiểm tra lichHoc nữa vì DB sẽ tự động cascade
+        $lopHoc->delete();
 
-            $lopHoc->delete();
-
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Xóa lớp học thành công!',
-                ]);
-            }
-
-            return redirect()->route('admin.lophoc.index')
-                ->with('success', 'Xóa lớp học thành công!');
-        } catch (\Exception $e) {
-            $message = 'Lỗi khi xóa: ' . $e->getMessage();
-            
-            if ($request->wantsJson() || $request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $message,
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', $message);
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Xóa lớp học thành công (bao gồm các dữ liệu liên quan)!',
+            ]);
         }
+
+        return redirect()->route('admin.lophoc.index')
+            ->with('success', 'Xóa lớp học và toàn bộ dữ liệu liên quan thành công!');
+    } catch (\Exception $e) {
+        $message = 'Lỗi khi xóa: ' . $e->getMessage();
+
+        if ($request->wantsJson() || $request->is('api/*')) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 500);
+        }
+
+        return redirect()->back()->with('error', $message);
     }
+}
+
 
     /**
      * Thống kê lớp học
