@@ -165,6 +165,23 @@ class LopHocController extends Controller
                 ->update(['TrangThai' => 'Rejected']);
         });
 
+        // --- Tạo thông báo cho gia sư (giống mobile) ---
+        $lopHocInfo = \App\Models\LopHocYeuCau::with(['monHoc', 'khoiLop'])->find($yeuCau->LopYeuCauID);
+        $giaSuInfo = \App\Models\GiaSu::find($yeuCau->GiaSuID);
+
+        if ($lopHocInfo && $giaSuInfo) {
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            
+            \App\Models\Notification::create([
+                'user_id' => $giaSuInfo->TaiKhoanID,
+                'title' => 'Yêu cầu được chấp nhận',
+                'message' => "Yêu cầu dạy lớp $tenLop đã được chấp nhận",
+                'type' => 'request_accepted',
+                'related_id' => $lopHocInfo->LopYeuCauID,
+                'is_read' => false,
+            ]);
+        }
+
         return back()->with('success', 'Đã chấp nhận gia sư thành công! Lớp học đã chuyển sang trạng thái Đang học.');
     }
 
@@ -184,6 +201,23 @@ class LopHocController extends Controller
             'TrangThai' => 'Rejected',
             'NgayCapNhat' => now()
         ]);
+
+        // --- Tạo thông báo cho gia sư (giống mobile) ---
+        $lopHocInfo = \App\Models\LopHocYeuCau::with(['monHoc', 'khoiLop'])->find($yeuCau->LopYeuCauID);
+        $giaSuInfo = \App\Models\GiaSu::find($yeuCau->GiaSuID);
+
+        if ($lopHocInfo && $giaSuInfo) {
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            
+            \App\Models\Notification::create([
+                'user_id' => $giaSuInfo->TaiKhoanID,
+                'title' => 'Yêu cầu bị từ chối',
+                'message' => "Yêu cầu dạy lớp $tenLop đã bị từ chối",
+                'type' => 'request_rejected',
+                'related_id' => $lopHocInfo->LopYeuCauID,
+                'is_read' => false,
+            ]);
+        }
 
         return back()->with('success', 'Đã từ chối yêu cầu.');
     }

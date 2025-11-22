@@ -10,7 +10,15 @@
             <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Cài đặt tài khoản</h1>
             <p class="text-gray-500 mt-2 text-base font-medium">Quản lý hồ sơ, thông tin cá nhân và bảo mật.</p>
         </div>
-        <div>
+        <div class="flex items-center gap-4">
+            @if($danhGiaStats && $danhGiaStats->tong_so_danh_gia > 0)
+                <div class="flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-full">
+                    <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-yellow-400"></i>
+                    <span class="font-bold text-yellow-800">{{ $danhGiaStats->diem_trung_binh }}</span>
+                    <span class="text-yellow-600 text-sm">({{ $danhGiaStats->tong_so_danh_gia }} đánh giá)</span>
+                </div>
+            @endif
+            
             @if($user->giaSu->TrangThai == 2)
                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800">
                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -69,7 +77,18 @@
                         <div class="mt-2">
                             <span class="inline-block h-32 w-32 rounded-full overflow-hidden bg-gray-100">
                                 <template x-if="!photoPreview">
-                                    <img src="{{ $user->giaSu->AnhDaiDien ? asset('storage/' . $user->giaSu->AnhDaiDien) : 'https://ui-avatars.com/api/?name=' . urlencode($user->giaSu->HoTen) . '&background=random&size=128' }}" 
+                                    @php
+                                        // ĐỒNG BỘ MOBILE: Hỗ trợ cả URL ImgBB và storage path
+                                        $avatarUrl = 'https://ui-avatars.com/api/?name=' . urlencode($user->giaSu->HoTen) . '&background=random&size=128';
+                                        if ($user->giaSu->AnhDaiDien) {
+                                            if (filter_var($user->giaSu->AnhDaiDien, FILTER_VALIDATE_URL)) {
+                                                $avatarUrl = $user->giaSu->AnhDaiDien;
+                                            } else {
+                                                $avatarUrl = asset('storage/' . $user->giaSu->AnhDaiDien);
+                                            }
+                                        }
+                                    @endphp
+                                    <img src="{{ $avatarUrl }}" 
                                          alt="Ảnh đại diện" class="h-full w-full object-cover">
                                 </template>
                                 <template x-if="photoPreview">
@@ -120,13 +139,6 @@
                                 <option value="Nữ" {{ old('GioiTinh', $user->giaSu->GioiTinh) == 'Nữ' ? 'selected' : '' }}>Nữ</option>
                                 <option value="Khác" {{ old('GioiTinh', $user->giaSu->GioiTinh) == 'Khác' ? 'selected' : '' }}>Khác</option>
                             </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Trình độ</label>
-                            <input type="text" name="TrinhDo" value="{{ old('TrinhDo', $user->giaSu->TrinhDo) }}" 
-                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                                   placeholder="VD: Đại học, Thạc sĩ...">
-                            @error('TrinhDo') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-2">Bằng cấp</label>
@@ -182,13 +194,6 @@
                                    placeholder="Ví dụ: Q.1, TP.HCM">
                             @error('DiaChi') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Giới thiệu bản thân</label>
-                            <textarea name="GioiThieu" rows="4" 
-                                      class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                                      placeholder="Viết vài dòng giới thiệu về bản thân...">{{ old('GioiThieu', $user->giaSu->GioiThieu) }}</textarea>
-                            @error('GioiThieu') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                        </div>
                     </div>
                 </div>
 
@@ -203,7 +208,12 @@
                                 <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-400 transition-colors">
                                     <template x-if="!preview">
                                         @if($user->giaSu->AnhCCCD_MatTruoc)
-                                            <img src="{{ asset('storage/' . $user->giaSu->AnhCCCD_MatTruoc) }}" 
+                                            @php
+                                                $cccdFrontUrl = filter_var($user->giaSu->AnhCCCD_MatTruoc, FILTER_VALIDATE_URL) 
+                                                    ? $user->giaSu->AnhCCCD_MatTruoc 
+                                                    : asset('storage/' . $user->giaSu->AnhCCCD_MatTruoc);
+                                            @endphp
+                                            <img src="{{ $cccdFrontUrl }}" 
                                                  alt="CCCD mặt trước" class="w-full h-32 object-cover rounded-lg">
                                         @else
                                             <div class="flex flex-col items-center justify-center h-32 text-gray-400">
@@ -238,7 +248,12 @@
                                 <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-400 transition-colors">
                                     <template x-if="!preview">
                                         @if($user->giaSu->AnhCCCD_MatSau)
-                                            <img src="{{ asset('storage/' . $user->giaSu->AnhCCCD_MatSau) }}" 
+                                            @php
+                                                $cccdBackUrl = filter_var($user->giaSu->AnhCCCD_MatSau, FILTER_VALIDATE_URL) 
+                                                    ? $user->giaSu->AnhCCCD_MatSau 
+                                                    : asset('storage/' . $user->giaSu->AnhCCCD_MatSau);
+                                            @endphp
+                                            <img src="{{ $cccdBackUrl }}" 
                                                  alt="CCCD mặt sau" class="w-full h-32 object-cover rounded-lg">
                                         @else
                                             <div class="flex flex-col items-center justify-center h-32 text-gray-400">
@@ -273,7 +288,12 @@
                                 <div class="relative border-2 border-dashed border-gray-300 rounded-xl p-4 hover:border-blue-400 transition-colors">
                                     <template x-if="!preview">
                                         @if($user->giaSu->AnhBangCap)
-                                            <img src="{{ asset('storage/' . $user->giaSu->AnhBangCap) }}" 
+                                            @php
+                                                $degreeUrl = filter_var($user->giaSu->AnhBangCap, FILTER_VALIDATE_URL) 
+                                                    ? $user->giaSu->AnhBangCap 
+                                                    : asset('storage/' . $user->giaSu->AnhBangCap);
+                                            @endphp
+                                            <img src="{{ $degreeUrl }}" 
                                                  alt="Bằng cấp" class="w-full h-32 object-cover rounded-lg">
                                         @else
                                             <div class="flex flex-col items-center justify-center h-32 text-gray-400">

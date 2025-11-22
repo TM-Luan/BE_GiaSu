@@ -11,7 +11,6 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
         <div class="lg:col-span-2 space-y-6">
             <!-- Header Card - Simplified -->
             <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
@@ -146,7 +145,7 @@
                 
                 <div class="mt-4 pt-4 border-t border-gray-100">
                     <a href="{{ route('nguoihoc.giasu.show', $lopHoc->GiaSuID) }}" class="block w-full py-2.5 text-center text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors">
-                        Xem hồ sơ
+                        Xem hồ sơ & Đánh giá
                     </a>
                 </div>
             </div>

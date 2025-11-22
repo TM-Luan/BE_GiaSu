@@ -49,6 +49,15 @@ Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 // ===== AUTHENTICATED USER ROUTES =====
 Route::middleware(['auth'])->group(function () {
     
+    // ===== THÔNG BÁO (NOTIFICATIONS) - DÙNG CHUNG CHO TẤT CẢ USER =====
+    Route::prefix('thong-bao')->name('thongbao.')->group(function () {
+        Route::get('/', [App\Http\Controllers\Web\NotificationController::class, 'index'])->name('index');
+        Route::get('/api/list', [App\Http\Controllers\Web\NotificationController::class, 'getNotifications'])->name('api.list');
+        Route::post('/{id}/mark-read', [App\Http\Controllers\Web\NotificationController::class, 'markAsRead'])->name('mark-read');
+        Route::post('/mark-all-read', [App\Http\Controllers\Web\NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+        Route::delete('/{id}', [App\Http\Controllers\Web\NotificationController::class, 'delete'])->name('delete');
+    });
+    
     // ===== GIA SƯ (TUTOR) ROUTES =====
     Route::prefix('giasu')->name('giasu.')->group(function () {
         
@@ -80,6 +89,10 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/{id}/lich-hoc', [GiaSuLopHocController::class, 'schedule'])->name('schedule');
             // Thêm lịch học mới
             Route::get('/{id}/lich-hoc/them', [GiaSuLopHocController::class, 'addSchedule'])->name('schedule.add');
+            
+            // ĐỒNG BỘ MOBILE: Sửa lịch và cập nhật trạng thái
+            Route::put('/lich-hoc/{lichHocId}/sua', [GiaSuLopHocController::class, 'updateSchedule'])->name('schedule.update');
+            Route::patch('/lich-hoc/{lichHocId}/trang-thai', [GiaSuLopHocController::class, 'updateScheduleStatus'])->name('schedule.update-status');
             
             // Chấp nhận/từ chối lời mời từ học viên
             Route::post('/loi-moi/{yeuCauId}/chap-nhan', [GiaSuLopHocController::class, 'acceptInvitation'])->name('invitation.accept');
@@ -113,6 +126,11 @@ Route::middleware(['auth'])->group(function () {
         
         // Mời gia sư dạy
         Route::post('/moi-day', [NguoiHocDashboardController::class, 'moiDay'])->name('moi_day');
+
+        // Đánh giá gia sư
+        Route::get('/danh-gia/{giaSuId}/kiem-tra', [App\Http\Controllers\Web\DanhGiaWebController::class, 'kiemTraDanhGia'])->name('danhgia.check');
+        Route::post('/danh-gia', [App\Http\Controllers\Web\DanhGiaWebController::class, 'taoDanhGia'])->name('danhgia.store');
+        Route::get('/danh-gia/{giaSuId}/stats', [App\Http\Controllers\Web\DanhGiaWebController::class, 'getRatingStats'])->name('danhgia.stats');
 
         // Quản lý lớp học của tôi
         Route::prefix('lop-hoc')->name('lophoc.')->group(function () {

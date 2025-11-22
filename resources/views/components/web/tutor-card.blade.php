@@ -3,9 +3,34 @@
 @php
     $gs = $taikhoanGiaSu; 
     
-    // 1. Xử lý Đánh giá
-    $rating = round($gs->danh_gia_avg_diem_so ?? 0, 1);
-    $reviewCount = $gs->danh_gia_count ?? 0;
+    // DEBUG: Check all available attributes
+    $allKeys = array_keys($gs->getAttributes());
+    $aggregates = array_filter($allKeys, fn($k) => str_contains($k, 'danh_gia'));
+    
+    // Try all possible attribute name variations
+    $rating = round(
+        $gs->{'danh_gia_avg_DiemSo'} ?? 
+        $gs->{'danh_gia_avg_diem_so'} ?? 
+        $gs->getAttribute('danh_gia_avg_DiemSo') ?? 
+        $gs->getAttribute('danh_gia_avg_diem_so') ??
+        0, 
+    1);
+    
+    $reviewCount = 
+        $gs->{'danh_gia_count'} ?? 
+        $gs->getAttribute('danh_gia_count') ?? 
+        0;
+    
+    // DEBUG: Disabled - uncomment to debug
+    // if ($gs->GiaSuID == 15) {
+    //     dd([
+    //         'all_keys' => $allKeys,
+    //         'danh_gia_keys' => $aggregates,
+    //         'rating' => $rating,
+    //         'count' => $reviewCount,
+    //         'raw_object' => $gs->toArray(),
+    //     ]);
+    // }
 
     // 2. Xử lý Học phí
     $avgHocPhi = $gs->lopHocYeuCau->avg('HocPhi');
@@ -47,7 +72,14 @@
             </div>
 
             <p class="text-gray-500 text-sm font-medium truncate">
-                {{ $gs->KinhNghiem ?? $gs->TruongDaoTao ?? 'Gia sư mới' }}
+                {{ 
+                    $gs->KinhNghiem
+                    ? 'Kinh nghiệm: ' . $gs->KinhNghiem
+                    : ($gs->TruongDaoTao 
+                        ? $gs->TruongDaoTao
+                        : 'Gia sư mới'
+                    )
+                }}
             </p>
 
             <div class="flex items-center gap-1 mt-1">

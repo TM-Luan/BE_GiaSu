@@ -178,6 +178,23 @@ class GiaSuDashboardController extends Controller
                 'NgayCapNhat' => now()
             ]);
 
+            // --- Tạo thông báo cho người học (giống mobile) ---
+            $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($validated['lop_hoc_id']);
+            
+            if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
+                $tenGiaSu = $user->HoTen ?? 'Một gia sư';
+                $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Môn học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+
+                \App\Models\Notification::create([
+                    'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
+                    'title' => 'Yêu cầu dạy mới',
+                    'message' => "$tenGiaSu đã đăng ký dạy lớp: $tenLop",
+                    'type' => 'request_received',
+                    'related_id' => $lopHocInfo->LopYeuCauID,
+                    'is_read' => false,
+                ]);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Đã gửi đề nghị dạy lớp "' . $lopHoc->TieuDeLop . '" thành công!'

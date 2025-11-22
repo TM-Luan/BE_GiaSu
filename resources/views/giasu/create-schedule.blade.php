@@ -1,8 +1,34 @@
 @extends('layouts.web')
 
-@section('title', 'Tạo lịch học tự động')
+@section('title', 'Tạo lịch học')
 
 @section('content')
+
+@if($lopHoc->TrangThaiThanhToan !== 'DaThanhToan')
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg mb-6">
+            <div class="flex items-start">
+                <i data-lucide="alert-circle" class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0 mt-1"></i>
+                <div>
+                    <h3 class="text-lg font-bold text-yellow-800 mb-2">Chưa thể tạo lịch học</h3>
+                    <p class="text-yellow-700 mb-4">Bạn cần thanh toán phí nhận lớp trước khi tạo lịch học.</p>
+                    <div class="flex gap-3">
+                        <a href="{{ route('giasu.lophoc.payment', $lopHoc->LopYeuCauID) }}" 
+                           class="inline-flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg font-semibold hover:bg-yellow-700 transition-colors">
+                            <i data-lucide="credit-card" class="w-4 h-4 mr-2"></i>
+                            Thanh toán ngay
+                        </a>
+                        <a href="{{ route('giasu.lophoc.index') }}" 
+                           class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                            Quay lại
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@else
 <div class="max-w-4xl mx-auto p-6">
     <div class="mb-6">
         <a href="{{ route('giasu.lophoc.index') }}" class="inline-flex items-center text-blue-600 hover:text-blue-700">
@@ -183,9 +209,18 @@
     lucide.createIcons();
 
     let buoiHocIndex = 1;
+    const maxBuoiTuan = {{ $lopHoc->SoBuoiTuan ?? 2 }}; // ĐỒNG BỘ MOBILE: Lấy số buổi/tuần
 
     document.getElementById('add-buoi').addEventListener('click', function() {
         const container = document.getElementById('buoi-hoc-container');
+        const currentCount = document.querySelectorAll('.buoi-hoc-item').length;
+        
+        // ĐỒNG BỘ MOBILE: Kiểm tra số buổi trước khi thêm
+        if (currentCount >= maxBuoiTuan) {
+            alert(`⚠️ Lớp này chỉ học tối đa ${maxBuoiTuan} buổi/tuần. Bạn không thể thêm thêm buổi học!`);
+            return;
+        }
+
         const newBuoi = `
             <div class="buoi-hoc-item flex gap-3 items-start p-4 bg-gray-50 rounded-lg border border-gray-200">
                 <div class="flex-1">
@@ -213,12 +248,14 @@
         buoiHocIndex++;
         lucide.createIcons();
         updateRemoveButtons();
+        updateAddButtonState(); // Kiểm tra lại nút thêm
     });
 
     document.getElementById('buoi-hoc-container').addEventListener('click', function(e) {
         if (e.target.closest('.remove-buoi')) {
             e.target.closest('.buoi-hoc-item').remove();
             updateRemoveButtons();
+            updateAddButtonState(); // Kiểm tra lại nút thêm
         }
     });
 
@@ -233,5 +270,24 @@
             }
         });
     }
+
+    function updateAddButtonState() {
+        const addBtn = document.getElementById('add-buoi');
+        const currentCount = document.querySelectorAll('.buoi-hoc-item').length;
+        
+        if (currentCount >= maxBuoiTuan) {
+            addBtn.disabled = true;
+            addBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            addBtn.classList.remove('hover:bg-blue-100');
+        } else {
+            addBtn.disabled = false;
+            addBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            addBtn.classList.add('hover:bg-blue-100');
+        }
+    }
+
+    // Khởi tạo trạng thái ban đầu
+    updateAddButtonState();
 </script>
+@endif
 @endsection

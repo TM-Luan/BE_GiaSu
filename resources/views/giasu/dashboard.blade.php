@@ -4,6 +4,14 @@
 
 @section('content')
     
+    {{-- Header với Notification Bell --}}
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Trang chủ Gia sư</h1>
+        
+        {{-- Notification Bell --}}
+        <x-notification-bell />
+    </div>
+    
     {{-- Thông báo chờ duyệt nếu TrangThai != 1 --}}
     @php
         $currentUser = Auth::user();

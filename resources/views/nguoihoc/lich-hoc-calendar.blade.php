@@ -3,6 +3,7 @@
 @section('title', 'Lịch học, lịch thi theo tuần')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="w-full px-4">
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
         <!-- Header -->
@@ -148,10 +149,20 @@
 
     function initCalendar() {
         const today = new Date();
-        const day = today.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
+        const day = today.getDay(); // 0=Sunday, 6=Saturday
+        let diff;
+        
+        if (day === 0) {
+            diff = 1; // Nếu hôm nay là Chủ nhật, lấy Thứ 2 tuần sau
+        } else if (day === 6) {
+            diff = 2; // Nếu hôm nay là Thứ 7, lấy Thứ 2 tuần sau
+        } else {
+            diff = 1 - day; // Các ngày khác, lấy Thứ 2 tuần này
+        }
+        
         currentWeekStart = new Date(today);
         currentWeekStart.setDate(today.getDate() + diff);
+        currentWeekStart.setHours(0, 0, 0, 0); // Reset time to midnight
         renderWeek();
     }
 
@@ -165,18 +176,22 @@
         }
 
         // Update header dates
+        // currentWeekStart là Thứ 2 (Monday)
+        // Cần map: Monday→id=2, Tuesday→id=3,...Saturday→id=7, Sunday→id=1
         for (let i = 0; i < 7; i++) {
             const date = new Date(currentWeekStart);
             date.setDate(currentWeekStart.getDate() + i);
-            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
+            // i=0 (Mon)→2, i=1 (Tue)→3, i=2 (Wed)→4, i=3 (Thu)→5, i=4 (Fri)→6, i=5 (Sat)→7, i=6 (Sun)→1
+            const columnId = i === 6 ? 1 : (i + 2);
             const dateStr = date.toLocaleDateString('vi-VN');
-            const dateEl = document.getElementById(`date-${dayOfWeek}`);
+            const dateEl = document.getElementById(`date-${columnId}`);
             if (dateEl) dateEl.textContent = dateStr;
             
             // Highlight current day
-            const header = document.getElementById(`day-header-${dayOfWeek}`);
+            const header = document.getElementById(`day-header-${columnId}`);
             const today = new Date();
-            if (date.toDateString() === today.toDateString()) {
+            today.setHours(0, 0, 0, 0);
+            if (date.getTime() === today.getTime()) {
                 header.querySelector('div').classList.add('text-blue-600');
             } else {
                 header.querySelector('div').classList.remove('text-blue-600');
@@ -185,19 +200,22 @@
 
         // Fill schedule data
         scheduleData.forEach(schedule => {
-            const scheduleDate = new Date(schedule.date);
-            const dayOfWeek = scheduleDate.getDay() === 0 ? 7 : scheduleDate.getDay();
+            const scheduleDate = new Date(schedule.date + 'T00:00:00'); // Force local timezone
             
             // Check if schedule is in current week
-            if (scheduleDate >= currentWeekStart) {
-                const weekEnd = new Date(currentWeekStart);
-                weekEnd.setDate(currentWeekStart.getDate() + 7);
-                if (scheduleDate < weekEnd) {
-                    const period = getPeriodFromTime(schedule.time);
-                    const cell = document.getElementById(`cell-${period}-${dayOfWeek}`);
-                    if (cell) {
-                        cell.innerHTML += createScheduleCard(schedule);
-                    }
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(currentWeekStart.getDate() + 7);
+            
+            if (scheduleDate >= currentWeekStart && scheduleDate < weekEnd) {
+                // Calculate column ID based on days difference from Monday
+                const daysDiff = Math.floor((scheduleDate - currentWeekStart) / (1000 * 60 * 60 * 24));
+                // daysDiff: 0(Mon)→2, 1(Tue)→3, 2(Wed)→4, 3(Thu)→5, 4(Fri)→6, 5(Sat)→7, 6(Sun)→1
+                const columnId = daysDiff === 6 ? 1 : (daysDiff + 2);
+                
+                const period = getPeriodFromTime(schedule.time);
+                const cell = document.getElementById(`cell-${period}-${columnId}`);
+                if (cell) {
+                    cell.innerHTML += createScheduleCard(schedule);
                 }
             }
         });
@@ -215,15 +233,58 @@
     }
 
     function createScheduleCard(schedule) {
-        const bgColor = schedule.isOnline ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200';
-        const textColor = schedule.isOnline ? 'text-blue-700' : 'text-gray-700';
+        // ĐỒNG BỘ MOBILE: Hiển thị trạng thái và nút tham gia
+        const status = schedule.status || 'SapToi';
+        const hasLink = schedule.link && schedule.link.trim() !== '';
+        
+        // Màu sắc theo trạng thái
+        let bgColor = 'bg-gray-50';
+        let borderColor = 'border-gray-200';
+        let textColor = 'text-gray-700';
+        let statusBadge = '';
+        
+        switch(status) {
+            case 'DaHoc':
+                bgColor = 'bg-green-50';
+                borderColor = 'border-green-200';
+                textColor = 'text-green-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800"><span class="w-1.5 h-1.5 bg-green-600 rounded-full mr-1"></span>Đã dạy</span>';
+                break;
+            case 'Huy':
+                bgColor = 'bg-red-50';
+                borderColor = 'border-red-200';
+                textColor = 'text-red-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800"><span class="w-1.5 h-1.5 bg-red-600 rounded-full mr-1"></span>Đã hủy</span>';
+                break;
+            case 'DangDay':
+                bgColor = 'bg-orange-50';
+                borderColor = 'border-orange-200';
+                textColor = 'text-orange-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800"><span class="w-1.5 h-1.5 bg-orange-600 rounded-full mr-1"></span>Đang dạy</span>';
+                break;
+            default: // SapToi
+                if (schedule.isOnline) {
+                    bgColor = 'bg-blue-50';
+                    borderColor = 'border-blue-200';
+                    textColor = 'text-blue-700';
+                }
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><span class="w-1.5 h-1.5 bg-blue-600 rounded-full mr-1"></span>Sắp tới</span>';
+        }
+        
+        // Nút tham gia (chỉ hiển khi có link VÀ chưa hoàn thành/hủy)
+        const canJoin = hasLink && status !== 'DaHoc' && status !== 'Huy';
+        const joinButton = canJoin ? `<a href="${schedule.link}" target="_blank" onclick="event.stopPropagation()" class="inline-flex items-center px-3 py-1.5 mt-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white text-xs font-semibold rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-sm"><i data-lucide="video" class="w-3 h-3 mr-1"></i>Tham gia</a>` : '';
         
         return `
-            <div class="mb-2 p-2 ${bgColor} border rounded-lg cursor-pointer hover:shadow-md transition-shadow" onclick="showScheduleDetail(${schedule.id})">
-                <div class="text-xs font-semibold ${textColor}">${schedule.subject}</div>
-                ${schedule.tutor ? `<div class="text-xs text-gray-600 mt-1">GV: ${schedule.tutor}</div>` : ''}
-                <div class="text-xs text-gray-600 mt-1">${schedule.time}</div>
-                ${schedule.isOnline && schedule.link ? '<div class="text-xs text-blue-600 mt-1"><i data-lucide="video" class="w-3 h-3 inline"></i> Online</div>' : ''}
+            <div class="mb-2 p-2 ${bgColor} border ${borderColor} rounded-lg hover:shadow-md transition-shadow cursor-pointer" onclick="showScheduleDetail(${schedule.id})">
+                <div class="flex justify-between items-start mb-1">
+                    <div class="text-xs font-semibold ${textColor}">${schedule.subject}</div>
+                    ${statusBadge}
+                </div>
+                <div class="text-xs text-gray-600">${schedule.time}</div>
+                ${schedule.tutor ? `<div class="text-xs text-gray-600 mt-0.5">GV: ${schedule.tutor}</div>` : ''}
+                ${schedule.isOnline ? '<div class="text-xs text-blue-600 mt-1"><i data-lucide="monitor" class="w-3 h-3 inline"></i> Online</div>' : ''}
+                ${joinButton}
             </div>
         `;
     }
@@ -251,7 +312,18 @@
     }
 
     function showScheduleDetail(id) {
-        console.log('Show detail for schedule:', id);
+        // Tìm schedule data
+        const schedule = scheduleData.find(s => s.id === id);
+        if (!schedule) return;
+        
+        const statusText = {
+            'DaHoc': 'Đã hoàn thành',
+            'Huy': 'Đã hủy',
+            'DangDay': 'Đang dạy',
+            'SapToi': 'Sắp tới'
+        }[schedule.status || 'SapToi'];
+        
+        alert(`Chi tiết lịch học:\n\nMôn: ${schedule.subject}\nGiáo viên: ${schedule.tutor}\nThời gian: ${schedule.time}\nTrạng thái: ${statusText}`);
     }
 
     // Initialize on page load

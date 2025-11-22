@@ -3,6 +3,7 @@
 @section('title', 'Lịch học, lịch thi theo tuần')
 
 @section('content')
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <div class="w-full px-4">
     <div class="bg-white rounded-2xl shadow-lg border border-gray-100">
         <!-- Header -->
@@ -142,6 +143,52 @@
         </div>
     </div>
 </div>
+
+<!-- ĐỒNG BỘ MOBILE: Modal sửa lịch học -->
+<div id="editScheduleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-8 border w-full max-w-md shadow-2xl rounded-2xl bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Cập nhật buổi học</h3>
+            <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <i data-lucide="x" class="w-6 h-6"></i>
+            </button>
+        </div>
+        
+        <form id="editScheduleForm" onsubmit="submitEditSchedule(event)" method="POST">
+            @csrf
+            @method('PUT')
+            <input type="hidden" id="editLichHocId" name="lich_hoc_id">
+            
+            <!-- Trạng thái -->
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Trạng thái</label>
+                <select id="editTrangThai" name="TrangThai" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="SapToi">Sắp tới</option>
+                    <option value="DaHoc">Đã hoàn thành</option>
+                    <option value="Huy">Hủy buổi học</option>
+                </select>
+            </div>
+            
+            <!-- Link học online (chỉ hiện với lớp online) -->
+            <div id="editLinkGroup" class="mb-6 hidden">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Link học Online</label>
+                <input type="url" id="editDuongDan" name="DuongDan" placeholder="https://meet.google.com/..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <p class="text-xs text-gray-500 mt-1">Cập nhật link để học viên có thể tham gia lớp</p>
+            </div>
+            
+            <!-- Buttons -->
+            <div class="flex gap-3">
+                <button type="button" onclick="closeEditModal()" class="flex-1 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
+                    Hủy
+                </button>
+                <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all shadow-lg">
+                    Lưu thay đổi
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -151,10 +198,22 @@
 
     function initCalendar() {
         const today = new Date();
-        const day = today.getDay();
-        const diff = day === 0 ? -6 : 1 - day; // Monday of current week
+        const day = today.getDay(); // 0=Sunday, 1=Monday, 2=Tuesday,...6=Saturday
+        let diff;
+        
+        // Tính số ngày đến thứ 2 tuần hiện tại/sau
+        if (day === 0) {
+            diff = 1; // Chủ nhật → Thứ 2 tuần sau
+        } else if (day === 6) {
+            diff = 2; // Thứ 7 → Thứ 2 tuần sau
+        } else {
+            diff = 1 - day; // Thứ khác → Thứ 2 tuần này
+        }
+        
         currentWeekStart = new Date(today);
         currentWeekStart.setDate(today.getDate() + diff);
+        currentWeekStart.setHours(0, 0, 0, 0); // Reset time to midnight
+        
         renderWeek();
     }
 
@@ -167,17 +226,23 @@
         }
 
         // Update header dates
+        // currentWeekStart là Thứ 2 (Monday)
+        // Cần map: Monday→id=2, Tuesday→id=3,...Saturday→id=7, Sunday→id=1
         for (let i = 0; i < 7; i++) {
             const date = new Date(currentWeekStart);
             date.setDate(currentWeekStart.getDate() + i);
-            const dayOfWeek = date.getDay() === 0 ? 7 : date.getDay();
+            
+            // i=0 (Mon)→2, i=1 (Tue)→3, i=2 (Wed)→4, i=3 (Thu)→5, i=4 (Fri)→6, i=5 (Sat)→7, i=6 (Sun)→1
+            const columnId = i === 6 ? 1 : (i + 2);
+            
             const dateStr = date.toLocaleDateString('vi-VN');
-            document.getElementById(`date-${dayOfWeek}`).textContent = dateStr;
+            document.getElementById(`date-${columnId}`).textContent = dateStr;
             
             // Highlight current day
-            const header = document.getElementById(`day-header-${dayOfWeek}`);
+            const header = document.getElementById(`day-header-${columnId}`);
             const today = new Date();
-            if (date.toDateString() === today.toDateString()) {
+            today.setHours(0, 0, 0, 0);
+            if (date.getTime() === today.getTime()) {
                 header.querySelector('div').classList.add('text-blue-600');
             } else {
                 header.querySelector('div').classList.remove('text-blue-600');
@@ -186,19 +251,22 @@
 
         // Fill schedule data
         scheduleData.forEach(schedule => {
-            const scheduleDate = new Date(schedule.date);
-            const dayOfWeek = scheduleDate.getDay() === 0 ? 7 : scheduleDate.getDay();
+            const scheduleDate = new Date(schedule.date + 'T00:00:00'); // Force local timezone
             
             // Check if schedule is in current week
-            if (scheduleDate >= currentWeekStart) {
-                const weekEnd = new Date(currentWeekStart);
-                weekEnd.setDate(currentWeekStart.getDate() + 7);
-                if (scheduleDate < weekEnd) {
-                    const period = getPeriodFromTime(schedule.time);
-                    const cell = document.getElementById(`cell-${period}-${dayOfWeek}`);
-                    if (cell) {
-                        cell.innerHTML += createScheduleCard(schedule);
-                    }
+            const weekEnd = new Date(currentWeekStart);
+            weekEnd.setDate(currentWeekStart.getDate() + 7);
+            
+            if (scheduleDate >= currentWeekStart && scheduleDate < weekEnd) {
+                // Calculate column ID based on days difference from Monday
+                const daysDiff = Math.floor((scheduleDate - currentWeekStart) / (1000 * 60 * 60 * 24));
+                // daysDiff: 0(Mon)→2, 1(Tue)→3, 2(Wed)→4, 3(Thu)→5, 4(Fri)→6, 5(Sat)→7, 6(Sun)→1
+                const columnId = daysDiff === 6 ? 1 : (daysDiff + 2);
+                
+                const period = getPeriodFromTime(schedule.time);
+                const cell = document.getElementById(`cell-${period}-${columnId}`);
+                if (cell) {
+                    cell.innerHTML += createScheduleCard(schedule);
                 }
             }
         });
@@ -214,28 +282,127 @@
     }
 
     function createScheduleCard(schedule) {
-        const bgColor = schedule.isOnline ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-200';
-        const textColor = schedule.isOnline ? 'text-blue-700' : 'text-gray-700';
+        // Xác định màu sắc theo trạng thái - ĐỒNG BỘ MOBILE
+        let bgColor, borderColor, textColor, statusBadge;
         
-        // Check if class is happening now or within next 30 minutes
-        const now = new Date();
-        const scheduleDateTime = new Date(schedule.date + ' ' + schedule.time);
-        const timeDiff = scheduleDateTime - now;
-        const isClassTime = timeDiff >= 0 && timeDiff <= 30 * 60 * 1000; // Within 30 minutes
+        switch(schedule.status) {
+            case 'DaHoc':
+                bgColor = 'bg-green-50';
+                borderColor = 'border-green-200';
+                textColor = 'text-green-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800"><span class="w-1.5 h-1.5 mr-1 bg-green-600 rounded-full"></span>Đã dạy</span>';
+                break;
+            case 'Huy':
+                bgColor = 'bg-red-50';
+                borderColor = 'border-red-200';
+                textColor = 'text-red-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800"><span class="w-1.5 h-1.5 mr-1 bg-red-600 rounded-full"></span>Đã hủy</span>';
+                break;
+            case 'DangDay':
+                bgColor = 'bg-orange-50';
+                borderColor = 'border-orange-200';
+                textColor = 'text-orange-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800"><span class="w-1.5 h-1.5 mr-1 bg-orange-600 rounded-full"></span>Đang dạy</span>';
+                break;
+            default: // SapToi, ChuaDienRa
+                bgColor = schedule.isOnline ? 'bg-blue-50' : 'bg-gray-50';
+                borderColor = schedule.isOnline ? 'border-blue-200' : 'border-gray-200';
+                textColor = schedule.isOnline ? 'text-blue-700' : 'text-gray-700';
+                statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"><span class="w-1.5 h-1.5 mr-1 bg-blue-600 rounded-full"></span>Sắp tới</span>';
+        }
         
-        let joinButton = '';
-        if (schedule.isOnline && schedule.link && isClassTime) {
-            joinButton = `<a href="${schedule.link}" target="_blank" class="block mt-2 px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors text-center" onclick="event.stopPropagation();"><i data-lucide="video" class="w-3 h-3 inline mr-1"></i>Tham gia ngay</a>`;
+        // ĐỒNG BỘ MOBILE: Nút "Tham gia" chỉ hiện khi có link VÀ không phải Đã học/Hủy
+        const hasLink = schedule.link && schedule.link.trim() !== '';
+        const canJoin = hasLink && schedule.status !== 'DaHoc' && schedule.status !== 'Huy';
+        
+        // ĐỒNG BỘ MOBILE: Nút "Cập nhật" chỉ hiện khi không phải Đã học/Hủy
+        const canUpdate = schedule.status !== 'DaHoc' && schedule.status !== 'Huy';
+        
+        let buttons = '';
+        if (canUpdate) {
+            buttons += `<button onclick="openEditModal(${schedule.id}, '${schedule.status}', '${schedule.link || ''}', ${schedule.isOnline})" class="mt-2 w-full px-2 py-1 text-xs font-medium text-orange-600 bg-orange-50 border border-orange-200 rounded hover:bg-orange-100 transition-colors"><i data-lucide="edit" class="w-3 h-3 inline mr-1"></i>Cập nhật</button>`;
+        }
+        
+        if (canJoin) {
+            buttons += `<a href="${schedule.link}" target="_blank" class="block mt-2 px-2 py-1 bg-green-600 text-white text-xs font-medium rounded hover:bg-green-700 transition-colors text-center" onclick="event.stopPropagation();"><i data-lucide="video" class="w-3 h-3 inline mr-1"></i>Tham gia</a>`;
         }
         
         return `
-            <div class="mb-2 p-2 ${bgColor} border rounded-lg hover:shadow-md transition-shadow">
-                <div class="text-xs font-semibold ${textColor}">${schedule.subject}</div>
-                <div class="text-xs text-gray-600 mt-1">${schedule.time}</div>
-                ${schedule.isOnline ? '<div class="text-xs text-blue-600 mt-1"><i data-lucide="video" class="w-3 h-3 inline"></i> Online</div>' : ''}
-                ${joinButton}
+            <div class="mb-2 p-2 ${bgColor} border ${borderColor} rounded-lg hover:shadow-md transition-shadow cursor-pointer" onclick="showScheduleDetail(${schedule.id})">
+                <div class="flex justify-between items-start mb-1">
+                    <div class="text-xs font-semibold ${textColor}">${schedule.subject}</div>
+                    ${statusBadge}
+                </div>
+                <div class="text-xs text-gray-600">${schedule.time}</div>
+                <div class="text-xs text-gray-600 mt-0.5">${schedule.student}</div>
+                ${schedule.isOnline ? '<div class="text-xs text-blue-600 mt-1"><i data-lucide="monitor" class="w-3 h-3 inline"></i> Online</div>' : ''}
+                ${buttons}
             </div>
         `;
+    }
+
+    function showScheduleDetail(id) {
+        // Tìm schedule data
+        const schedule = scheduleData.find(s => s.id === id);
+        if (!schedule) return;
+        
+        alert(`Chi tiết lịch học:\n\nMôn: ${schedule.subject}\nHọc viên: ${schedule.student}\nThời gian: ${schedule.time}\nTrạng thái: ${schedule.status}`);
+    }
+
+    function openEditModal(lichHocId, currentStatus, currentLink, isOnline) {
+        const modal = document.getElementById('editScheduleModal');
+        const form = document.getElementById('editScheduleForm');
+        
+        // Set form action with Laravel route
+        form.setAttribute('data-lich-hoc-id', lichHocId);
+        document.getElementById('editLichHocId').value = lichHocId;
+        document.getElementById('editTrangThai').value = currentStatus || 'SapToi';
+        document.getElementById('editDuongDan').value = currentLink || '';
+        
+        // Hiển thị/ẩn trường link
+        const linkGroup = document.getElementById('editLinkGroup');
+        if (isOnline) {
+            linkGroup.classList.remove('hidden');
+        } else {
+            linkGroup.classList.add('hidden');
+        }
+        
+        modal.classList.remove('hidden');
+    }
+
+    function closeEditModal() {
+        document.getElementById('editScheduleModal').classList.add('hidden');
+    }
+
+    function submitEditSchedule(event) {
+        event.preventDefault();
+        const form = event.target;
+        const lichHocId = form.getAttribute('data-lich-hoc-id');
+        const formData = new FormData(form);
+        
+        // ĐỒNG BỘ MOBILE: Gọi route updateSchedule với PUT method
+        fetch(`/giasu/lop-hoc/lich-hoc/${lichHocId}/sua`, {
+            method: 'POST', // Laravel form method spoofing
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Network response was not ok');
+            return response.text(); // Laravel may redirect with HTML
+        })
+        .then(responseText => {
+            // ĐỒNG BỘ MOBILE: Laravel trả về redirect, coi như thành công
+            closeEditModal();
+            location.reload(); // Reload để cập nhật lịch
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Lỗi kết nối server');
+        });
     }
 
     function previousWeek() {

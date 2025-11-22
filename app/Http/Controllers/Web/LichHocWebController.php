@@ -18,9 +18,9 @@ class LichHocWebController extends Controller
         // 1. Lấy ID Người học
         $nguoiHocId = Auth::user()->nguoiHoc->NguoiHocID;
 
-        // 2. Lấy ID các lớp
+        // 2. Lấy ID các lớp (ĐỒNG BỘ: Hiển thị tất cả lịch học có gia sư)
         $lopHocIds = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
-                            ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
+                            ->whereNotNull('GiaSuID') // Chỉ lấy lớp đã có gia sư
                             ->pluck('LopYeuCauID');
 
         // 3. Lấy các buổi học

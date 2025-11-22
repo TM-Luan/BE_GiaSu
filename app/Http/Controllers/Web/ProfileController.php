@@ -7,8 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Illuminate\Support\Facades\Hash;         // <-- THÊM DÒNG NÀY
-use Illuminate\Validation\Rules\Password;   // <-- THÊM DÒNG NÀY
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Http;
 
 class ProfileController extends Controller
 {
@@ -92,7 +93,16 @@ class ProfileController extends Controller
         // Lấy danh sách môn học cho dropdown
         $monHocs = \App\Models\MonHoc::orderBy('TenMon')->get();
         
-        return view('giasu.profile-index', compact('user', 'monHocs'));
+        // Lấy thông tin đánh giá
+        $giaSuId = $user->giaSu->GiaSuID;
+        $danhGiaStats = \App\Models\DanhGia::whereHas('lop', function ($q) use ($giaSuId) {
+            $q->where('GiaSuID', $giaSuId);
+        })->selectRaw('
+            ROUND(AVG(DiemSo), 1) as diem_trung_binh,
+            COUNT(*) as tong_so_danh_gia
+        ')->first();
+        
+        return view('giasu.profile-index', compact('user', 'monHocs', 'danhGiaStats'));
     }
 
     /**
@@ -160,44 +170,63 @@ class ProfileController extends Controller
             'TruongDaoTao' => $validated['TruongDaoTao'] ?? null,
             'ChuyenNganh' => $validated['ChuyenNganh'] ?? null,
             'ThanhTich' => $validated['ThanhTich'] ?? null,
-            'KinhNghiem' => $validated['KinhNghiem'] ?? null,
+            'KinhNghiem' => isset($validated['KinhNghiem']) ? $validated['KinhNghiem'] . ' năm' : null,
             'MonID' => $validated['MonID'] ?? null,
         ];
         
-        // Upload ảnh đại diện - Đồng bộ với mobile
+        // ĐỒNG BỘ MOBILE: Upload ảnh lên ImgBB API
+        $apiKey = config('services.imgbb.key');
+        
+        $uploadToImgBB = function ($file) use ($apiKey) {
+            if (!$apiKey) {
+                return null;
+            }
+            try {
+                $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
+                $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
+                    'key' => $apiKey,
+                    'image' => $imageBase64
+                ]);
+
+                if ($response->successful() && isset($response->json()['data']['url'])) {
+                    return $response->json()['data']['url'];
+                }
+            } catch (\Exception $e) {
+                \Log::error('ImgBB upload failed: ' . $e->getMessage());
+            }
+            return null;
+        };
+        
+        // Upload ảnh đại diện - ĐỒNG BỘ MOBILE
         if ($request->hasFile('AnhDaiDien')) {
-            if ($giaSu->AnhDaiDien) {
-                Storage::disk('public')->delete($giaSu->AnhDaiDien);
+            $url = $uploadToImgBB($request->file('AnhDaiDien'));
+            if ($url) {
+                $giaSuData['AnhDaiDien'] = $url;
             }
-            $path = $request->file('AnhDaiDien')->store('avatars', 'public');
-            $giaSuData['AnhDaiDien'] = $path;
         }
         
-        // Upload CCCD mặt trước - Đồng bộ với mobile
+        // Upload CCCD mặt trước - ĐỒNG BỘ MOBILE
         if ($request->hasFile('AnhCCCD_MatTruoc')) {
-            if ($giaSu->AnhCCCD_MatTruoc) {
-                Storage::disk('public')->delete($giaSu->AnhCCCD_MatTruoc);
+            $url = $uploadToImgBB($request->file('AnhCCCD_MatTruoc'));
+            if ($url) {
+                $giaSuData['AnhCCCD_MatTruoc'] = $url;
             }
-            $path = $request->file('AnhCCCD_MatTruoc')->store('cccd', 'public');
-            $giaSuData['AnhCCCD_MatTruoc'] = $path;
         }
         
-        // Upload CCCD mặt sau - Đồng bộ với mobile
+        // Upload CCCD mặt sau - ĐỒNG BỘ MOBILE
         if ($request->hasFile('AnhCCCD_MatSau')) {
-            if ($giaSu->AnhCCCD_MatSau) {
-                Storage::disk('public')->delete($giaSu->AnhCCCD_MatSau);
+            $url = $uploadToImgBB($request->file('AnhCCCD_MatSau'));
+            if ($url) {
+                $giaSuData['AnhCCCD_MatSau'] = $url;
             }
-            $path = $request->file('AnhCCCD_MatSau')->store('cccd', 'public');
-            $giaSuData['AnhCCCD_MatSau'] = $path;
         }
         
-        // Upload ảnh bằng cấp - Đồng bộ với mobile
+        // Upload ảnh bằng cấp - ĐỒNG BỘ MOBILE
         if ($request->hasFile('AnhBangCap')) {
-            if ($giaSu->AnhBangCap) {
-                Storage::disk('public')->delete($giaSu->AnhBangCap);
+            $url = $uploadToImgBB($request->file('AnhBangCap'));
+            if ($url) {
+                $giaSuData['AnhBangCap'] = $url;
             }
-            $path = $request->file('AnhBangCap')->store('degrees', 'public');
-            $giaSuData['AnhBangCap'] = $path;
         }
         
         $giaSu->update($giaSuData);

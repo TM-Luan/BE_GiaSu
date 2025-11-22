@@ -3,10 +3,18 @@
 @section('title', 'Chi tiết lớp học')
 
 @section('content')
+
+@php
+    $fromDashboard = request('from') === 'dashboard';
+    $currentUser = Auth::user();
+    $giaSu = $currentUser?->giaSu;
+    $isDuyet = $giaSu && $giaSu->TrangThai == 1;
+@endphp
+
 <div class="max-w-6xl mx-auto">
     <div class="mb-6">
-        <a href="{{ route('giasu.lophoc.index') }}" class="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors">
-            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Quay lại danh sách
+        <a href="{{ $fromDashboard ? route('giasu.dashboard') : route('giasu.lophoc.index') }}" class="inline-flex items-center text-gray-500 hover:text-blue-600 transition-colors">
+            <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Quay lại {{ $fromDashboard ? 'trang chủ' : 'danh sách' }}
         </a>
     </div>
 
@@ -27,7 +35,7 @@
                             @if($lopHoc->khoiLop)
                             <span class="inline-flex items-center">
                                 <i data-lucide="graduation-cap" class="w-4 h-4 mr-1.5 text-purple-500"></i>
-                                {{ $lopHoc->khoiLop->TenKhoi ?? 'Khối lớp' }}
+                                Khối {{ $lopHoc->khoiLop->BacHoc ?? $lopHoc->khoiLop->TenKhoi }}
                             </span>
                             @endif
                         </div>
@@ -167,30 +175,33 @@
                 <!-- Nút hành động -->
                 @if($lopHoc->TrangThai == 'DangHoc' && $lopHoc->GiaSuID == Auth::user()->giaSu->GiaSuID)
                     {{-- Nếu gia sư đang dạy lớp này --}}
-                    <div class="mt-4 space-y-2">
+                    <div class="mt-4">
                         <a href="{{ route('giasu.lophoc.schedule', $lopHoc->LopYeuCauID) }}" 
                            class="block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors">
                             <i data-lucide="calendar" class="w-4 h-4 inline mr-2"></i>
                             Xem lịch học
                         </a>
-                        <a href="{{ route('giasu.lophoc.schedule.add', $lopHoc->LopYeuCauID) }}" 
-                           class="block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors">
-                            <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
-                            Thêm lịch học
-                        </a>
                     </div>
                 @elseif($lopHoc->TrangThai == 'TimGiaSu' && !isset($yeuCau))
-                    {{-- Nếu lớp đang tìm gia sư và chưa có yêu cầu --}}
+                    {{-- Nếu lớp đang tìm gia sư và chưa có yêu cầu - KIỂM TRA DUYỆT --}}
                     <div class="mt-4">
-                        <form action="{{ route('giasu.de_nghi_day') }}" method="POST">
-                            @csrf
-                            <input type="hidden" name="lop_yeu_cau_id" value="{{ $lopHoc->LopYeuCauID }}">
-                            <button type="submit" 
-                                    class="block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-lg">
-                                <i data-lucide="send" class="w-4 h-4 inline mr-2"></i>
-                                Gửi đề nghị dạy
+                        @if($isDuyet)
+                            <form action="{{ route('giasu.de_nghi_day') }}" method="POST">
+                                @csrf
+                                <input type="hidden" name="lop_hoc_id" value="{{ $lopHoc->LopYeuCauID }}">
+                                <button type="submit" 
+                                        class="block w-full text-center py-3 rounded-xl bg-blue-600 text-white font-bold hover:bg-blue-700 transition-colors shadow-lg">
+                                    <i data-lucide="send" class="w-4 h-4 inline mr-2"></i>
+                                    Gửi đề nghị dạy
+                                </button>
+                            </form>
+                        @else
+                            <button disabled title="Tài khoản của bạn đang chờ duyệt" 
+                                    class="block w-full text-center py-3 rounded-xl bg-gray-300 text-gray-500 font-bold cursor-not-allowed opacity-60">
+                                <i data-lucide="lock" class="w-4 h-4 inline mr-2"></i>
+                                Chờ duyệt
                             </button>
-                        </form>
+                        @endif
                     </div>
                 @elseif(isset($yeuCau) && $yeuCau->TrangThai == 'ChoDuyet')
                     {{-- Nếu đã có yêu cầu đang chờ duyệt --}}

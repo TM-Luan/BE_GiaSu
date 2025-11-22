@@ -46,6 +46,15 @@
                 </li>
 
                 <li>
+                    <a href="{{ route('thongbao.index') }}" 
+                       class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
+                       {{ Request::routeIs('thongbao.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <i data-lucide="bell" class="w-5 h-5 mr-3"></i>
+                        Thông báo
+                    </a>
+                </li>
+
+                <li>
                     <a href="{{ route('nguoihoc.profile.index') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
                        {{ Request::routeIs('nguoihoc.profile.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
@@ -67,7 +76,7 @@
                 <li>
                     <a href="{{ route('giasu.lophoc.index') }}" 
                        class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
-                       {{ Request::routeIs('giasu.lophoc.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                       {{ (Request::routeIs('giasu.lophoc.*') && request('from') !== 'dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="book-open" class="w-5 h-5 mr-3"></i>
                         Lớp học của tôi
                     </a>
@@ -79,6 +88,15 @@
                        {{ Request::routeIs('giasu.lichhoc.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
                         <i data-lucide="calendar-days" class="w-5 h-5 mr-3"></i>
                         Lịch học
+                    </a>
+                </li>
+
+                <li>
+                    <a href="{{ route('thongbao.index') }}" 
+                       class="flex items-center px-4 py-3 rounded-xl font-medium transition-colors
+                       {{ Request::routeIs('thongbao.*') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900' }}">
+                        <i data-lucide="bell" class="w-5 h-5 mr-3"></i>
+                        Thông báo
                     </a>
                 </li>
 

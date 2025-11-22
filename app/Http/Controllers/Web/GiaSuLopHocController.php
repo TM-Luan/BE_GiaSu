@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\LopHocYeuCau;
 use App\Models\YeuCauNhanLop;
 use App\Models\GiaSu;
+use App\Models\LichHoc;
 
 class GiaSuLopHocController extends Controller
 {
@@ -97,6 +98,22 @@ class GiaSuLopHocController extends Controller
                 ->where('TrangThai', 'Pending')
                 ->update(['TrangThai' => 'Rejected', 'NgayCapNhat' => now()]);
 
+            // --- Tạo thông báo cho người học (giống mobile) ---
+            $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($lopHoc->LopYeuCauID);
+            
+            if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
+                $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+                
+                \App\Models\Notification::create([
+                    'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
+                    'title' => 'Lời mời được chấp nhận',
+                    'message' => "Gia sư đã chấp nhận dạy lớp $tenLop",
+                    'type' => 'request_accepted',
+                    'related_id' => $lopHocInfo->LopYeuCauID,
+                    'is_read' => false,
+                ]);
+            }
+
             DB::commit();
 
             // Chuyển đến trang tạo lịch thay vì về danh sách
@@ -136,6 +153,22 @@ class GiaSuLopHocController extends Controller
         $yeuCau->TrangThai = 'Rejected';
         $yeuCau->NgayCapNhat = now();
         $yeuCau->save();
+
+        // --- Tạo thông báo cho người học (giống mobile) ---
+        $lopHocInfo = YeuCauNhanLop::with(['lop.nguoiHoc', 'lop.monHoc', 'lop.khoiLop'])->find($yeuCauId);
+        
+        if ($lopHocInfo && $lopHocInfo->lop && $lopHocInfo->lop->nguoiHoc) {
+            $tenLop = ($lopHocInfo->lop->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->lop->khoiLop->TenKhoiLop ?? '');
+            
+            \App\Models\Notification::create([
+                'user_id' => $lopHocInfo->lop->nguoiHoc->TaiKhoanID,
+                'title' => 'Lời mời bị từ chối',
+                'message' => "Gia sư đã từ chối dạy lớp $tenLop",
+                'type' => 'request_rejected',
+                'related_id' => $lopHocInfo->LopYeuCauID,
+                'is_read' => false,
+            ]);
+        }
 
         return back()->with('success', 'Đã từ chối lời mời.');
     }
@@ -378,15 +411,6 @@ class GiaSuLopHocController extends Controller
      */
     public function storeSchedule(Request $request, $id)
     {
-        $validated = $request->validate([
-            'ngay_bat_dau' => 'required|date|after_or_equal:today',
-            'so_tuan' => 'required|integer|min:1|max:52',
-            'duong_dan' => 'nullable|url',
-            'buoi_hoc' => 'required|array|min:1',
-            'buoi_hoc.*.thu' => 'required|integer|between:1,7',
-            'buoi_hoc.*.gio' => 'required|date_format:H:i'
-        ]);
-
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
         
@@ -400,7 +424,21 @@ class GiaSuLopHocController extends Controller
             abort(403);
         }
 
-        // Bắt buộc thanh toán trước khi tạo lịch (Đồng bộ với mobile)
+        // ĐỒNG BỘ MOBILE: Lấy số buổi/tuần trước khi validate
+        $soBuoiTuan = $lopHoc->SoBuoiTuan ?? 2;
+
+        $validated = $request->validate([
+            'ngay_bat_dau' => 'required|date|after_or_equal:today',
+            'so_tuan' => 'required|integer|min:1|max:52',
+            'duong_dan' => 'nullable|url',
+            'buoi_hoc' => "required|array|min:1|max:{$soBuoiTuan}",
+            'buoi_hoc.*.thu' => 'required|integer|between:1,7',
+            'buoi_hoc.*.gio' => 'required|date_format:H:i'
+        ], [
+            'buoi_hoc.max' => "Lớp này chỉ học tối đa {$soBuoiTuan} buổi/tuần. Bạn không thể thêm quá {$soBuoiTuan} buổi.",
+        ]);
+
+        // Bắt buộc thanh toán trước khi tạo lịch
         if ($lopHoc->TrangThaiThanhToan !== 'DaThanhToan') {
             return redirect()->route('giasu.lophoc.payment', $lopHoc->LopYeuCauID)
                 ->with('error', 'Vui lòng thanh toán phí nhận lớp trước khi tạo lịch học.');
@@ -413,27 +451,39 @@ class GiaSuLopHocController extends Controller
             $soTuan = $validated['so_tuan'];
             $duongDan = $validated['duong_dan'] ?? null;
             $buoiHoc = $validated['buoi_hoc'];
+            $thoiLuong = $lopHoc->ThoiLuong ?? 90;
 
-            // Tạo lịch học theo tuần
-            for ($tuan = 0; $tuan < $soTuan; $tuan++) {
-                foreach ($buoiHoc as $buoi) {
-                    $thu = $buoi['thu']; // 1=CN, 2=T2, 3=T3,...7=T7
-                    $gio = $buoi['gio'];
+            // ĐỒNG BỘ 100% MOBILE API
+            // Web form: thu (1=CN, 2=T2, 3=T3, 4=T4, 5=T5, 6=T6, 7=T7)
+            // Mobile API: ngay_thu (0=CN, 1=T2, 2=T3, 3=T4, 4=T5, 5=T6, 6=T7)
+            // Carbon startOfWeek(SUNDAY): Chủ nhật = ngày 0 của tuần
+            foreach ($buoiHoc as $buoi) {
+                $thu = $buoi['thu']; // Web form: 1=CN, 2=T2, 3=T3,...7=T7
+                $gio = $buoi['gio'];
+                
+                // Chuyển đổi web form (1-7) sang mobile API (0-6)
+                // QUAN TRỌNG: 1→0 (CN), 2→1 (T2), 3→2 (T3), 4→3 (T4), 5→4 (T5), 6→5 (T6), 7→6 (T7)
+                $ngayThu = $thu - 1;
+                
+                // Logic CHÍNH XÁC giống mobile API (LichHocController.php line 250)
+                // startOfWeek(SUNDAY) trả về Chủ nhật đầu tuần
+                // addDays(0) = Chủ nhật, addDays(1) = Thứ 2, addDays(2) = Thứ 3...
+                $ngayDauTien = $ngayBatDau->copy()->startOfWeek(\Carbon\Carbon::SUNDAY)->addDays($ngayThu);
+                
+                // Nếu ngày tìm được < ngày bắt đầu → Lấy tuần sau
+                if ($ngayDauTien->isBefore($ngayBatDau, 'day')) {
+                    $ngayDauTien->addWeek();
+                }
 
-                    // Tính ngày học
-                    $ngayHoc = $ngayBatDau->copy()->addWeeks($tuan);
-                    
-                    // Điều chỉnh sang đúng thứ
-                    $currentDayOfWeek = $ngayHoc->dayOfWeek == 0 ? 7 : $ngayHoc->dayOfWeek; // Carbon: 0=CN
-                    $targetDayOfWeek = $thu == 1 ? 7 : $thu - 1; // Chuyển về format Carbon
-                    $diff = $targetDayOfWeek - $currentDayOfWeek;
-                    $ngayHoc->addDays($diff);
+                // Tính thời gian kết thúc
+                $thoiGianBatDau = $gio . ':00';
+                $thoiGianKetThuc = \Carbon\Carbon::parse($gio)->addMinutes($thoiLuong)->format('H:i:s');
 
-                    // Tính thời gian kết thúc
-                    $thoiGianBatDau = $gio . ':00';
-                    $thoiGianKetThuc = \Carbon\Carbon::parse($gio)->addMinutes($lopHoc->ThoiLuong ?? 90)->format('H:i:s');
+                // Tạo lịch cho số tuần
+                for ($tuan = 0; $tuan < $soTuan; $tuan++) {
+                    $ngayHoc = $ngayDauTien->copy()->addWeeks($tuan);
 
-                    // Kiểm tra trùng lịch (Đồng bộ với mobile)
+                    // Kiểm tra trùng lịch
                     if ($this->kiemTraTrungLich($giaSu->GiaSuID, $ngayHoc->format('Y-m-d'), $thoiGianBatDau, $thoiGianKetThuc)) {
                         DB::rollBack();
                         
@@ -636,5 +686,101 @@ class GiaSuLopHocController extends Controller
         }
 
         return $query->exists();
+    }
+
+    /**
+     * Sửa lịch học - ĐỒNG BỘ VỚI MOBILE (capNhatLichHocGiaSu)
+     * DuongDan: Link (Online) hoặc Địa chỉ (Offline)
+     */
+    public function updateSchedule(Request $request, $lichHocId)
+    {
+        $validated = $request->validate([
+            'ThoiGianBatDau' => 'sometimes|required|date_format:H:i',
+            'ThoiGianKetThuc' => 'sometimes|required|date_format:H:i',
+            'NgayHoc' => 'sometimes|required|date|after_or_equal:today',
+            'DuongDan' => 'nullable|string|max:500', // Link hoặc địa chỉ
+            'TrangThai' => 'nullable|in:DangDay,SapToi,DaHoc,Huy'
+        ]);
+
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $lichHoc = LichHoc::with('lopHocYeuCau')->findOrFail($lichHocId);
+
+        if ($lichHoc->lopHocYeuCau->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền sửa lịch học này');
+        }
+
+        try {
+            // Kiểm tra trùng lịch khi cập nhật thời gian/ngày
+            if ($request->has('NgayHoc') || $request->has('ThoiGianBatDau') || $request->has('ThoiGianKetThuc')) {
+                $ngayHoc = $validated['NgayHoc'] ?? $lichHoc->NgayHoc;
+                $thoiGianBatDau = ($validated['ThoiGianBatDau'] ?? substr($lichHoc->ThoiGianBatDau, 0, 5)) . ':00';
+                $thoiGianKetThuc = ($validated['ThoiGianKetThuc'] ?? substr($lichHoc->ThoiGianKetThuc, 0, 5)) . ':00';
+                
+                if ($this->kiemTraTrungLich($giaSu->GiaSuID, $ngayHoc, $thoiGianBatDau, $thoiGianKetThuc, $lichHocId)) {
+                    return back()->with('error', '⚠️ Trùng lịch học. Vui lòng chọn thời gian khác.')->withInput();
+                }
+            }
+
+            // Chuyển đổi format giờ nếu có
+            if (isset($validated['ThoiGianBatDau'])) {
+                $validated['ThoiGianBatDau'] = $validated['ThoiGianBatDau'] . ':00';
+            }
+            if (isset($validated['ThoiGianKetThuc'])) {
+                $validated['ThoiGianKetThuc'] = $validated['ThoiGianKetThuc'] . ':00';
+            }
+
+            $lichHoc->update($validated);
+
+            $message = 'Cập nhật lịch học thành công!';
+            if ($request->has('DuongDan')) {
+                $hinhThuc = $lichHoc->lopHocYeuCau->HinhThuc ?? 'Offline';
+                $message = $hinhThuc === 'Online' 
+                    ? '✅ Đã cập nhật link học online!' 
+                    : '✅ Đã cập nhật địa chỉ học!';
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái buổi học - ĐỒNG BỘ VỚI MOBILE
+     */
+    public function updateScheduleStatus(Request $request, $lichHocId)
+    {
+        $validated = $request->validate([
+            'TrangThai' => 'required|in:DangDay,SapToi,DaHoc,Huy'
+        ]);
+
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+        
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        $lichHoc = LichHoc::with('lopHocYeuCau')->findOrFail($lichHocId);
+
+        if ($lichHoc->lopHocYeuCau->GiaSuID != $giaSu->GiaSuID) {
+            abort(403, 'Bạn không có quyền cập nhật trạng thái lịch học này');
+        }
+
+        try {
+            $lichHoc->update(['TrangThai' => $validated['TrangThai']]);
+
+            return back()->with('success', 'Cập nhật trạng thái thành công!');
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
     }
 }

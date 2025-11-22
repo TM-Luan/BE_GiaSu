@@ -74,7 +74,8 @@ class NguoiHocDashboardController extends Controller
             ->withCount('danhGia')
             ->findOrFail($id);
         
-        $rating = round($giasu->danh_gia_avg_diem_so ?? 0, 1);
+        // Fix: Laravel preserves column case in withAvg, so it's danh_gia_avg_DiemSo not danh_gia_avg_diem_so
+        $rating = round($giasu->getAttribute('danh_gia_avg_DiemSo') ?? 0, 1);
         $avgHocPhi = $giasu->lopHocYeuCau->avg('HocPhi');
         $hocPhi = $avgHocPhi > 0 ? number_format($avgHocPhi, 0, ',', '.') . 'đ/buổi' : 'Thỏa thuận';
         $relatedTutors = GiaSu::where('ChuyenNganh', 'LIKE', "%{$giasu->ChuyenNganh}%")
@@ -144,6 +145,26 @@ class NguoiHocDashboardController extends Controller
             'NgayTao' => now(),
             'NgayCapNhat' => now()
         ]);
+
+        // --- Tạo thông báo cho gia sư (giống mobile) ---
+        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->lop_yeu_cau_id);
+        $tenNguoiGui = Auth::user()->HoTen ?? 'Người dùng';
+        $giaSuNhan = \App\Models\GiaSu::find($request->gia_su_id);
+
+        if ($lopHocInfo && $giaSuNhan) {
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            $message = "$tenNguoiGui đã mời bạn dạy lớp: $tenLop";
+
+            \App\Models\Notification::create([
+                'user_id' => $giaSuNhan->TaiKhoanID,
+                'title' => 'Lời mời dạy mới',
+                'message' => $message,
+                'type' => 'invitation_received',
+                'related_id' => $lopHocInfo->LopYeuCauID,
+                'is_read' => false,
+                'created_at' => now(),
+            ]);
+        }
 
         return back()->with('success', 'Đã gửi lời mời thành công!');
     }

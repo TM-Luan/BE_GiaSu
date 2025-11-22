@@ -4,9 +4,15 @@
 
 @section('content')
     
-    <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Chào mừng trở lại!</h1>
-        <p class="text-gray-500 mt-2 text-base font-medium">Tìm kiếm gia sư phù hợp nhất cho bạn.</p>
+    {{-- Header với Notification Bell --}}
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-3xl font-extrabold text-gray-900 tracking-tight">Chào mừng trở lại!</h1>
+            <p class="text-gray-500 mt-2 text-base font-medium">Tìm kiếm gia sư phù hợp nhất cho bạn.</p>
+        </div>
+        
+        {{-- Notification Bell --}}
+        <x-notification-bell />
     </div>
 
     <form method="GET" action="{{ route('nguoihoc.dashboard') }}" class="mb-10">

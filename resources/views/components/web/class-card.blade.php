@@ -99,8 +99,8 @@
 
     {{-- Action buttons --}}
     <div class="grid grid-cols-2 gap-3 mt-auto">
-        {{-- View details button --}}
-        <a href="{{ route('giasu.lophoc.show', $lop->LopYeuCauID) }}" 
+        {{-- View details button (from dashboard, don't highlight "Lớp học của tôi" tab) --}}
+        <a href="{{ route('giasu.lophoc.show', ['id' => $lop->LopYeuCauID, 'from' => 'dashboard']) }}" 
            class="flex items-center justify-center py-2.5 px-4 rounded-xl text-gray-700 font-semibold bg-gray-100 hover:bg-gray-200 transition-colors text-sm group-hover:bg-blue-50 group-hover:text-blue-600">
             <i data-lucide="eye" class="w-4 h-4 mr-1"></i>
             Chi tiết
