@@ -47,17 +47,17 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <p class="form-control-plaintext form-control-dark mb-2">
-                            <i class="fa-solid fa-user me-2 text-muted"></i>
+                            <i class="fa-solid fa-user me-2 text-white 50"></i>
                             <span class="text-white-50">Họ tên:</span> 
                             <strong class="text-white ms-2">{{ $lophoc->nguoiHoc->HoTen ?? 'Chưa có thông tin' }}</strong>
                         </p>
                         <p class="form-control-plaintext form-control-dark mb-2">
-                            <i class="fa-solid fa-envelope me-2 text-muted"></i>
+                            <i class="fa-solid fa-envelope me-2 text-white 50"></i>
                             <span class="text-white-50">Email:</span> 
                             <span class="text-white ms-2">{{ $lophoc->nguoiHoc->taiKhoan->Email ?? 'Chưa có email' }}</span>
                         </p>
                         <p class="form-control-plaintext form-control-dark mb-0">
-                            <i class="fa-solid fa-phone me-2 text-muted"></i>
+                            <i class="fa-solid fa-phone me-2 text-white 50"></i>
                             <span class="text-white-50">Số điện thoại:</span> 
                             <span class="text-white ms-2">{{ $lophoc->nguoiHoc->taiKhoan->SoDienThoai ?? 'Chưa có số điện thoại' }}</span>
                         </p>
@@ -75,17 +75,17 @@
                     @if($lophoc->giaSu)
                         <div class="mb-3">
                             <p class="form-control-plaintext form-control-dark mb-2">
-                                <i class="fa-solid fa-user-tie me-2 text-muted"></i>
+                                <i class="fa-solid fa-user-tie me-2 text-white 50"></i>
                                 <span class="text-white-50">Họ tên:</span> 
                                 <strong class="text-white ms-2">{{ $lophoc->giaSu->HoTen }}</strong>
                             </p>
                             <p class="form-control-plaintext form-control-dark mb-2">
-                                <i class="fa-solid fa-envelope me-2 text-muted"></i>
+                                <i class="fa-solid fa-envelope me-2 text-white 50"></i>
                                 <span class="text-white-50">Email:</span> 
                                 <span class="text-white ms-2">{{ $lophoc->giaSu->taiKhoan->Email ?? 'Chưa có email' }}</span>
                             </p>
                             <p class="form-control-plaintext form-control-dark mb-0">
-                                <i class="fa-solid fa-phone me-2 text-muted"></i>
+                                <i class="fa-solid fa-phone me-2 text-white 50"></i>
                                 <span class="text-white-50">Số điện thoại:</span> 
                                 <span class="text-white ms-2">{{ $lophoc->giaSu->taiKhoan->SoDienThoai ?? 'Chưa có số điện thoại' }}</span>
                             </p>
@@ -109,28 +109,28 @@
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-book-open me-2 text-muted"></i>
+                        <i class="fa-solid fa-book-open me-2 text-white 50"></i>
                         <span class="text-white-50">Môn học:</span> 
                         <strong class="text-white ms-2">{{ $lophoc->monHoc->TenMon ?? 'Chưa có môn học' }}</strong>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-graduation-cap me-2 text-muted"></i>
+                        <i class="fa-solid fa-graduation-cap me-2 text-white 50"></i>
                         <span class="text-white-50">Khối lớp:</span> 
                         <strong class="text-white ms-2">{{ $lophoc->khoiLop->BacHoc ?? 'Chưa xác định' }}</strong>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-users me-2 text-muted"></i>
+                        <i class="fa-solid fa-users me-2 text-white 50"></i>
                         <span class="text-white-50">Đối tượng:</span> 
                         <span class="text-white ms-2">{{ $lophoc->doiTuong->TenDoiTuong ?? 'Chưa xác định' }}</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-laptop me-2 text-muted"></i>
+                        <i class="fa-solid fa-laptop me-2 text-white 50"></i>
                         <span class="text-white-50">Hình thức:</span> 
                         <span class="badge bg-info ms-2">
                             {{ $lophoc->HinhThuc == 'Online' ? 'Online' : ($lophoc->HinhThuc == 'Offline' ? 'Offline' : $lophoc->HinhThuc) }}
@@ -139,28 +139,28 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-money-bill-wave me-2 text-muted"></i>
+                        <i class="fa-solid fa-money-bill-wave me-2 text-white 50"></i>
                         <span class="text-white-50">Học phí:</span> 
                         <span class="text-success fw-bold ms-2">{{ number_format($lophoc->HocPhi ?? 0, 0, ',', '.') }} đ/buổi</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-clock me-2 text-muted"></i>
+                        <i class="fa-solid fa-clock me-2 text-white 50"></i>
                         <span class="text-white-50">Thời lượng:</span> 
                         <span class="text-white ms-2">{{ $lophoc->ThoiLuong ?? 0 }} phút/buổi</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-list-ol me-2 text-muted"></i>
+                        <i class="fa-solid fa-list-ol me-2 text-white 50"></i>
                         <span class="text-white-50">Số buổi:</span> 
                         <span class="text-white ms-2">{{ $lophoc->SoLuong ?? 0 }} buổi</span>
                     </p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-circle-info me-2 text-muted"></i>
+                        <i class="fa-solid fa-circle-info me-2 text-white 50"></i>
                         <span class="text-white-50">Trạng thái:</span> 
                         @php
                             $statusColors = [
@@ -185,14 +185,14 @@
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-0">
-                        <i class="fa-solid fa-calendar-plus me-2 text-muted"></i>
+                        <i class="fa-solid fa-calendar-plus me-2 text-white 50"></i>
                         <span class="text-white-50">Ngày tạo:</span> 
                         <span class="text-white ms-2">{{ $lophoc->NgayTao ? \Carbon\Carbon::parse($lophoc->NgayTao)->format('d/m/Y H:i') : 'Chưa có thông tin' }}</span>
                     </p>
                 </div>
                 <div class="col-md-12 mb-3">
                     <p class="form-control-plaintext form-control-dark mb-1">
-                        <i class="fa-solid fa-align-left me-2 text-muted"></i>
+                        <i class="fa-solid fa-align-left me-2 text-white 50"></i>
                         <span class="text-white-50">Mô tả yêu cầu:</span>
                     </p>
                     <div class="bg-dark p-3 rounded">
@@ -229,7 +229,7 @@
                     </tbody>
                 </table>
                 @if($lophoc->lichHocs->count() > 10)
-                    <p class="text-muted text-center">Và {{ $lophoc->lichHocs->count() - 10 }} buổi khác...</p>
+                    <p class="text-white 50 text-center">Và {{ $lophoc->lichHocs->count() - 10 }} buổi khác...</p>
                 @endif
             </div>
         </div>

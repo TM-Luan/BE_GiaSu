@@ -361,40 +361,66 @@ class LopHocController extends Controller
         return view('nguoihoc.lop-hoc-show', compact('lopHoc'));
     }
     /**
-     * Hiển thị form để tạo khiếu nại
+     * Hiển thị form để tạo khiếu nại (Kèm danh sách lịch sử)
      */
     public function createComplaint($id)
     {
         $nguoiHocId = Auth::user()->nguoiHoc->NguoiHocID;
+        $taiKhoanId = Auth::id();
 
-        // 1. Tìm lớp học, kiểm tra chính chủ
+        // 1. Tìm lớp học
         $lopHoc = LopHocYeuCau::where('LopYeuCauID', $id)
             ->where('NguoiHocID', $nguoiHocId)
-            ->with('giaSu', 'monHoc') // Lấy thông tin gia sư, môn học để hiển thị
+            ->with('giaSu', 'monHoc')
             ->firstOrFail();
 
-        // 2. Chỉ cho khiếu nại lớp đang học hoặc đã hoàn thành
+        // 2. Validate trạng thái lớp (Giữ nguyên logic cũ)
         if (!in_array($lopHoc->TrangThai, ['DangHoc', 'HoanThanh'])) {
             return redirect()->route('nguoihoc.lophoc.index')
                 ->with('error', 'Bạn không thể khiếu nại một lớp chưa bắt đầu.');
         }
 
-        return view('nguoihoc.lop-hoc-complaint', compact('lopHoc'));
+        // 3. [MỚI] Lấy danh sách khiếu nại CỦA TÔI về LỚP NÀY
+        $lichSuKhieuNai = KhieuNai::where('TaiKhoanID', $taiKhoanId)
+                                  ->where('LopYeuCauID', $id)
+                                  ->orderBy('NgayTao', 'desc')
+                                  ->get();
+
+        // 4. Truyền biến $lichSuKhieuNai sang View
+        return view('nguoihoc.lop-hoc-complaint', compact('lopHoc', 'lichSuKhieuNai'));
     }
 
     /**
      * Lưu khiếu nại mới vào CSDL
      */
+    // ... (Các hàm cũ giữ nguyên) ...
+
+    /**
+     * Lưu khiếu nại mới vào CSDL (CÓ CHỐNG SPAM)
+     */
     public function storeComplaint(Request $request, $id)
     {
         $nguoiHocId = Auth::user()->nguoiHoc->NguoiHocID;
-        $taiKhoanId = Auth::id(); // Lấy TaiKhoanID của người đang đăng nhập
+        $taiKhoanId = Auth::id();
 
-        // 1. Tìm lớp học, kiểm tra chính chủ
+        // 1. Tìm lớp học
         $lopHoc = LopHocYeuCau::where('LopYeuCauID', $id)
             ->where('NguoiHocID', $nguoiHocId)
             ->firstOrFail();
             
+        // === 🛑 THÊM LOGIC CHỐNG SPAM TẠI ĐÂY ===
+        // Kiểm tra xem tài khoản này đã khiếu nại lớp này chưa
+        $daGui = KhieuNai::where('TaiKhoanID', $taiKhoanId)
+                        ->where('LopYeuCauID', $lopHoc->LopYeuCauID)
+                        ->exists();
+
+        if ($daGui) {
+            // Nếu đã gửi rồi -> Trả về thông báo lỗi
+            return redirect()->route('nguoihoc.lophoc.show', $id)
+                ->with('error', 'Bạn đã gửi khiếu nại về lớp này rồi. Vui lòng chờ Admin phản hồi.');
+        }
+        // ==========================================
+
         // 2. Validate dữ liệu
         $request->validate([
             'NoiDung' => 'required|string|min:20|max:1000',
@@ -404,16 +430,77 @@ class LopHocController extends Controller
         ]);
 
         // 3. Tạo khiếu nại
-        // (Dựa trên cấu trúc bảng KhieuNai)
         KhieuNai::create([
             'TaiKhoanID' => $taiKhoanId,
             'LopYeuCauID' => $lopHoc->LopYeuCauID,
             'NoiDung' => $request->NoiDung,
-            'TrangThai' => 'TiepNhan', // Trạng thái mặc định
+            'TrangThai' => 'TiepNhan',
             'NgayTao' => now()
         ]);
 
-        return redirect()->route('nguoihoc.lophoc.index')
-            ->with('success', 'Gửi khiếu nại thành công! Chúng tôi sẽ xem xét và phản hồi sớm nhất.');
+        return redirect()->route('nguoihoc.lophoc.show', $id)
+            ->with('success', 'Gửi khiếu nại thành công! Bạn có thể chỉnh sửa trong vòng 5 phút.');
+    }
+
+    /**
+     * [MỚI] Cập nhật khiếu nại (Chỉ cho phép trong 5 phút + Trạng thái Tiếp nhận)
+     */
+    public function updateComplaint(Request $request, $khieuNaiId)
+    {
+        $taiKhoanId = Auth::id();
+        
+        // 1. Tìm khiếu nại chính chủ
+        $khieuNai = KhieuNai::where('KhieuNaiID', $khieuNaiId)
+                            ->where('TaiKhoanID', $taiKhoanId)
+                            ->firstOrFail();
+
+        // 2. Kiểm tra thời gian (5 phút)
+        $thoiGianTao = \Carbon\Carbon::parse($khieuNai->NgayTao);
+        if (now()->diffInMinutes($thoiGianTao) > 5) {
+            return back()->with('error', 'Đã quá 5 phút, bạn không thể chỉnh sửa được nữa!');
+        }
+
+        // 3. Kiểm tra trạng thái (Admin đã xử lý chưa?)
+        if ($khieuNai->TrangThai !== 'TiepNhan') {
+            return back()->with('error', 'Admin đang xử lý hồ sơ này, không thể chỉnh sửa!');
+        }
+
+        // 4. Cập nhật
+        $request->validate(['NoiDung' => 'required|string|min:20|max:1000']);
+        
+        $khieuNai->update([
+            'NoiDung' => $request->NoiDung
+        ]);
+
+        return back()->with('success', 'Cập nhật nội dung khiếu nại thành công!');
+    }
+
+    /**
+     * [MỚI] Xóa khiếu nại (Chỉ cho phép trong 5 phút + Trạng thái Tiếp nhận)
+     */
+    public function destroyComplaint($khieuNaiId)
+    {
+        $taiKhoanId = Auth::id();
+        
+        // 1. Tìm khiếu nại chính chủ
+        $khieuNai = KhieuNai::where('KhieuNaiID', $khieuNaiId)
+                            ->where('TaiKhoanID', $taiKhoanId)
+                            ->firstOrFail();
+
+        // 2. Kiểm tra thời gian (5 phút)
+        $thoiGianTao = \Carbon\Carbon::parse($khieuNai->NgayTao);
+        if (now()->diffInMinutes($thoiGianTao) > 5) {
+            return back()->with('error', 'Đã quá 5 phút, bạn không thể xóa được nữa!');
+        }
+
+        // 3. Kiểm tra trạng thái
+        if ($khieuNai->TrangThai !== 'TiepNhan') {
+            return back()->with('error', 'Admin đang xử lý, không thể thu hồi!');
+        }
+
+        // 4. Xóa
+        $khieuNai->delete();
+
+        return back()->with('success', 'Đã thu hồi khiếu nại thành công.');
     }
 }

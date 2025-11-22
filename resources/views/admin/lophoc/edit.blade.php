@@ -47,7 +47,7 @@
                             <option value="HoanThanh" {{ $lophoc->TrangThai == 'HoanThanh' ? 'selected' : '' }}>Hoàn thành - Đã kết thúc</option>
                             <option value="DaHuy" {{ $lophoc->TrangThai == 'DaHuy' ? 'selected' : '' }}>Đã hủy - Không diễn ra</option>
                         </select>
-                        <small class="text-muted">Trạng thái hiện tại của lớp học</small>
+                        <small class="text-white 50">Trạng thái hiện tại của lớp học</small>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -58,7 +58,7 @@
                             <option value="Online" {{ $lophoc->HinhThuc == 'Online' ? 'selected' : '' }}>Online - Học qua mạng</option>
                             <option value="Offline" {{ $lophoc->HinhThuc == 'Offline' ? 'selected' : '' }}>Offline - Gặp mặt trực tiếp</option>
                         </select>
-                        <small class="text-muted">Phương thức giảng dạy</small>
+                        <small class="text-white 50">Phương thức giảng dạy</small>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -67,7 +67,7 @@
                         </label>
                         <input type="number" name="HocPhi" class="form-control form-control-dark" 
                                value="{{ old('HocPhi', $lophoc->HocPhi) }}" min="0" step="1000">
-                        <small class="text-muted">Học phí cho mỗi buổi học</small>
+                        <small class="text-white 50">Học phí cho mỗi buổi học</small>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -76,7 +76,7 @@
                         </label>
                         <input type="number" name="ThoiLuong" class="form-control form-control-dark" 
                                value="{{ old('ThoiLuong', $lophoc->ThoiLuong ?? 90) }}" min="30" max="300">
-                        <small class="text-muted">Thời gian mỗi buổi học (30-300 phút)</small>
+                        <small class="text-white 50">Thời gian mỗi buổi học (30-300 phút)</small>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -85,7 +85,7 @@
                         </label>
                         <input type="number" name="SoLuong" class="form-control form-control-dark" 
                                value="{{ old('SoLuong', $lophoc->SoLuong ?? 1) }}" min="1" max="100">
-                        <small class="text-muted">Tổng số buổi của khóa học (1-100 buổi)</small>
+                        <small class="text-white 50">Tổng số buổi của khóa học (1-100 buổi)</small>
                     </div>
 
                     <div class="col-md-12 mb-3">
@@ -93,7 +93,7 @@
                             <i class="fa-solid fa-align-left me-1"></i> Mô tả / Ghi chú
                         </label>
                         <textarea name="MoTa" class="form-control form-control-dark" rows="4">{{ old('MoTa', $lophoc->MoTa) }}</textarea>
-                        <small class="text-muted">Thông tin bổ sung về lớp học</small>
+                        <small class="text-white 50">Thông tin bổ sung về lớp học</small>
                     </div>
                 </div>
 
@@ -104,7 +104,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <p class="mb-1">
-                                <i class="fa-solid fa-user me-2 text-muted"></i>
+                                <i class="fa-solid fa-user me-2 text-white 50"></i>
                                 <span class="text-white-50">Người học:</span> 
                                 <strong class="text-white ms-2">{{ $lophoc->nguoiHoc->HoTen ?? 'Chưa có thông tin' }}</strong>
                             </p>
@@ -117,14 +117,14 @@
                         </div>
                         <div class="col-md-3 mb-3">
                             <p class="mb-0">
-                                <i class="fa-solid fa-book me-2 text-muted"></i>
+                                <i class="fa-solid fa-book me-2 text-white 50"></i>
                                 <span class="text-white-50">Môn học:</span> 
                                 <strong class="text-white ms-2">{{ $lophoc->monHoc->TenMon ?? 'Chưa có môn học' }}</strong>
                             </p>
                         </div>
                         <div class="col-md-3 mb-3">
                             <p class="mb-0">
-                                <i class="fa-solid fa-graduation-cap me-2 text-muted"></i>
+                                <i class="fa-solid fa-graduation-cap me-2 text-white 50"></i>
                                 <span class="text-white-50">Khối lớp:</span> 
                                 <strong class="text-white ms-2">{{ $lophoc->khoiLop->BacHoc ?? 'Chưa xác định' }}</strong>
                             </p>
@@ -132,7 +132,7 @@
                         @if($lophoc->giaSu)
                         <div class="col-md-6 mb-3">
                             <p class="mb-1">
-                                <i class="fa-solid fa-chalkboard-user me-2 text-muted"></i>
+                                <i class="fa-solid fa-chalkboard-user me-2 text-white 50"></i>
                                 <span class="text-white-50">Gia sư:</span> 
                                 <strong class="text-white ms-2">{{ $lophoc->giaSu->HoTen }}</strong>
                             </p>

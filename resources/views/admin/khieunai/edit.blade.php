@@ -11,100 +11,79 @@
         </a>
     </div>
 
-    @if(session('error'))
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            {{ session('error') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    @endif
-
     @if($errors->any())
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show">
             <ul class="mb-0">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
+                @foreach($errors->all() as $error) <li>{{ $error }}</li> @endforeach
             </ul>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
     <div class="row">
+        {{-- CỘT TRÁI --}}
         <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fa-solid fa-file-alt me-2"></i>Nội dung Khiếu nại</h5>
+            {{-- Nội dung khiếu nại --}}
+            <div class="card mb-4 border-secondary">
+                <div class="card-header bg-dark border-bottom border-secondary text-white">
+                    <h6 class="mb-0"><i class="fa-solid fa-file-alt me-2"></i>Nội dung từ người dùng</h6>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Nội dung từ người dùng</label>
-                        <div class="p-3 bg-dark rounded border border-secondary">
-                            <p class="mb-0 text-white" style="white-space: pre-line;">{{ $khieunai->NoiDung }}</p>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="text-muted">Người khiếu nại</label>
-                            <p class="text-white">{{ $khieunai->taiKhoan->Email ?? 'N/A' }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted">Ngày tạo</label>
-                            <p class="text-white">
-                                @if($khieunai->NgayTao)
-                                    {{ $khieunai->NgayTao->format('d/m/Y H:i') }}
-                                @else
-                                    N/A
-                                @endif
-                            </p>
-                        </div>
+                <div class="card-body bg-dark text-light">
+                    <div class="p-3 bg-black bg-opacity-25 rounded border border-secondary">
+                        <p class="mb-0" style="white-space: pre-line;">{{ $khieunai->NoiDung }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-body">
+            {{-- FORM XỬ LÝ (Đã làm đơn giản hóa màu sắc) --}}
+            <div class="card border-secondary">
+                <div class="card-header bg-dark border-bottom border-secondary text-white">
+                     <h5 class="mb-0"><i class="fa-solid fa-gavel me-2"></i>Thông tin Xử lý</h5>
+                </div>
+                <div class="card-body bg-dark">
                     <form action="{{ route('admin.khieunai.update', $khieunai->KhieuNaiID) }}" method="POST">
                         @csrf
                         @method('PUT')
 
-                        <h5 class="text-white mb-3"><i class="fa-solid fa-tasks me-2"></i>Xử lý Khiếu nại</h5>
-
-                        <div class="mb-3">
-                            <label class="form-label">Trạng thái <span class="text-danger">*</span></label>
-                            <select name="TrangThai" class="form-select form-select-dark" required>
+                        {{-- 1. Trạng thái --}}
+                        <div class="mb-4">
+                            <label class="form-label text-white fw-bold">1. Trạng thái xử lý <span class="text-danger">*</span></label>
+                            <select name="TrangThai" class="form-select form-select-lg bg-dark text-white border-secondary" required>
                                 <option value="TiepNhan" {{ $khieunai->TrangThai == 'TiepNhan' ? 'selected' : '' }}>Tiếp nhận</option>
                                 <option value="DangXuLy" {{ $khieunai->TrangThai == 'DangXuLy' ? 'selected' : '' }}>Đang xử lý</option>
                                 <option value="DaGiaiQuyet" {{ $khieunai->TrangThai == 'DaGiaiQuyet' ? 'selected' : '' }}>Đã giải quyết</option>
-                                <option value="TuChoi" {{ $khieunai->TrangThai == 'TuChoi' ? 'selected' : '' }}>Từ chối</option>
+                                <option value="TuChoi" {{ $khieunai->TrangThai == 'TuChoi' ? 'selected' : '' }}>Từ chối / Hủy</option>
                             </select>
-                            <small class="text-muted">Cập nhật trạng thái xử lý khiếu nại</small>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Phản hồi cho người dùng</label>
-                            <textarea name="PhanHoi" class="form-control form-control-dark" rows="5" 
-                                      placeholder="Nhập nội dung phản hồi sẽ gửi đến người khiếu nại...">{{ old('PhanHoi', $khieunai->PhanHoi) }}</textarea>
-                            <small class="text-muted">Nội dung này sẽ hiển thị cho người dùng</small>
+                        {{-- 2. Ghi chú nội bộ --}}
+                        <div class="mb-4">
+                            <label class="form-label text-white fw-bold">
+                                2. Phương án giải quyết / Ghi chú nội bộ
+                            </label>
+                            <small class="text-white-50 d-block mb-2">
+                                (Lưu vào cột GiaiQuyet - Dành cho Admin)
+                            </small>
+                            <textarea name="GiaiQuyet" class="form-control form-control-dark bg-dark text-white border-secondary" rows="4">{{ old('GiaiQuyet', $khieunai->GiaiQuyet) }}</textarea>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Ghi chú nội bộ (không hiển thị cho người dùng)</label>
-                            <textarea name="GhiChu" class="form-control form-control-dark" rows="3" 
-                                      placeholder="Ghi chú nội bộ của admin...">{{ old('GhiChu', $khieunai->GhiChu) }}</textarea>
-                            <small class="text-muted">Chỉ admin có thể xem ghi chú này</small>
+                        {{-- 3. Phản hồi user --}}
+                        <div class="mb-4">
+                            {{-- Đã bỏ text-success (màu xanh), chuyển về text-white --}}
+                            <label class="form-label text-white fw-bold">
+                                3. Phản hồi cho người dùng
+                            </label>
+                            <small class="text-white-50 d-block mb-2">
+                                (Lưu vào cột PhanHoi - Người dùng sẽ thấy nội dung này)
+                            </small>
+                            {{-- Đã bỏ border-success, chuyển về border-secondary --}}
+                            <textarea name="PhanHoi" class="form-control form-control-dark bg-dark text-white border-secondary" rows="3">{{ old('PhanHoi', $khieunai->PhanHoi) }}</textarea>
                         </div>
 
-                        <div class="alert alert-warning">
-                            <i class="fa-solid fa-exclamation-triangle me-2"></i>
-                            <strong>Lưu ý:</strong> Hành động này sẽ cập nhật thời gian xử lý và có thể gửi thông báo đến người khiếu nại.
-                        </div>
-
-                        <div class="d-flex justify-content-end gap-2">
-                            <a href="{{ route('admin.khieunai.show', $khieunai->KhieuNaiID) }}" class="btn btn-secondary">
-                                <i class="fa-solid fa-times me-2"></i> Hủy
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fa-solid fa-save me-2"></i> Lưu xử lý
+                        <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-3">
+                            <a href="{{ route('admin.khieunai.show', $khieunai->KhieuNaiID) }}" class="btn btn-secondary">Hủy bỏ</a>
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="fa-solid fa-save me-2"></i> Lưu Xử Lý
                             </button>
                         </div>
                     </form>
@@ -112,93 +91,29 @@
             </div>
         </div>
 
+        {{-- CỘT PHẢI --}}
         <div class="col-md-4">
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fa-solid fa-info-circle me-2"></i>Thông tin liên quan</h5>
+            <div class="card mb-4 border-secondary">
+                <div class="card-header bg-dark border-bottom border-secondary text-white">
+                    <h6 class="mb-0"><i class="fa-solid fa-info-circle me-2"></i>Thông tin liên quan</h6>
                 </div>
-                <div class="card-body">
+                <div class="card-body bg-dark">
+                    <p class="mb-1 text-white-50">Người gửi:</p>
+                    <p class="text-white fw-bold mb-3">{{ $khieunai->taiKhoan->Email ?? 'N/A' }}</p>
+                    
+                    <hr class="border-secondary">
+
+                    <p class="mb-1 text-white-50">Ngày tạo:</p>
+                    <p class="text-white mb-3">
+                        {{ \Carbon\Carbon::parse($khieunai->NgayTao)->format('H:i d/m/Y') }}
+                    </p>
+
                     @if($khieunai->lop)
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Lớp học</label>
-                            <p class="form-control-plaintext form-control-dark">
-                                <a href="{{ route('admin.lophoc.show', $khieunai->LopYeuCauID) }}" class="text-info">
-                                    #{{ $khieunai->LopYeuCauID }} - {{ $khieunai->lop->monHoc->TenMon ?? 'N/A' }}
-                                </a>
-                            </p>
-                        </div>
-                    @endif
-
-                    @if($khieunai->giaoDich)
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Giao dịch</label>
-                            <p class="form-control-plaintext form-control-dark">
-                                <a href="{{ route('admin.giaodich.show', $khieunai->GiaoDichID) }}" class="text-info">
-                                    {{ $khieunai->giaoDich->MaGiaoDich ?? '#' . $khieunai->GiaoDichID }}
-                                </a>
-                            </p>
-                        </div>
-                    @endif
-
-                    <div class="mb-3">
-                        <label class="form-label text-muted">Trạng thái hiện tại</label>
-                        <p class="form-control-plaintext form-control-dark">
-                            @php
-                                $statusColors = [
-                                    'TiepNhan' => 'bg-info',
-                                    'DangXuLy' => 'bg-warning text-dark',
-                                    'DaGiaiQuyet' => 'bg-success',
-                                    'TuChoi' => 'bg-danger'
-                                ];
-                                $statusText = [
-                                    'TiepNhan' => 'Tiếp nhận',
-                                    'DangXuLy' => 'Đang xử lý',
-                                    'DaGiaiQuyet' => 'Đã giải quyết',
-                                    'TuChoi' => 'Từ chối'
-                                ];
-                            @endphp
-                            <span class="badge {{ $statusColors[$khieunai->TrangThai] ?? 'bg-secondary' }} fs-6">
-                                {{ $statusText[$khieunai->TrangThai] ?? $khieunai->TrangThai }}
-                            </span>
-                        </p>
-                    </div>
-
-                    @if($khieunai->NgayXuLy)
-                        <div class="mb-3">
-                            <label class="form-label text-muted">Lần xử lý gần nhất</label>
-                            <p class="form-control-plaintext form-control-dark">
-                                {{ $khieunai->NgayXuLy->format('d/m/Y H:i') }}
-                            </p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fa-solid fa-user me-2"></i>Người khiếu nại</h5>
-                </div>
-                <div class="card-body">
-                    @if($khieunai->taiKhoan)
-                        <div class="mb-2">
-                            <small class="text-muted">Email:</small>
-                            <p class="text-white mb-1">{{ $khieunai->taiKhoan->Email }}</p>
-                        </div>
-                        <div class="mb-2">
-                            <small class="text-muted">SĐT:</small>
-                            <p class="text-white mb-1">{{ $khieunai->taiKhoan->SoDienThoai ?? 'N/A' }}</p>
-                        </div>
-                        @if($khieunai->taiKhoan->giasu)
-                            <div class="mb-2">
-                                <small class="text-muted">Vai trò:</small>
-                                <p class="mb-0"><span class="badge bg-primary">Gia sư</span></p>
-                            </div>
-                        @elseif($khieunai->taiKhoan->nguoihoc)
-                            <div class="mb-2">
-                                <small class="text-muted">Vai trò:</small>
-                                <p class="mb-0"><span class="badge bg-info">Người học</span></p>
-                            </div>
-                        @endif
+                        <hr class="border-secondary">
+                        <p class="mb-1 text-white-50">Lớp học:</p>
+                        <a href="{{ route('admin.lophoc.show', $khieunai->LopYeuCauID) }}" class="btn btn-outline-light btn-sm w-100 text-start border-secondary">
+                            <i class="fa-solid fa-external-link-alt me-2"></i> Xem lớp #{{ $khieunai->LopYeuCauID }}
+                        </a>
                     @endif
                 </div>
             </div>

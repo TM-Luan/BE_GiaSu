@@ -58,15 +58,15 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $kn->taiKhoan->Email ?? 'N/A' }}</span>
-                                    <small class="text-muted">ID: {{ $kn->TaiKhoanID }}</small>
+                                    <small class="text-white 50">ID: {{ $kn->TaiKhoanID }}</small>
                                 </div>
                             </td>
                             <td>
                                 @if($kn->lop)
                                     <small>Lớp #{{ $kn->LopYeuCauID }}</small><br>
-                                    <small class="text-muted">{{ $kn->lop->monHoc->TenMon ?? '' }}</small>
+                                    <small class="text-white 25">{{ $kn->lop->monHoc->TenMon ?? '' }}</small>
                                 @else
-                                    <span class="text-muted">N/A</span>
+                                    <span class="text-white 25">N/A</span>
                                 @endif
                             </td>
                             <td>
@@ -116,8 +116,8 @@
                         @empty
                         <tr>
                             <td colspan="7" class="text-center py-4">
-                                <i class="fa-solid fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                                <p class="text-muted mb-0">Không tìm thấy khiếu nại nào</p>
+                                <i class="fa-solid fa-inbox fa-3x text-white 25 mb-3 d-block"></i>
+                                <p class="text-white 25 mb-0">Không tìm thấy khiếu nại nào</p>
                             </td>
                         </tr>
                         @endforelse
