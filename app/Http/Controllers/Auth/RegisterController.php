@@ -30,8 +30,8 @@ class RegisterController extends Controller
         $validated = $request->validate([
             'VaiTro' => 'required|in:2,3', // CHỈ cho phép 2=Gia sư, 3=Người học
             'HoTen' => 'required|string|max:255',
-            'SoDienThoai' => 'required|string|regex:/^[0-9]{10,11}$/|unique:taikhoan,SoDienThoai',
-            'Email' => 'required|email|unique:taikhoan,Email',
+            'SoDienThoai' => 'required|string|regex:/^[0-9]{10,11}$/|unique:TaiKhoan,SoDienThoai',
+            'Email' => 'required|email|unique:TaiKhoan,Email',
             'MatKhau' => 'required|string|min:6|confirmed',
             'agree_terms' => 'required|accepted'
         ], [
