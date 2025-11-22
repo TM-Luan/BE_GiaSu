@@ -9,6 +9,21 @@
             <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i> Quay lại danh sách
         </a>
     </div>
+    {{-- === THÊM ĐOẠN NÀY VÀO ĐÂY === --}}
+    @if (session('success'))
+        <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 flex items-center">
+            <i data-lucide="check-circle" class="w-5 h-5 mr-2"></i>
+            <strong>{{ session('success') }}</strong>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-center">
+            <i data-lucide="x-circle" class="w-5 h-5 mr-2"></i>
+            <strong>{{ session('error') }}</strong>
+        </div>
+    @endif
+    {{-- ============================== --}}
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         

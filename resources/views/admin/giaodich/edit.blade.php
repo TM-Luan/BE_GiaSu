@@ -49,19 +49,19 @@
                             <option value="ThatBai" {{ $giaodich->TrangThai == 'ThatBai' ? 'selected' : '' }}>Thất bại</option>
                             <option value="HoanTien" {{ $giaodich->TrangThai == 'HoanTien' ? 'selected' : '' }}>Hoàn tiền</option>
                         </select>
-                        <small class="text-muted">Cập nhật trạng thái xử lý giao dịch</small>
+                        <small class="text-white 50">Cập nhật trạng thái xử lý giao dịch</small>
                     </div>
 
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Mã giao dịch</label>
-                        <input type="text" class="form-control form-control-dark" value="{{ $giaodich->MaGiaoDich ?? 'N/A' }}" disabled>
-                        <small class="text-muted">Không thể thay đổi</small>
+                        <input type="text" class="form-control form-control-dark bg-dark text-white border-secondary" value="{{ $giaodich->MaGiaoDich ?? 'N/A' }}" disabled>
+                        <small class="text-white 50">Không thể thay đổi</small>
                     </div>
 
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Ghi chú / Lý do</label>
                         <textarea name="GhiChu" class="form-control form-control-dark" rows="4" placeholder="Nhập ghi chú hoặc lý do cập nhật trạng thái...">{{ old('GhiChu', $giaodich->GhiChu) }}</textarea>
-                        <small class="text-muted">Ghi chú về giao dịch hoặc lý do thay đổi trạng thái</small>
+                        <small class="text-white 50">Ghi chú về giao dịch hoặc lý do thay đổi trạng thái</small>
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@
                     <h5 class="text-white mb-3">Thông tin giao dịch</h5>
                     <div class="row">
                         <div class="col-md-4">
-                            <label class="text-muted">Loại giao dịch</label>
+                            <label class="text-white 50">Loại giao dịch</label>
                             <p class="text-white">
                                 @php
                                     $typeColors = [
@@ -86,11 +86,11 @@
                             </p>
                         </div>
                         <div class="col-md-4">
-                            <label class="text-muted">Số tiền</label>
+                            <label class="text-white 50">Số tiền</label>
                             <p class="text-white fw-bold fs-5">{{ number_format($giaodich->SoTien, 0, ',', '.') }} đ</p>
                         </div>
                         <div class="col-md-4">
-                            <label class="text-muted">Thời gian</label>
+                            <label class="text-white 50">Thời gian</label>
                             <p class="text-white">
                                 @if($giaodich->ThoiGian)
                                     {{ \Carbon\Carbon::parse($giaodich->ThoiGian)->format('d/m/Y H:i') }}
@@ -100,11 +100,11 @@
                             </p>
                         </div>
                         <div class="col-md-12">
-                            <label class="text-muted">Tài khoản</label>
+                            <label class="text-white 50">Tài khoản</label>
                             <p class="text-white">{{ $giaodich->taiKhoan->Email ?? 'N/A' }}</p>
                         </div>
                     </div>
-                    <p class="text-muted mb-0"><small><i class="fa-solid fa-lock me-1"></i> Các thông tin trên không thể thay đổi</small></p>
+                    <p class="text-white 50 mb-0"><small><i class="fa-solid fa-lock me-1"></i> Các thông tin trên không thể thay đổi</small></p>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2">

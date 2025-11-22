@@ -82,34 +82,70 @@ class KhieuNaiController extends Controller
     /**
      * Cập nhật khiếu nại
      */
+    // public function update(Request $request, $id)
+    // {
+    //     $validated = $request->validate([
+    //         'TrangThai' => 'required|in:TiepNhan,DangXuLy,DaGiaiQuyet,TuChoi',
+    //         'GhiChu' => 'nullable|string|max:1000',
+    //         'PhanHoi' => 'nullable|string|max:1000',
+    //     ]);
+
+    //     $khieuNai = KhieuNai::findOrFail($id);
+        
+    //     $khieuNai->update([
+    //         'TrangThai' => $validated['TrangThai'],
+    //         'GhiChu' => $validated['GhiChu'] ?? $khieuNai->GhiChu,
+    //         'PhanHoi' => $validated['PhanHoi'] ?? $khieuNai->PhanHoi,
+    //         'NgayXuLy' => now(),
+    //     ]);
+
+    //     if ($request->wantsJson() || $request->is('api/*')) {
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Cập nhật khiếu nại thành công!',
+    //             'data' => $khieuNai,
+    //         ]);
+    //     }
+
+    //     return redirect()->route('admin.khieunai.show', $id)
+    //         ->with('success', 'Cập nhật khiếu nại thành công!');
+    // }
     public function update(Request $request, $id)
     {
+        // 1. Tìm khiếu nại
+        $khieuNai = KhieuNai::findOrFail($id);
+
+        // 2. Validate dữ liệu
         $validated = $request->validate([
             'TrangThai' => 'required|in:TiepNhan,DangXuLy,DaGiaiQuyet,TuChoi',
-            'GhiChu' => 'nullable|string|max:1000',
-            'PhanHoi' => 'nullable|string|max:1000',
+            // PhanHoi trong DB là varchar(255), nên giới hạn max:255
+            'PhanHoi'   => 'nullable|string|max:255', 
+            // GiaiQuyet trong DB là Text, có thể viết dài
+            'GiaiQuyet' => 'nullable|string|max:5000', 
+        ], [
+            'PhanHoi.max' => 'Nội dung phản hồi cho người dùng không được quá 255 ký tự.',
         ]);
 
-        $khieuNai = KhieuNai::findOrFail($id);
-        
+        // 3. Cập nhật dữ liệu
         $khieuNai->update([
             'TrangThai' => $validated['TrangThai'],
-            'GhiChu' => $validated['GhiChu'] ?? $khieuNai->GhiChu,
-            'PhanHoi' => $validated['PhanHoi'] ?? $khieuNai->PhanHoi,
-            'NgayXuLy' => now(),
+            'PhanHoi'   => $validated['PhanHoi'] ?? $khieuNai->PhanHoi,
+            'GiaiQuyet' => $validated['GiaiQuyet'] ?? $khieuNai->GiaiQuyet,
         ]);
 
+        // 4. Trả về (Hỗ trợ cả API và Web)
         if ($request->wantsJson() || $request->is('api/*')) {
             return response()->json([
                 'success' => true,
-                'message' => 'Cập nhật khiếu nại thành công!',
+                'message' => 'Đã cập nhật xử lý khiếu nại!',
                 'data' => $khieuNai,
             ]);
         }
 
         return redirect()->route('admin.khieunai.show', $id)
-            ->with('success', 'Cập nhật khiếu nại thành công!');
+            ->with('success', 'Đã cập nhật phương án giải quyết thành công!');
     }
+
 
     /**
      * Xóa khiếu nại (Admin)

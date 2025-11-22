@@ -42,7 +42,7 @@
         @else
             <div class="col-12">
                 <div class="card p-3 text-center">
-                    <p class="text-muted">Không có dữ liệu thống kê.</p>
+                    <p class="texr-white 50">Không có dữ liệu thống kê.</p>
                 </div>
             </div>
         @endif

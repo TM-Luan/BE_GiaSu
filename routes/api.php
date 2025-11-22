@@ -26,6 +26,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/changepassword', [AuthController::class, 'changePassword']);
     Route::get('/khieunai', [KhieuNaiController::class, 'index']);
     Route::post('/khieunai', [KhieuNaiController::class, 'store']);
+    Route::put('/khieunai/{id}', [KhieuNaiController::class, 'update']);
+    Route::delete('/khieunai/{id}', [KhieuNaiController::class, 'destroy']);
 
     // DanhGia routes - Đánh giá gia sư
     Route::post('/danhgia', [DanhGiaController::class, 'taoDanhGia']);

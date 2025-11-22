@@ -99,7 +99,7 @@
                         @if($avatarSrc)
                             <img src="{{ $avatarSrc }}" alt="Ảnh đại diện" class="img-fluid rounded" style="max-height: 150px; border: 1px solid #555;">
                         @else
-                            <div class="text-muted fst-italic">Chưa có ảnh</div>
+                            <div class="text-white 50 fst-italic">Chưa có ảnh</div>
                         @endif
                     </div>
                     <div class="col-md-9 mb-3">

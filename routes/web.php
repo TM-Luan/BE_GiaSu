@@ -134,6 +134,8 @@ Route::middleware(['auth'])->group(function () {
             // Khiếu nại lớp học
             Route::get('/{id}/khieu-nai', [LopHocController::class, 'createComplaint'])->name('complaint.create');
             Route::post('/{id}/khieu-nai', [LopHocController::class, 'storeComplaint'])->name('complaint.store');
+            Route::put('/khieu-nai/{khieuNaiId}', [LopHocController::class, 'updateComplaint'])->name('complaint.update');
+            Route::delete('/khieu-nai/{khieuNaiId}', [LopHocController::class, 'destroyComplaint'])->name('complaint.destroy');
         });
 
         // Xử lý đề nghị (chấp nhận/từ chối gia sư)

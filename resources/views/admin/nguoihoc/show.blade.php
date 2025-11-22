@@ -18,15 +18,15 @@
             <h5 class="text-white mb-3">Thông tin Cơ bản (Bảng TaiKhoan)</h5>
             <div class="row mb-3">
                 <div class="col-md-6">
-                    <label class="form-label text-muted">Email</label>
+                    <label class="form-label text-white 50">Email</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->Email }}</p>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted">Số điện thoại</label>
+                    <label class="form-label text-white 50">Số điện thoại</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->SoDienThoai ?? 'Chưa cập nhật' }}</p>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted">Trạng thái</label>
+                    <label class="form-label text-white 50">Trạng thái</label>
                     <div>
                         <span class="badge rounded-pill {{ $taiKhoan->TrangThai == 1 ? 'bg-success' : 'bg-danger' }}">
                             {{ $taiKhoan->TrangThai == 1 ? 'Hoạt động' : 'Bị khóa' }}
@@ -41,19 +41,19 @@
             <h5 class="text-white mb-3">Thông tin Chi tiết (Bảng NguoiHoc)</h5>
             <div class="row mb-3">
                 <div class="col-md-5">
-                    <label class="form-label text-muted">Họ tên</label>
+                    <label class="form-label text-white 50">Họ tên</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->nguoihoc->HoTen ?? 'Chưa cập nhật' }}</p>
                 </div>
                 <div class="col-md-3">
-                    <label class="form-label text-muted">Giới tính</label>
+                    <label class="form-label text-white 50">Giới tính</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->nguoihoc->GioiTinh ?? 'Chưa cập nhật' }}</p>
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label text-muted">Ngày sinh</label>
+                    <label class="form-label text-white 50">Ngày sinh</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->nguoihoc->NgaySinh ? \Carbon\Carbon::parse($taiKhoan->nguoihoc->NgaySinh)->format('d/m/Y') : 'Chưa cập nhật' }}</p>
                 </div>
                 <div class="col-md-12 mt-3">
-                    <label class="form-label text-muted">Địa chỉ</label>
+                    <label class="form-label text-white 50">Địa chỉ</label>
                     <p class="form-control-plaintext form-control-dark">{{ $taiKhoan->nguoihoc->DiaChi ?? 'Chưa cập nhật' }}</p>
                 </div>
             </div>
@@ -69,7 +69,7 @@
                             <img src="{{ $taiKhoan->nguoihoc->AnhDaiDien }}" alt="Ảnh đại diện" class="img-fluid rounded" style="border: 1px solid #555;">
                         </a>
                     @else
-                        <div class="text-muted fst-italic">Chưa có ảnh</div>
+                        <div class="text-white 50 fst-italic">Chưa có ảnh</div>
                     @endif
                 </div>
             </div>
