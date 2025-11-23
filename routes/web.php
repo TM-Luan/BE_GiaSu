@@ -38,10 +38,18 @@ use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
 // Landing page
 Route::get('/', [LandingController::class, 'index'])->name('home');
 
-// Authentication
-Route::get('register', [RegisterController::class, 'showRegisterForm'])->name('register');
+// Authentication - Redirect to home with modal
+Route::get('register', function (Illuminate\Http\Request $request) {
+    $redirect = $request->query('redirect', url()->previous());
+    return redirect()->to('/?open=register&redirect=' . urlencode($redirect));
+})->name('register');
+
+Route::get('login', function (Illuminate\Http\Request $request) {
+    $redirect = $request->query('redirect', url()->previous());
+    return redirect()->to('/?open=login&redirect=' . urlencode($redirect));
+})->name('login');
+
 Route::post('register', [RegisterController::class, 'register'])->name('register.post');
-Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login'])->name('login.post');
 Route::post('logout', [LoginController::class, 'logout'])->name('logout');
 

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Modal Demo</title>
+    <link href="/css/auth.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .demo-container {
+            text-align: center;
+            color: white;
+        }
+        .demo-title {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .demo-subtitle {
+            font-size: 18px;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        .demo-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .demo-btn {
+            background: white;
+            color: #667eea;
+            border: none;
+            padding: 15px 40px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .demo-btn.secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        .demo-info {
+            margin-top: 60px;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 600px;
+        }
+        .demo-info h3 {
+            margin-top: 0;
+            font-size: 24px;
+        }
+        .demo-info ul {
+            text-align: left;
+            line-height: 2;
+        }
+        .demo-code {
+            background: rgba(0,0,0,0.3);
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <h1 class="demo-title">🎨 Auth Modal Demo</h1>
+        <p class="demo-subtitle">Modal đăng ký/đăng nhập với hiệu ứng sliding hiện đại</p>
+        
+        <div class="demo-buttons">
+            <button class="demo-btn" onclick="openAuthModal('login')">
+                🔐 Mở Modal Login
+            </button>
+            <button class="demo-btn" onclick="openAuthModal('register')">
+                ✨ Mở Modal Register
+            </button>
+        </div>
+
+        <div class="demo-info">
+            <h3>✅ Tính năng</h3>
+            <ul>
+                <li>✨ Hiệu ứng sliding mượt mà</li>
+                <li>📱 Responsive design</li>
+                <li>🔒 Form Login & Register</li>
+                <li>🔑 Form Quên mật khẩu</li>
+                <li>⚡ Validation tích hợp</li>
+                <li>🎯 Đóng bằng ESC hoặc click overlay</li>
+            </ul>
+
+            <h3 style="margin-top: 30px;">💻 Cách sử dụng</h3>
+            <div class="demo-code">
+                openAuthModal('login'); // Mở ở tab Login
+            </div>
+            <div class="demo-code">
+                openAuthModal('register'); // Mở ở tab Register
+            </div>
+            <div class="demo-code">
+                closeAuthModal(); // Đóng modal
+            </div>
+        </div>
+    </div>
+
+    {{-- Auth Modal HTML --}}
+    <div id="authModal" class="auth-modal" style="display: none;">
+        <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+        
+        <div class="auth-container" id="authContainer">
+            
+            {{-- FORM ĐĂNG NHẬP --}}
+            <div class="auth-form-container sign-in-container">
+                <form class="auth-form" onsubmit="return handleDemoSubmit(event, 'login')">
+                    <h1 class="auth-title">Đăng nhập</h1>
+                    
+                    <input type="email" 
+                           placeholder="Email" 
+                           class="auth-input"
+                           required>
+                    
+                    <input type="password" 
+                           placeholder="Mật khẩu" 
+                           class="auth-input"
+                           required>
+                    
+                    <a href="#" class="auth-link" id="toForgotPassword">Quên mật khẩu?</a>
+                    
+                    <button type="submit" class="auth-button">Đăng nhập</button>
+                </form>
+            </div>
+
+            {{-- FORM ĐĂNG KÝ --}}
+            <div class="auth-form-container sign-up-container">
+                <form class="auth-form" onsubmit="return handleDemoSubmit(event, 'register')">
+                    <h1 class="auth-title">Tạo tài khoản</h1>
+                    
+                    <input type="text" 
+                           placeholder="Họ và tên" 
+                           class="auth-input"
+                           required>
+                    
+                    <input type="email" 
+                           placeholder="Email" 
+                           class="auth-input"
+                           required>
+                    
+                    <input type="text" 
+                           placeholder="Số điện thoại (10-11 số)" 
+                           class="auth-input"
+                           pattern="[0-9]{10,11}"
+                           required>
+                    
+                    <input type="password" 
+                           placeholder="Mật khẩu" 
+                           class="auth-input"
+                           required>
+                    
+                    <select class="auth-input" required>
+                        <option value="">Chọn vai trò...</option>
+                        <option value="3">Người học</option>
+                        <option value="2">Gia sư</option>
+                    </select>
+                    
+                    <label class="auth-checkbox-label">
+                        <input type="checkbox" required>
+                        <span>Tôi đồng ý với điều khoản sử dụng</span>
+                    </label>
+                    
+                    <button type="submit" class="auth-button">Đăng ký</button>
+                </form>
+            </div>
+
+            {{-- FORM QUÊN MẬT KHẨU --}}
+            <div class="auth-form-container forgot-password-container" style="display: none;">
+                <form class="auth-form" onsubmit="return handleDemoSubmit(event, 'forgot')">
+                    <h1 class="auth-title">Quên mật khẩu</h1>
+                    <p class="auth-description">Nhập email để nhận mã xác nhận</p>
+                    
+                    <input type="email" 
+                           placeholder="Email của bạn" 
+                           class="auth-input"
+                           required>
+                    
+                    <button type="submit" class="auth-button">Gửi mã</button>
+                    <a href="#" class="auth-link" id="backToLogin">Quay lại đăng nhập</a>
+                </form>
+            </div>
+
+            {{-- OVERLAY PANEL --}}
+            <div class="auth-overlay-container">
+                <div class="auth-overlay">
+                    <div class="auth-overlay-panel auth-overlay-left">
+                        <h1 class="auth-overlay-title">Chào mừng trở lại!</h1>
+                        <p class="auth-overlay-text">
+                            Để giữ kết nối với chúng tôi, vui lòng đăng nhập bằng thông tin cá nhân của bạn
+                        </p>
+                        <button class="auth-button-ghost" id="signIn">Đăng nhập</button>
+                    </div>
+                    <div class="auth-overlay-panel auth-overlay-right">
+                        <h1 class="auth-overlay-title">Xin chào!</h1>
+                        <p class="auth-overlay-text">
+                            Nhập thông tin cá nhân và bắt đầu hành trình với chúng tôi
+                        </p>
+                        <button class="auth-button-ghost" id="signUp">Đăng ký</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="/js/auth.js"></script>
+    <script>
+        function handleDemoSubmit(event, formType) {
+            event.preventDefault();
+            alert('DEMO MODE: Form ' + formType.toUpperCase() + ' submitted!\n\nTrong production, form sẽ submit tới backend.');
+            return false;
+        }
+    </script>
+</body>
+</html>

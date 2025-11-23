@@ -27,29 +27,36 @@ class RegisterController extends Controller
     public function register(Request $request)
     {
         // 1. Validate dữ liệu
-        $validated = $request->validate([
-            'VaiTro' => 'required|in:2,3', // CHỈ cho phép 2=Gia sư, 3=Người học
-            'HoTen' => 'required|string|max:255',
-            'SoDienThoai' => 'required|string|regex:/^[0-9]{10,11}$/|unique:TaiKhoan,SoDienThoai',
-            'Email' => 'required|email|unique:TaiKhoan,Email',
-            'MatKhau' => 'required|string|min:6|confirmed',
-            'agree_terms' => 'required|accepted'
-        ], [
-            'VaiTro.required' => 'Vui lòng chọn vai trò.',
-            'VaiTro.in' => 'Vai trò không hợp lệ.',
-            'HoTen.required' => 'Vui lòng nhập họ tên.',
-            'SoDienThoai.required' => 'Vui lòng nhập số điện thoại.',
-            'SoDienThoai.regex' => 'Số điện thoại phải từ 10-11 chữ số.',
-            'SoDienThoai.unique' => 'Số điện thoại đã được đăng ký.',
-            'Email.required' => 'Vui lòng nhập email.',
-            'Email.email' => 'Email không hợp lệ.',
-            'Email.unique' => 'Email đã được đăng ký.',
-            'MatKhau.required' => 'Vui lòng nhập mật khẩu.',
-            'MatKhau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
-            'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-            'agree_terms.required' => 'Vui lòng đồng ý với điều khoản.',
-            'agree_terms.accepted' => 'Vui lòng đồng ý với điều khoản.'
-        ]);
+        try {
+            $validated = $request->validate([
+                'VaiTro' => 'required|in:2,3', // CHỈ cho phép 2=Gia sư, 3=Người học
+                'HoTen' => 'required|string|max:255',
+                'SoDienThoai' => 'required|string|regex:/^[0-9]{10,11}$/|unique:TaiKhoan,SoDienThoai',
+                'Email' => 'required|email|unique:TaiKhoan,Email',
+                'MatKhau' => 'required|string|min:6|confirmed',
+                'agree_terms' => 'required|accepted'
+            ], [
+                'VaiTro.required' => 'Vui lòng chọn vai trò.',
+                'VaiTro.in' => 'Vai trò không hợp lệ.',
+                'HoTen.required' => 'Vui lòng nhập họ tên.',
+                'SoDienThoai.required' => 'Vui lòng nhập số điện thoại.',
+                'SoDienThoai.regex' => 'Số điện thoại phải từ 10-11 chữ số.',
+                'SoDienThoai.unique' => 'Số điện thoại đã được đăng ký.',
+                'Email.required' => 'Vui lòng nhập email.',
+                'Email.email' => 'Email không hợp lệ.',
+                'Email.unique' => 'Email đã được đăng ký.',
+                'MatKhau.required' => 'Vui lòng nhập mật khẩu.',
+                'MatKhau.min' => 'Mật khẩu phải có ít nhất 6 ký tự.',
+                'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
+                'agree_terms.required' => 'Vui lòng đồng ý với điều khoản.',
+                'agree_terms.accepted' => 'Vui lòng đồng ý với điều khoản.'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()
+                ->withErrors($e->validator)
+                ->withInput()
+                ->with('auth_panel', 'register');
+        }
 
         try {
             DB::beginTransaction();

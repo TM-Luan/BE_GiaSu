@@ -37,14 +37,18 @@ class LoginController extends Controller
 
         // 3. Kiểm tra tài khoản và mật khẩu
         if (!$user || !Hash::check($request->MatKhau, $user->getAuthPassword())) {
-            return back()->withInput($request->only('Email', 'remember'))
-                         ->withErrors(['Email' => 'Email hoặc Mật khẩu không chính xác.']);
+            return back()
+                ->withInput($request->only('Email', 'remember'))
+                ->withErrors(['Email' => 'Email hoặc Mật khẩu không chính xác.'])
+                ->with('auth_panel', 'login');
         }
 
         // 4. Kiểm tra trạng thái (Bị khóa)
         if ($user->TrangThai == 0) {
-            return back()->withInput($request->only('Email', 'remember'))
-                         ->withErrors(['Email' => 'Tài khoản này đã bị khóa.']);
+            return back()
+                ->withInput($request->only('Email', 'remember'))
+                ->withErrors(['Email' => 'Tài khoản này đã bị khóa.'])
+                ->with('auth_panel', 'login');
         }
 
         // 5. Kiểm tra vai trò

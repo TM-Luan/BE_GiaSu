@@ -10,6 +10,9 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
 
+        <!-- Auth Modal CSS -->
+        <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
+
         <!-- Styles / Scripts -->
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -32,7 +35,8 @@
                         </a>
                     @else
                         <a
-                            href="{{ route('login') }}"
+                            href="#"
+                            onclick="openAuthModal('login'); return false;"
                             class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] text-[#1b1b18] border border-transparent hover:border-[#19140035] dark:hover:border-[#3E3E3A] rounded-sm text-sm leading-normal"
                         >
                             Log in
@@ -40,7 +44,8 @@
 
                         @if (Route::has('register'))
                             <a
-                                href="{{ route('register') }}"
+                                href="#"
+                                onclick="openAuthModal('register'); return false;"
                                 class="inline-block px-5 py-1.5 dark:text-[#EDEDEC] border-[#19140035] hover:border-[#1915014a] border text-[#1b1b18] dark:border-[#3E3E3A] dark:hover:border-[#62605b] rounded-sm text-sm leading-normal">
                                 Register
                             </a>
@@ -273,5 +278,73 @@
         @if (Route::has('login'))
             <div class="h-14.5 hidden lg:block"></div>
         @endif
+
+        {{-- Auth Modal - Inline để đảm bảo load --}}
+        <div id="authModal" class="auth-modal" style="display: none;">
+            <div class="auth-modal-overlay" onclick="closeAuthModal()"></div>
+            
+            <div class="auth-container" id="authContainer">
+                
+                {{-- FORM ĐĂNG NHẬP --}}
+                <div class="auth-form-container sign-in-container">
+                    <form method="POST" action="{{ route('login.post') }}" class="auth-form">
+                        @csrf
+                        <h1 class="auth-title">Đăng nhập</h1>
+                        
+                        <input type="email" name="Email" placeholder="Email" class="auth-input" value="{{ old('Email') }}" required>
+                        <input type="password" name="MatKhau" placeholder="Mật khẩu" class="auth-input" required>
+                        
+                        <button type="submit" class="auth-button">Đăng nhập</button>
+                    </form>
+                </div>
+
+                {{-- FORM ĐĂNG KÝ --}}
+                <div class="auth-form-container sign-up-container">
+                    <form method="POST" action="{{ route('register.post') }}" class="auth-form">
+                        @csrf
+                        <h1 class="auth-title">Tạo tài khoản</h1>
+                        
+                        <input type="text" name="HoTen" placeholder="Họ và tên" class="auth-input" value="{{ old('HoTen') }}" required>
+                        <input type="email" name="Email" placeholder="Email" class="auth-input" value="{{ old('Email') }}" required>
+                        <input type="text" name="SoDienThoai" placeholder="Số điện thoại (10-11 số)" class="auth-input" value="{{ old('SoDienThoai') }}" pattern="[0-9]{10,11}" required>
+                        <input type="password" name="MatKhau" placeholder="Mật khẩu (tối thiểu 6 ký tự)" class="auth-input" minlength="6" required>
+                        <input type="password" name="MatKhau_confirmation" placeholder="Xác nhận mật khẩu" class="auth-input" minlength="6" required>
+                        
+                        <select name="VaiTro" class="auth-input" required>
+                            <option value="">Chọn vai trò...</option>
+                            <option value="3">Người học</option>
+                            <option value="2">Gia sư</option>
+                        </select>
+                        
+                        <label class="auth-checkbox-label">
+                            <input type="checkbox" name="agree_terms" value="1" required>
+                            <span>Tôi đồng ý với điều khoản sử dụng</span>
+                        </label>
+                        
+                        <button type="submit" class="auth-button">Đăng ký</button>
+                    </form>
+                </div>
+
+                {{-- OVERLAY PANEL --}}
+                <div class="auth-overlay-container">
+                    <div class="auth-overlay">
+                        <div class="auth-overlay-panel auth-overlay-left">
+                            <h1 class="auth-overlay-title">Chào mừng trở lại!</h1>
+                            <p class="auth-overlay-text">Để giữ kết nối với chúng tôi, vui lòng đăng nhập</p>
+                            <button class="auth-button-ghost" id="signIn">Đăng nhập</button>
+                        </div>
+                        <div class="auth-overlay-panel auth-overlay-right">
+                            <h1 class="auth-overlay-title">Xin chào!</h1>
+                            <p class="auth-overlay-text">Nhập thông tin và bắt đầu hành trình với chúng tôi</p>
+                            <button class="auth-button-ghost" id="signUp">Đăng ký</button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {{-- Auth Modal JavaScript --}}
+        <script src="{{ asset('js/auth.js') }}"></script>
     </body>
 </html>

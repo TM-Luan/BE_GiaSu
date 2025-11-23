@@ -6,6 +6,7 @@
     <title>Trung Tâm Gia Sư - Kết nối gia sư và học viên</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="{{ asset('css/auth.css') }}" rel="stylesheet">
 </head>
 <body class="bg-gray-50">
     <!-- Header -->
@@ -27,10 +28,10 @@
 
                 <!-- Auth Buttons -->
                 <div class="flex items-center space-x-4">
-                    <a href="{{ route('login') }}" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+                    <a href="#" onclick="openAuthModal('login'); return false;" class="text-gray-600 hover:text-blue-600 font-medium transition-colors">
                         Đăng nhập
                     </a>
-                    <a href="{{ route('register') }}" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md">
+                    <a href="#" onclick="openAuthModal('register'); return false;" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-md">
                         Đăng ký
                     </a>
                 </div>
@@ -303,5 +304,11 @@
             });
         });
     </script>
+
+    {{-- Auth Modal --}}
+    @include('partials.auth-modal')
+    
+    {{-- Auth Modal JavaScript --}}
+    <script src="{{ asset('js/auth.js') }}"></script>
 </body>
 </html>
