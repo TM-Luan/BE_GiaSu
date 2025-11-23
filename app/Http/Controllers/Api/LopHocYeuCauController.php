@@ -94,11 +94,37 @@ class LopHocYeuCauController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+   public function destroy($id)
     {
-        $lopHoc = LopHocYeuCau::findOrFail($id);
-        $lopHoc->delete();
-        return response()->noContent();
+        try {
+            $lopHoc = LopHocYeuCau::findOrFail($id);
+            
+            // (Tùy chọn) Kiểm tra quyền sở hữu: Chỉ người tạo mới được xóa
+            // if ($lopHoc->NguoiHocID != auth()->user()->nguoiHoc->NguoiHocID) {
+            //     return response()->json(['message' => 'Không có quyền'], 403);
+            // }
+
+            // (Tùy chọn) Chỉ cho phép xóa nếu chưa có gia sư (TrangThai == 'TimGiaSu')
+            if ($lopHoc->TrangThai !== 'TimGiaSu') {
+                 return response()->json([
+                     'success' => false,
+                     'message' => 'Không thể xóa lớp đang học hoặc đã kết thúc.'
+                 ], 400);
+            }
+
+            $lopHoc->delete();
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa lớp học thành công.'
+            ], 200); // 200 OK hoặc 204 No Content
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi xóa lớp: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function show($id)
