@@ -12,9 +12,9 @@
         </div>
         <div class="flex items-center gap-4">
             
-            {{-- KHỐI HIỂN THỊ ĐIỂM SAO VÀ ĐIỂM TRUNG BÌNH (Đã kiểm tra cú pháp) --}}
+            {{-- KHỐI HIỂN THỊ ĐIỂM SAO VÀ ĐIỂM TRUNG BÌNH --}}
             @php
-                // Sử dụng biến được truyền từ ProfileController.php
+                // Đã sửa lỗi Undefined variable $danhGiaStats bằng cách đảm bảo biến này được truyền
                 $currentRating = $danhGiaStats->rating ?? 0;
                 $reviewCount = $danhGiaStats->total ?? 0;
                 $roundedRating = floor($currentRating);
@@ -253,7 +253,7 @@
                             </div>
                             <input type="file" name="AnhCCCD_MatTruoc" class="hidden" x-ref="cccdFront" x-on:change="
                                 const reader = new FileReader();
-                                reader.onload = (e) => { preview = e.target.result; };
+                                reader.onload = (e) => { photoPreview = e.target.result; };
                                 reader.readAsDataURL($refs.cccdFront.files[0]);
                             ">
                             <button type="button" x-on:click.prevent="$refs.cccdFront.click()" 
@@ -293,7 +293,7 @@
                             </div>
                             <input type="file" name="AnhCCCD_MatSau" class="hidden" x-ref="cccdBack" x-on:change="
                                 const reader = new FileReader();
-                                reader.onload = (e) => { preview = e.target.result; };
+                                reader.onload = (e) => { photoPreview = e.target.result; };
                                 reader.readAsDataURL($refs.cccdBack.files[0]);
                             ">
                             <button type="button" x-on:click.prevent="$refs.cccdBack.click()" 
@@ -333,7 +333,7 @@
                             </div>
                             <input type="file" name="AnhBangCap" class="hidden" x-ref="degree" x-on:change="
                                 const reader = new FileReader();
-                                reader.onload = (e) => { preview = e.target.result; };
+                                reader.onload = (e) => { photoPreview = e.target.result; };
                                 reader.readAsDataURL($refs.degree.files[0]);
                             ">
                             <button type="button" x-on:click.prevent="$refs.degree.click()" 

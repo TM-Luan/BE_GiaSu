@@ -84,24 +84,43 @@ class DanhGiaWebController extends Controller
 
             $nguoiHocId = $user->nguoiHoc->NguoiHocID;
 
-            // Validate
-            $validator = Validator::make($request->all(), [
+            // 1. Định nghĩa quy tắc validation
+            $rules = [
                 'gia_su_id' => 'required|integer|exists:GiaSu,GiaSuID',
                 'diem_so' => 'required|numeric|min:1|max:5',
-                'binh_luan' => 'nullable|string|max:1000',
-            ], [
+                'binh_luan' => [
+                    'nullable',
+                    'string',
+                    'max:1000',
+                    // QUY TẮC MỚI: Bắt buộc nếu điểm số là 1 hoặc 2
+                    function ($attribute, $value, $fail) use ($request) {
+                        $diemSo = (int) $request->input('diem_so');
+                        $binhLuan = trim((string) $value);
+                        
+                        if ($diemSo <= 2 && empty($binhLuan)) {
+                            $fail('Vui lòng nhập lý do chi tiết khi đánh giá 1 hoặc 2 sao.');
+                        }
+                    }
+                ],
+            ];
+            
+            // 2. Định nghĩa thông báo lỗi (cho các quy tắc chung)
+            $messages = [
                 'gia_su_id.required' => 'Vui lòng chọn gia sư.',
                 'gia_su_id.exists' => 'Gia sư không tồn tại.',
                 'diem_so.required' => 'Vui lòng chọn số sao đánh giá.',
                 'diem_so.min' => 'Đánh giá phải từ 1 đến 5 sao.',
                 'diem_so.max' => 'Đánh giá phải từ 1 đến 5 sao.',
                 'binh_luan.max' => 'Bình luận không được vượt quá 1000 ký tự.',
-            ]);
+            ];
+            
+            $validator = Validator::make($request->all(), $rules, $messages);
 
             if ($validator->fails()) {
+                // Sửa response để trả về lỗi validation rõ ràng
                 return response()->json([
                     'success' => false,
-                    'message' => 'Dữ liệu không hợp lệ',
+                    'message' => $validator->errors()->first() ?? 'Dữ liệu không hợp lệ',
                     'errors' => $validator->errors()
                 ], 422);
             }

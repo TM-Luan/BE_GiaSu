@@ -188,6 +188,12 @@
                         <i class="fa-solid fa-triangle-exclamation fa-fw me-2"></i>Khiếu nại
                     </a>
                 </li>
+                {{-- 7. Quản lý Đánh giá - Dòng mới thêm --}}
+                <li class="nav-item">
+                    <a class="nav-link {{ Request::routeIs('admin.danhgia.*') ? 'active' : '' }}" href="{{ route('admin.danhgia.index') }}">
+                        <i class="fa-solid fa-star fa-fw me-2"></i>Quản lý Đánh giá
+                    </a>
+                </li>
 
                 {{-- 7. DUYỆT HỒ SƠ GIA SƯ (Nằm cuối, đã xóa gạch ngang) --}}
                 <li class="nav-item">
