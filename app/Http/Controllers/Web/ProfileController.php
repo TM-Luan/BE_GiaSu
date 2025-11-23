@@ -10,6 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Http;
+// XÓA: use Illuminate\Support\Facades\Log; để tránh lỗi xung đột
 
 class ProfileController extends Controller
 {
@@ -89,20 +90,27 @@ class ProfileController extends Controller
         /** @var \App\Models\TaiKhoan $user */
         $user = Auth::user();
         $user->load('giaSu');
-        
+        $gs = $user->giaSu; 
+
         // Lấy danh sách môn học cho dropdown
         $monHocs = \App\Models\MonHoc::orderBy('TenMon')->get();
-        
-        // Lấy thông tin đánh giá
-        $giaSuId = $user->giaSu->GiaSuID;
-        $danhGiaStats = \App\Models\DanhGia::whereHas('lop', function ($q) use ($giaSuId) {
-            $q->where('GiaSuID', $giaSuId);
+
+        // Thống kê đánh giá
+        $danhGiaStats = \App\Models\DanhGia::whereHas('lop', function ($q) use ($gs) {
+            $q->where('GiaSuID', $gs->GiaSuID);
         })->selectRaw('
-            ROUND(AVG(DiemSo), 1) as diem_trung_binh,
-            COUNT(*) as tong_so_danh_gia
+            ROUND(AVG(DiemSo),1) as rating,
+            COUNT(*) as total
         ')->first();
+
+        // Nếu không có đánh giá (Sử dụng tên biến mới)
+        $rating = $danhGiaStats->rating ?? 0;
+        $gs->danh_gia_count = $danhGiaStats->total ?? 0; 
         
-        return view('giasu.profile-index', compact('user', 'monHocs', 'danhGiaStats'));
+        // Học phí mẫu (tùy bạn)
+        $hocPhi = number_format($gs->GiaTrungBinhMotBuoi ?? 150000, 0, ',', '.') . ' đ/buổi';
+
+        return view('giasu.profile-index', compact('user', 'monHocs', 'danhGiaStats', 'gs', 'rating', 'hocPhi')); 
     }
 
     /**
@@ -192,7 +200,8 @@ class ProfileController extends Controller
                     return $response->json()['data']['url'];
                 }
             } catch (\Exception $e) {
-                \Log::error('ImgBB upload failed: ' . $e->getMessage());
+                // SỬA LỖI: Gọi Facade Log với namespace đầy đủ
+                \Illuminate\Support\Facades\Log::error('ImgBB upload failed: ' . $e->getMessage()); 
             }
             return null;
         };

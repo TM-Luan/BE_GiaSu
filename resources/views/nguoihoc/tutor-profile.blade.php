@@ -25,11 +25,32 @@
                 <h1 class="text-xl font-bold text-gray-900">{{ $gs->HoTen }}</h1>
                 <p class="text-gray-500 text-sm mb-3">{{ $gs->KinhNghiem ?? 'Chưa cập nhật kinh nghiệm' }}</p>
                 
+                {{-- KHỐI HIỂN THỊ ĐIỂM SAO VÀ ĐIỂM TRUNG BÌNH (ĐÃ SỬA LỖI) --}}
                 <div class="flex items-center gap-1 mb-4">
-                    <i data-lucide="star" class="w-4 h-4 text-yellow-500 fill-yellow-400"></i>
-                    <span class="font-bold text-gray-800">{{ $rating }}</span>
-                    <span class="text-gray-400 text-sm">({{ $gs->danh_gia_count }} đánh giá)</span>
+                    {{-- Lặp 5 lần để hiển thị 5 sao --}}
+                    @php
+                        $roundedRating = floor($gs->rating_average ?? 0); // Lấy số sao nguyên
+                    @endphp
+                    @for ($i = 1; $i <= 5; $i++)
+                        <i data-lucide="star" class="w-4 h-4 
+                        @if ($i <= $roundedRating)
+                            text-yellow-500 fill-yellow-400
+                        @else
+                            text-gray-300
+                        @endif
+                        "></i>
+                    @endfor
+                    
+                    {{-- Hiển thị điểm số trung bình (ví dụ: 4.5) --}}
+                    <span class="font-bold text-gray-800 ml-2">
+                        {{ $gs->rating_average ? number_format($gs->rating_average, 1) : '---' }}
+                    </span>
+                    
+                    {{-- Hiển thị tổng số đánh giá --}}
+                    <span class="text-gray-400 text-sm">({{ $gs->rating_count ?? 0 }} đánh giá)</span>
                 </div>
+                {{-- KẾT THÚC KHỐI HIỂN THỊ ĐIỂM SAO --}}
+
                 
                 <button type="button" @click="modalOpen = true" class="w-full px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200">
                     Mời dạy ngay
@@ -87,11 +108,12 @@
             <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                  <h3 class="flex items-center text-lg font-bold text-gray-900 mb-4">
                     <i data-lucide="message-square" class="w-5 h-5 mr-2 text-green-500"></i>
-                    Đánh giá từ học viên ({{ $gs->danh_gia_count }})
+                    Đánh giá từ học viên ({{ $gs->rating_count }})
                 </h3>
                 <div class="space-y-4">
                     @forelse($gs->danhGia as $dg)
                         <div class="flex gap-3 border-b border-gray-100 pb-4 last:border-b-0">
+                            {{-- Lấy tên người học từ quan hệ lồng nhau --}}
                             <img src="https://ui-avatars.com/api/?name={{ $dg->taiKhoan->nguoiHoc->HoTen ?? 'Học viên' }}" class="w-10 h-10 rounded-full">
                             <div class="flex-1">
                                 <div class="flex items-center justify-between mb-1">
