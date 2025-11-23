@@ -88,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
             // Thanh toán phí nhận lớp
             Route::get('/{id}/thanh-toan', [GiaSuLopHocController::class, 'showPayment'])->name('payment');
             Route::post('/{id}/thanh-toan', [GiaSuLopHocController::class, 'processPayment'])->name('payment.process');
-            
+            Route::get('/payment/vnpay-return', [GiaSuLopHocController::class, 'vnpayReturn'])->name('payment.vnpay_return');
             // Tạo lịch học
             Route::get('/{id}/tao-lich', [GiaSuLopHocController::class, 'showCreateSchedule'])->name('schedule.create');
             Route::post('/{id}/tao-lich', [GiaSuLopHocController::class, 'storeSchedule'])->name('schedule.store');

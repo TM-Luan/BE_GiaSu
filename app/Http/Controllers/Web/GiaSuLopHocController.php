@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\LopHocYeuCau;
 use App\Models\YeuCauNhanLop;
 use App\Models\GiaSu;
+use App\Models\GiaoDich;
 use App\Models\LichHoc;
 
 class GiaSuLopHocController extends Controller
@@ -316,7 +317,7 @@ class GiaSuLopHocController extends Controller
     /**
      * Xử lý thanh toán phí nhận lớp
      */
-    public function processPayment(Request $request, $id)
+   public function processPayment(Request $request, $id)
     {
         $validated = $request->validate([
             'loai_giao_dich' => 'required|in:VNPAY,MoMo,ZaloPay,ChuyenKhoan'
@@ -329,50 +330,201 @@ class GiaSuLopHocController extends Controller
             abort(403);
         }
 
-        // Tìm lớp học
         $lopHoc = LopHocYeuCau::findOrFail($id);
 
-        // Kiểm tra quyền
         if ($lopHoc->GiaSuID != $giaSu->GiaSuID) {
             abort(403);
         }
 
-        // Kiểm tra đã thanh toán chưa - Đồng bộ với mobile
         if ($lopHoc->TrangThaiThanhToan === 'DaThanhToan') {
             return redirect()->route('giasu.lophoc.index')
                 ->with('info', 'Lớp học này đã được thanh toán.');
         }
 
+        // Tính phí
+        $soTien = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
+
+        // Xử lý riêng cho VNPAY
+        if ($validated['loai_giao_dich'] === 'VNPAY') {
+            return $this->createVnPayPayment($request, $user, $lopHoc, $soTien);
+        }
+
+        // Xử lý cho các phương thức khác (Giữ nguyên logic cũ hoặc phát triển thêm sau)
         try {
             DB::beginTransaction();
-
-            // Tính phí - Đồng bộ với mobile: 30% × HocPhi × SoBuoiTuan × 4 tuần
-            $soTien = $lopHoc->HocPhi * ($lopHoc->SoBuoiTuan ?? 2) * 4 * 0.3;
-
-            // Tạo giao dịch - Đồng bộ với mobile API
-            DB::table('GiaoDich')->insert([
+            
+            GiaoDich::create([
                 'LopYeuCauID' => $lopHoc->LopYeuCauID,
                 'TaiKhoanID' => $user->TaiKhoanID,
                 'SoTien' => $soTien,
                 'LoaiGiaoDich' => $validated['loai_giao_dich'],
                 'GhiChu' => 'Thanh toán phí nhận lớp ' . $lopHoc->LopYeuCauID,
                 'ThoiGian' => now(),
-                'TrangThai' => 'Thành công',
+                'TrangThai' => 'ThanhCong', // Giả lập thành công cho các phương thức khác
                 'MaGiaoDich' => 'TXN_' . time() . '_' . $user->TaiKhoanID
             ]);
 
-            // Cập nhật trạng thái thanh toán - Đồng bộ với mobile
             $lopHoc->update(['TrangThaiThanhToan' => 'DaThanhToan']);
 
             DB::commit();
 
-            // Sau khi thanh toán thành công, chuyển đến trang tạo lịch (Đồng bộ với mobile)
             return redirect()->route('giasu.lophoc.schedule.create', $lopHoc->LopYeuCauID)
                 ->with('success', 'Thanh toán thành công! Vui lòng tạo lịch học cho lớp.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * [MỚI] Hàm tạo URL thanh toán VNPAY
+     */
+    private function createVnPayPayment($request, $user, $lopHoc, $soTien)
+    {
+        $vnp_TmnCode = env('VNP_TMN_CODE');
+        $vnp_HashSecret = env('VNP_HASH_SECRET');
+        $vnp_Url = env('VNP_URL');
+        // URL trả về xử lý trên Web
+        $vnp_Returnurl = route('giasu.lophoc.payment.vnpay_return'); 
+        
+        $vnp_TxnRef = time() . "_" . $user->TaiKhoanID; // Mã giao dịch
+        $vnp_OrderInfo = "Thanh toan phi lop " . $lopHoc->LopYeuCauID;
+        $vnp_OrderType = 'billpayment';
+        $vnp_Amount = $soTien * 100;
+        $vnp_Locale = 'vn';
+        $vnp_IpAddr = $request->ip();
+
+        // Lưu giao dịch Pending vào DB
+        GiaoDich::create([
+            'LopYeuCauID' => $lopHoc->LopYeuCauID,
+            'TaiKhoanID' => $user->TaiKhoanID,
+            'SoTien' => $soTien,
+            'LoaiGiaoDich' => 'VNPAY',
+            'GhiChu' => 'Thanh toán phí nhận lớp (VNPAY)',
+            'ThoiGian' => now(),
+            'TrangThai' => 'ChoXuLy', // Quan trọng: Đang chờ xử lý
+            'MaGiaoDich' => $vnp_TxnRef
+        ]);
+
+        $inputData = array(
+            "vnp_Version" => "2.1.0",
+            "vnp_TmnCode" => $vnp_TmnCode,
+            "vnp_Amount" => $vnp_Amount,
+            "vnp_Command" => "pay",
+            "vnp_CreateDate" => date('YmdHis'),
+            "vnp_CurrCode" => "VND",
+            "vnp_IpAddr" => $vnp_IpAddr,
+            "vnp_Locale" => $vnp_Locale,
+            "vnp_OrderInfo" => $vnp_OrderInfo,
+            "vnp_OrderType" => $vnp_OrderType,
+            "vnp_ReturnUrl" => $vnp_Returnurl,
+            "vnp_TxnRef" => $vnp_TxnRef,
+        );
+
+        ksort($inputData);
+        $query = "";
+        $i = 0;
+        $hashdata = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+            $query .= urlencode($key) . "=" . urlencode($value) . '&';
+        }
+
+        $vnp_Url = $vnp_Url . "?" . $query;
+        if (isset($vnp_HashSecret)) {
+            $vnpSecureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+            $vnp_Url .= 'vnp_SecureHash=' . $vnpSecureHash;
+        }
+
+        // Chuyển hướng người dùng sang trang thanh toán VNPAY
+        return redirect($vnp_Url);
+    }
+
+    /**
+     * [MỚI] Xử lý kết quả trả về từ VNPAY (Web)
+     */
+    public function vnpayReturn(Request $request)
+    {
+        $vnp_HashSecret = env('VNP_HASH_SECRET');
+        $vnp_SecureHash = $request->vnp_SecureHash;
+        
+        $inputData = array();
+        foreach ($request->all() as $key => $value) {
+            if (substr($key, 0, 4) == "vnp_") {
+                $inputData[$key] = $value;
+            }
+        }
+        
+        unset($inputData['vnp_SecureHash']);
+        ksort($inputData);
+        $i = 0;
+        $hashdata = "";
+        foreach ($inputData as $key => $value) {
+            if ($i == 1) {
+                $hashdata .= '&' . urlencode($key) . "=" . urlencode($value);
+            } else {
+                $hashdata .= urlencode($key) . "=" . urlencode($value);
+                $i = 1;
+            }
+        }
+
+        $secureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
+        
+        $vnp_TxnRef = $request->vnp_TxnRef;
+        $vnp_ResponseCode = $request->vnp_ResponseCode;
+
+        if ($secureHash == $vnp_SecureHash) {
+            if ($vnp_ResponseCode == '00') {
+                // --- THANH TOÁN THÀNH CÔNG ---
+                $giaoDich = GiaoDich::where('MaGiaoDich', $vnp_TxnRef)->first();
+
+                if ($giaoDich) {
+                    if ($giaoDich->TrangThai != 'ThanhCong') {
+                        DB::beginTransaction();
+                        try {
+                            $giaoDich->update(['TrangThai' => 'ThanhCong']);
+                            
+                            $lopHoc = LopHocYeuCau::find($giaoDich->LopYeuCauID);
+                            if ($lopHoc) {
+                                $lopHoc->update(['TrangThaiThanhToan' => 'DaThanhToan']);
+                            }
+                            DB::commit();
+
+                            // Chuyển hướng về trang tạo lịch
+                            return redirect()->route('giasu.lophoc.schedule.create', $giaoDich->LopYeuCauID)
+                                ->with('success', 'Thanh toán VNPAY thành công! Vui lòng tạo lịch học.');
+                        } catch (\Exception $e) {
+                            DB::rollBack();
+                            return redirect()->route('giasu.lophoc.index')
+                                ->with('error', 'Lỗi cập nhật dữ liệu: ' . $e->getMessage());
+                        }
+                    } else {
+                        // Đã xử lý trước đó rồi
+                         return redirect()->route('giasu.lophoc.schedule.create', $giaoDich->LopYeuCauID)
+                                ->with('info', 'Giao dịch đã được ghi nhận thành công.');
+                    }
+                } else {
+                    return redirect()->route('giasu.lophoc.index')->with('error', 'Không tìm thấy giao dịch.');
+                }
+            } else {
+                // --- THANH TOÁN THẤT BẠI ---
+                 // Cập nhật trạng thái thất bại nếu tìm thấy giao dịch
+                $giaoDich = GiaoDich::where('MaGiaoDich', $vnp_TxnRef)->first();
+                if ($giaoDich) {
+                    $giaoDich->update(['TrangThai' => 'ThatBai']);
+                    return redirect()->route('giasu.lophoc.payment', $giaoDich->LopYeuCauID)
+                        ->with('error', 'Thanh toán VNPAY thất bại hoặc bị hủy. Vui lòng thử lại.');
+                }
+                return redirect()->route('giasu.lophoc.index')->with('error', 'Thanh toán thất bại.');
+            }
+        } else {
+            return redirect()->route('giasu.lophoc.index')->with('error', 'Chữ ký VNPAY không hợp lệ!');
         }
     }
 
