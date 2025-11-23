@@ -13,7 +13,7 @@ use App\Http\Controllers\Api\KhieuNaiController;
 use App\Http\Controllers\Api\DanhGiaController;
 use App\Http\Controllers\Api\GiaoDichController;
 use App\Http\Controllers\Api\NotificationController;
-
+use App\Http\Controllers\Api\VnPayController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/resetpassword', [AuthController::class, 'resetPassword']);
@@ -77,6 +77,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     
     // Đánh dấu đã đọc 1 thông báo
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
+    Route::post('/vnpay/create-url', [VnPayController::class, 'createPaymentUrl']);
 });
 // Search & Filter routes (public)
 Route::get('/giasu/search', [GiaSuController::class, 'search']);
@@ -96,3 +97,5 @@ Route::get('/thoigianday', [DropdownDataController::class, 'getThoiGianDayList']
 Route::resource('nguoihoc', NguoiHocController::class);
 Route::resource('giasu', GiaSuController::class);
 Route::resource('lophocyeucau', LopHocYeuCauController::class);
+
+Route::get('/vnpay/return', [VnPayController::class, 'vnpayReturn']);
