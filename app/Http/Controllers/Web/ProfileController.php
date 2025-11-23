@@ -10,7 +10,7 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Http;
-// XÓA: use Illuminate\Support\Facades\Log; để tránh lỗi xung đột
+// XÓA: use Illuminate\Support\Facades\Log; để tránh lỗi xung đột (Đã được thay thế bằng FQN)
 
 class ProfileController extends Controller
 {

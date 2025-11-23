@@ -5,16 +5,15 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\GiaSu;
-use App\Models\YeuCauNhanLop; // Thêm model này
-use App\Models\LopHocYeuCau;  // Thêm model này
-use Illuminate\Support\Facades\Auth; // Thêm model này
+use App\Models\YeuCauNhanLop;
+use App\Models\LopHocYeuCau;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; // <<< QUAN TRỌNG: Thêm import DB
 
 class NguoiHocDashboardController extends Controller
 {
     /**
      * Hiển thị trang Dashboard với danh sách gia sư (có tìm kiếm)
-     * VÀ lấy danh sách lớp của người học để chuẩn bị cho modal "Mời dạy"
      */
     public function index(Request $request)
     {
@@ -32,43 +31,45 @@ class NguoiHocDashboardController extends Controller
             ->with(['lopHocYeuCau' => function($q) { 
                 $q->select('GiaSuID', 'HocPhi'); 
             }])
-            // Bỏ withAvg/withCount ở đây vì nó gây lỗi trong show()
-            // ->withAvg('danhGia', 'DiemSo') 
-            // ->withCount('danhGia')
             ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->whereHas('taiKhoan', fn($q) => $q->where('TrangThai', 1))
             ->paginate(6);
 
-        // [MỚI] TÍNH TOÁN RATING CHO TỪNG GIA SƯ TRONG DANH SÁCH (cho dashboard)
-        $giasuList->each(function ($gs) {
-            $stats = DB::table('DanhGia')
-                ->join('LopHocYeuCau', 'DanhGia.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
-                ->where('LopHocYeuCau.GiaSuID', $gs->GiaSuID)
-                ->selectRaw('ROUND(AVG(DiemSo), 1) as rating, COUNT(*) as count')
-                ->first();
-            $gs->rating_average = $stats->rating ?? 0.0;
-            $gs->rating_count = $stats->count ?? 0;
-        });
-
         $giasuList->appends(['q' => $request->q]);
 
-        // === [PHẦN MỚI] ===
+        // === [RAW QUERY ĐỂ TÍNH RATING CHO TRANG CHỦ] ===
+        $giaSuIds = $giasuList->pluck('GiaSuID')->toArray();
+
+        $ratingStats = DB::table('DanhGia')
+            ->join('LopHocYeuCau', 'DanhGia.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
+            ->whereIn('LopHocYeuCau.GiaSuID', $giaSuIds)
+            ->select('LopHocYeuCau.GiaSuID', DB::raw('ROUND(AVG(DanhGia.DiemSo), 1) as rating_average'), DB::raw('COUNT(DanhGia.DanhGiaID) as rating_count'))
+            ->groupBy('LopHocYeuCau.GiaSuID')
+            ->get()
+            ->keyBy('GiaSuID');
+        
+        // Gán lại kết quả tính toán vào từng đối tượng GiaSu
+        $giasuList->each(function ($gs) use ($ratingStats) {
+            $stats = $ratingStats->get($gs->GiaSuID);
+            $gs->rating_average = $stats->rating_average ?? 0.0;
+            $gs->rating_count = $stats->rating_count ?? 0;
+        });
+        // === [KẾT THÚC RAW QUERY] ===
+
         // 5. Lấy danh sách lớp của user để hiển thị trong Modal "Mời dạy"
         $user = Auth::user();
         $myClasses = [];
         
-        // Phải kiểm tra user đã có hồ sơ NguoiHoc chưa
         if ($user && $user->nguoiHoc) {
             $myClasses = LopHocYeuCau::where('NguoiHocID', $user->nguoiHoc->NguoiHocID)
-                        ->where('TrangThai', 'TimGiaSu') // Chỉ lấy lớp đang tìm gia sư
-                        ->with('monHoc', 'khoiLop') // Lấy tên môn/khối lớp để hiển thị
+                        ->where('TrangThai', 'TimGiaSu')
+                        ->with('monHoc', 'khoiLop')
                         ->get();
         }
-        // === [HẾT PHẦN MỚI] ===
 
         return view('nguoihoc.dashboard', [
             'giasuList' => $giasuList,
-            'myClasses' => $myClasses // <-- Truyền biến này sang View
+            'myClasses' => $myClasses
         ]);
     }
 
@@ -81,57 +82,53 @@ class NguoiHocDashboardController extends Controller
         $giasu = GiaSu::with([
                 'taiKhoan', 
                 'lopHocYeuCau',
-                'danhGia.taiKhoan.nguoiHoc' // ĐÃ SỬA: Eager load đầy đủ cho danh sách đánh giá
+                'danhGia.taiKhoan.nguoiHoc' // Eager load đầy đủ cho danh sách đánh giá
             ])
             ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->findOrFail($id);
         
-        // <<< THAY THẾ withAvg/withCount BẰNG RAW QUERY ĐỂ ĐẢM BẢO TÍNH TOÁN ĐÚNG >>>
+        // <<< RAW QUERY CHO TRANG CHI TIẾT >>>
+        // Tính toán điểm trung bình và số lượng đánh giá chính xác
         $stats = DB::table('DanhGia')
             ->join('LopHocYeuCau', 'DanhGia.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
             ->where('LopHocYeuCau.GiaSuID', $id)
-            ->selectRaw('ROUND(AVG(DiemSo), 1) as rating, COUNT(*) as count')
+            ->selectRaw('ROUND(AVG(DiemSo), 1) as rating, COUNT(*) as total')
             ->first();
             
-        // Gán kết quả tính toán vào đối tượng $giasu
-        $giasu->rating_average = $stats->rating ?? 0.0;
-        $giasu->rating_count = $stats->count ?? 0;
+        // Gán các thuộc tính cần thiết
+        $rating = $stats->rating ?? 0.0;
+        $giasu->danh_gia_count = $stats->total ?? 0; 
         // <<< KẾT THÚC RAW QUERY >>>
         
         $avgHocPhi = $giasu->lopHocYeuCau->avg('HocPhi');
         $hocPhi = $avgHocPhi > 0 ? number_format($avgHocPhi, 0, ',', '.') . 'đ/buổi' : 'Thỏa thuận';
-        
         $relatedTutors = GiaSu::where('ChuyenNganh', 'LIKE', "%{$giasu->ChuyenNganh}%")
             ->where('GiaSuID', '!=', $id)
-            ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
+            ->where('TrangThai', 1)
             ->limit(3)
             ->get();
             
-        // === [PHẦN MỚI THÊM VÀO] ===
         // Lấy danh sách lớp của user để hiển thị trong Modal "Mời dạy"
         $user = Auth::user();
         $myClasses = [];
         
-        // Phải kiểm tra user đã có hồ sơ NguoiHoc chưa
         if ($user && $user->nguoiHoc) {
             $myClasses = LopHocYeuCau::where('NguoiHocID', $user->nguoiHoc->NguoiHocID)
-                        ->where('TrangThai', 'TimGiaSu') // Chỉ lấy lớp đang tìm gia sư
-                        ->with('monHoc', 'khoiLop') // Lấy tên môn/khối lớp để hiển thị
+                        ->where('TrangThai', 'TimGiaSu')
+                        ->with('monHoc', 'khoiLop')
                         ->get();
         }
-        // === [HẾT PHẦN MỚI] ===
 
         return view('nguoihoc.tutor-profile', [
             'gs' => $giasu,
-            // Đã xóa $rating cũ vì nó được gán vào $giasu->rating_average
+            'rating' => $rating, // <<< TRUYỀN BIẾN RATING ĐÃ TÍNH TOÁN
             'hocPhi' => $hocPhi,
             'relatedTutors' => $relatedTutors,
-            'myClasses' => $myClasses // <-- Truyền biến này sang View
+            'myClasses' => $myClasses
         ]);
     }
 
     /**
-     * === [PHƯƠNG THỨC MỚI] ===
      * Xử lý khi Người học bấm "Gửi lời mời" từ Modal
      */
     public function moiDay(Request $request)
@@ -159,7 +156,7 @@ class NguoiHocDashboardController extends Controller
         }
 
         // 3. Tạo lời mời (dựa trên CSDL sql.sql)
-        YeuCauNhanLop::create([
+        \App\Models\YeuCauNhanLop::create([
             'LopYeuCauID' => $request->lop_yeu_cau_id,
             'GiaSuID' => $request->gia_su_id,
             'NguoiGuiTaiKhoanID' => Auth::id(), 

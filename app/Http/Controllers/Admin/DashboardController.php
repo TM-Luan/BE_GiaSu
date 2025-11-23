@@ -1,87 +1,168 @@
 <?php
+
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\TaiKhoan;
-use App\Models\GiaSu;
-use App\Models\NguoiHoc;
-use App\Models\LopHocYeuCau;
-use App\Models\KhieuNai;
-use App\Models\GiaoDich;
-use Illuminate\Support\Facades\DB; // <-- Thêm thư viện DB
-use Carbon\Carbon; // <-- Thêm thư viện Carbon
+use App\Models\GiaSu;       
+use App\Models\NguoiHoc;    
+use App\Models\LopHocYeuCau; 
+use App\Models\KhieuNai;    
+use App\Models\GiaoDich;    
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon; 
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index() {
-        // --- Lấy số liệu đếm cơ bản ---
+    /**
+     * Hàm phụ tính phần trăm tăng trưởng
+     */
+    private function calculateGrowth($currentCount, $previousCount)
+    {
+        if ($previousCount == 0) {
+            return $currentCount > 0 ? 100 : 0;
+        }
+        return round((($currentCount - $previousCount) / $previousCount) * 100, 1);
+    }
+
+    public function index(Request $request) { 
+        // 1. Xác định thời gian
+        $period = $request->input('period', 30);
+        $startDate = Carbon::now()->subDays($period)->startOfDay();
+        $prevDate = Carbon::now()->subDays($period * 2)->startOfDay(); // Kỳ trước để so sánh
+
+        // ---------------------------------------------------------
+        // 2. Tính toán số liệu THẬT
+        // ---------------------------------------------------------
+
+        // --- GIA SƯ (Lấy NgayTao từ bảng TaiKhoan) ---
         $tongGiaSu = GiaSu::count();
+        
+        // Join bảng GiaSu với TaiKhoan để lọc theo NgayTao của tài khoản
+        $giaSuMoiNay = GiaSu::join('TaiKhoan', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+                            ->where('TaiKhoan.NgayTao', '>=', $startDate)
+                            ->count();
+                            
+        $giaSuMoiTruoc = GiaSu::join('TaiKhoan', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+                              ->whereBetween('TaiKhoan.NgayTao', [$prevDate, $startDate])
+                              ->count();
+                              
+        $pcGiaSu = $this->calculateGrowth($giaSuMoiNay, $giaSuMoiTruoc);
+
+
+        // --- NGƯỜI HỌC (Lấy NgayTao từ bảng TaiKhoan) ---
         $tongNguoiHoc = NguoiHoc::count();
+        
+        $hocVienMoiNay = NguoiHoc::join('TaiKhoan', 'NguoiHoc.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+                                 ->where('TaiKhoan.NgayTao', '>=', $startDate)
+                                 ->count();
+                                 
+        $hocVienMoiTruoc = NguoiHoc::join('TaiKhoan', 'NguoiHoc.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+                                   ->whereBetween('TaiKhoan.NgayTao', [$prevDate, $startDate])
+                                   ->count();
+                                   
+        $pcNguoiHoc = $this->calculateGrowth($hocVienMoiNay, $hocVienMoiTruoc);
+
+
+        // --- LỚP HỌC (Dùng cột NgayTao thay vì NgayYeuCau) ---
         $tongLop = LopHocYeuCau::count();
-        $tongKhieuNai = KhieuNai::count();
-        
-        // --- Tính toán Doanh thu thật ---
-        
-        // 1. Tính tổng doanh thu (chỉ giao dịch 'ThanhCong')
-        $totalRevenue = GiaoDich::where('TrangThai', 'ThanhCong')->sum('SoTien');
+        $lopMoiNay = LopHocYeuCau::where('NgayTao', '>=', $startDate)->count(); 
+        $lopMoiTruoc = LopHocYeuCau::whereBetween('NgayTao', [$prevDate, $startDate])->count(); 
+        $pcLop = $this->calculateGrowth($lopMoiNay, $lopMoiTruoc);
 
-        // 2. Chuẩn bị dữ liệu cho Biểu đồ (6 tuần gần nhất)
+
+        // --- KHIẾU NẠI (Dùng cột NgayTao - Đã đúng) ---
+        $tongKhieuNai = KhieuNai::where('NgayTao', '>=', $startDate)->count();
+        $khieuNaiTruoc = KhieuNai::whereBetween('NgayTao', [$prevDate, $startDate])->count();
+        $pcKhieuNai = $this->calculateGrowth($tongKhieuNai, $khieuNaiTruoc);
+
+
+        // --- DOANH THU (Dùng cột ThoiGian - Đã đúng) ---
+        // Hàm xử lý tiền (xóa dấu chấm/phẩy)
+        $parseMoney = function($gd) { 
+            return (float) str_replace(['.', ','], '', $gd->SoTien); 
+        };
+
+        // Doanh thu kỳ này
+        $giaoDichNay = GiaoDich::where('ThoiGian', '>=', $startDate)
+            ->where(function($q) { 
+                $q->where('TrangThai', 'ThanhCong')
+                  ->orWhere('TrangThai', 'Thành công')
+                  ->orWhere('TrangThai', 'Success'); 
+            })->get();
+        $doanhThuNay = $giaoDichNay->sum($parseMoney);
+
+        // Doanh thu kỳ trước
+        $giaoDichTruoc = GiaoDich::whereBetween('ThoiGian', [$prevDate, $startDate])
+            ->where(function($q) { 
+                $q->where('TrangThai', 'ThanhCong')
+                  ->orWhere('TrangThai', 'Thành công')
+                  ->orWhere('TrangThai', 'Success'); 
+            })->get();
+        $doanhThuTruoc = $giaoDichTruoc->sum($parseMoney);
+        
+        $pcDoanhThu = $this->calculateGrowth($doanhThuNay, $doanhThuTruoc);
+
+
+        // ---------------------------------------------------------
+        // 3. Chuẩn bị dữ liệu Biểu đồ
+        // ---------------------------------------------------------
         $weeks = 6;
-        $endDate = Carbon::now();
-        $startDate = Carbon::now()->subWeeks($weeks - 1)->startOfWeek(); // Bắt đầu từ đầu tuần đầu tiên
+        $chartEndDate = Carbon::now()->endOfDay();
+        $chartStartDate = Carbon::now()->subWeeks($weeks - 1)->startOfWeek(); 
 
-        // Lấy tổng doanh thu theo tuần
         $revenueByWeek = GiaoDich::select(
-                DB::raw('WEEK(ThoiGian, 1) as week_number'), // 1 = Tuần bắt đầu từ Thứ 2
-                DB::raw('YEAR(ThoiGian) as year'),
-                DB::raw('SUM(SoTien) as total')
+                DB::raw('WEEK(ThoiGian, 1) as week_number'), 
+                DB::raw('YEAR(ThoiGian) as year'), 
+                DB::raw('SoTien'), 
+                DB::raw('TrangThai')
             )
-            ->where('TrangThai', 'ThanhCong')
-            ->whereBetween('ThoiGian', [$startDate, $endDate])
-            ->groupBy('year', 'week_number')
-            ->orderBy('year', 'asc')
-            ->orderBy('week_number', 'asc')
+            ->whereBetween('ThoiGian', [$chartStartDate, $chartEndDate])
+            ->where(function($q) { 
+                $q->where('TrangThai', 'ThanhCong')
+                  ->orWhere('TrangThai', 'Thành công')
+                  ->orWhere('TrangThai', 'Success'); 
+            })
             ->get()
-            ->keyBy(function($item) {
-                // Tạo key 'Năm-SốTuần', ví dụ: '2025-45'
-                return $item->year . '-' . $item->week_number; 
-            });
+            ->groupBy(function($item) { return $item->year . '-' . $item->week_number; });
 
         $chartLabels = [];
         $chartData = [];
         
-        // Tạo nhãn (label) và dữ liệu cho 6 tuần (từ 5 tuần trước đến tuần này)
         for ($i = $weeks - 1; $i >= 0; $i--) {
             $currentWeek = Carbon::now()->subWeeks($i);
-            $weekLabel = 'Tuần ' . $currentWeek->weekOfYear; // Ví dụ: "Tuần 45"
             $weekKey = $currentWeek->year . '-' . $currentWeek->weekOfYear;
-
-            $chartLabels[] = $weekLabel;
-            // Nếu có dữ liệu cho tuần này thì lấy, không thì 0
-            $chartData[] = $revenueByWeek->get($weekKey)->total ?? 0;
+            $chartLabels[] = 'Tuần ' . $currentWeek->weekOfYear;
+            
+            if (isset($revenueByWeek[$weekKey])) {
+                $chartData[] = $revenueByWeek[$weekKey]->sum($parseMoney);
+            } else {
+                $chartData[] = 0;
+            }
         }
 
-        // --- Chuẩn bị dữ liệu cho các thẻ thống kê ---
-        // (Phần trăm % tăng/giảm hiện đang là dữ liệu mẫu)
+        // ---------------------------------------------------------
+        // 4. Trả về View
+        // ---------------------------------------------------------
+        $formatPc = function($val) {
+            $sign = $val > 0 ? '+' : ''; 
+            $color = $val >= 0 ? 'text-success' : 'text-danger';
+            return ['percent' => $sign . $val . '%', 'color' => $color];
+        };
+
         $statsData = [
-            ['title' => 'Tổng Gia Sư', 'count' => $tongGiaSu, 'percent' => '+2.5%', 'color' => 'text-success'],
-            ['title' => 'Tổng Người Học', 'count' => $tongNguoiHoc, 'percent' => '+5.8%', 'color' => 'text-success'],
-            ['title' => 'Tổng Lớp', 'count' => $tongLop, 'percent' => '+1.2%', 'color' => 'text-success'],
-            ['title' => 'Khiếu nại', 'count' => $tongKhieuNai, 'percent' => '-0.5%', 'color' => 'text-danger'],
-            // Sử dụng Doanh thu thật ở đây
-            ['title' => 'Tổng Doanh Thu', 'count' => $totalRevenue, 'percent' => '+12.1%', 'color' => 'text-success'], 
+            array_merge(['title' => 'Tổng Gia Sư', 'count' => $tongGiaSu], $formatPc($pcGiaSu)),
+            array_merge(['title' => 'Tổng Người Học', 'count' => $tongNguoiHoc], $formatPc($pcNguoiHoc)),
+            array_merge(['title' => 'Tổng Lớp', 'count' => $tongLop], $formatPc($pcLop)),
+            array_merge(['title' => 'Khiếu nại', 'count' => $tongKhieuNai], $formatPc($pcKhieuNai)), 
+            array_merge(['title' => 'Tổng Doanh Thu', 'count' => $doanhThuNay], $formatPc($pcDoanhThu)), 
         ];
 
-        // --- Trả về View với dữ liệu ---
         return view('admin.dashboard', [
-            // Dữ liệu cho các thẻ (Stat Cards)
             '_stats' => $statsData,
-            
-            // Dữ liệu cho Biểu đồ Doanh thu (Line Chart)
             'revenueChartLabels' => $chartLabels,
             'revenueChartData' => $chartData,
-            
-            // Dữ liệu cho Biểu đồ Phân bố (Doughnut Chart)
             'tongGiaSu' => $tongGiaSu,
             'tongNguoiHoc' => $tongNguoiHoc,
         ]);

@@ -21,7 +21,7 @@ use App\Http\Controllers\Admin\NguoiHocController as AdminNguoiHocController;
 use App\Http\Controllers\Admin\LopHocController as AdminLopHocController;
 use App\Http\Controllers\Admin\GiaoDichController as AdminGiaoDichController;
 use App\Http\Controllers\Admin\KhieuNaiController as AdminKhieuNaiController;
-
+use App\Http\Controllers\Admin\DanhGiaController as AdminDanhGiaController; 
 
 /*
 |--------------------------------------------------------------------------
@@ -185,6 +185,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::get('/login', [AdminLoginController::class, 'showLoginForm'])->name('login');
     Route::post('/login', [AdminLoginController::class, 'login'])->name('login.post');
     Route::post('/logout', [AdminLoginController::class, 'logout'])->name('logout');
+    
 
     // Admin Protected Routes
     Route::middleware(['auth:admin'])->group(function () {
@@ -205,5 +206,6 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('/lophoc', AdminLopHocController::class);
         Route::resource('/giaodich', AdminGiaoDichController::class);
         Route::resource('/khieunai', AdminKhieuNaiController::class);
+        Route::resource('/danhgia', AdminDanhGiaController::class)->only(['index', 'show', 'destroy']);
     });
 });

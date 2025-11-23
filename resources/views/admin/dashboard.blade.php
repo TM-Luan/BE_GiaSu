@@ -2,25 +2,38 @@
 
 @section('content')
 <div class="container-fluid">
-    <!-- Header Chào mừng -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="text-white mb-0">Chào mừng trở lại, Admin!</h2>
             <p>Đây là tổng quan về hoạt động của nền tảng.</p>
         </div>
+
+        {{-- KHỐI LOGIC ĐỊNH NGHĨA BIẾN $periodLabel (QUAN TRỌNG) --}}
+        @php
+            // Lấy khoảng thời gian hiện tại từ request, mặc định là 30
+            $currentPeriod = request('period', 30); 
+            $periodMap = [
+                7 => '7 ngày qua',
+                30 => '30 ngày qua',
+                90 => '90 ngày qua',
+            ];
+            // Định nghĩa biến $periodLabel để sử dụng trong button
+            $periodLabel = $periodMap[$currentPeriod] ?? '30 ngày qua';
+        @endphp
+
         <div class="dropdown">
             <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                <i class="fa-solid fa-calendar-days me-2"></i> 30 ngày qua
+                <i class="fa-solid fa-calendar-days me-2"></i> {{ $periodLabel }}
             </button>
             <ul class="dropdown-menu dropdown-menu-dark">
-                <li><a class="dropdown-item" href="#">7 ngày qua</a></li>
-                <li><a class="dropdown-item" href="#">30 ngày qua</a></li>
-                <li><a class="dropdown-item" href="#">90 ngày qua</a></li>
+                {{-- Dùng route hiện tại và thêm tham số period --}}
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard', ['period' => 7]) }}">7 ngày qua</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard', ['period' => 30]) }}">30 ngày qua</a></li>
+                <li><a class="dropdown-item" href="{{ route('admin.dashboard', ['period' => 90]) }}">90 ngày qua</a></li>
             </ul>
         </div>
     </div>
 
-    <!-- Hàng Thẻ Thống kê -->
     <div class="row">
         {{-- Kiểm tra xem biến $_stats có tồn tại không --}}
         @if(isset($_stats) && is_array($_stats))
@@ -42,15 +55,13 @@
         @else
             <div class="col-12">
                 <div class="card p-3 text-center">
-                    <p class="texr-white 50">Không có dữ liệu thống kê.</p>
+                    <p class="text-white-50">Không có dữ liệu thống kê.</p>
                 </div>
             </div>
         @endif
     </div>
 
-    <!-- Hàng Biểu đồ -->
     <div class="row mt-4">
-        <!-- Biểu đồ đường (Line Chart) -->
         <div class="col-lg-8 mb-4">
             <div class="card p-4">
                 <h5 class="card-title text-white mb-3">Xu hướng doanh thu (6 tuần gần nhất)</h5>
@@ -58,7 +69,6 @@
             </div>
         </div>
 
-        <!-- Biểu đồ tròn (Doughnut Chart) -->
         <div class="col-lg-4 mb-4">
             <div class="card p-4 text-center">
                 <h5 class="card-title text-white mb-3">Phân bố người dùng</h5>
@@ -74,7 +84,6 @@
 @endsection
 
 @push('scripts')
-<!-- Mã JavaScript để vẽ biểu đồ -->
 <script>
     const chartTextColor = '#e0e0e0';
 
