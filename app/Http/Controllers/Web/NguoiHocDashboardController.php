@@ -8,6 +8,7 @@ use App\Models\GiaSu;
 use App\Models\YeuCauNhanLop; // Thêm model này
 use App\Models\LopHocYeuCau;  // Thêm model này
 use Illuminate\Support\Facades\Auth; // Thêm model này
+use Illuminate\Support\Facades\DB; // <<< QUAN TRỌNG: Thêm import DB
 
 class NguoiHocDashboardController extends Controller
 {
@@ -31,11 +32,23 @@ class NguoiHocDashboardController extends Controller
             ->with(['lopHocYeuCau' => function($q) { 
                 $q->select('GiaSuID', 'HocPhi'); 
             }])
-            ->withAvg('danhGia', 'DiemSo') 
-            ->withCount('danhGia')
+            // Bỏ withAvg/withCount ở đây vì nó gây lỗi trong show()
+            // ->withAvg('danhGia', 'DiemSo') 
+            // ->withCount('danhGia')
             ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
             ->whereHas('taiKhoan', fn($q) => $q->where('TrangThai', 1))
             ->paginate(6);
+
+        // [MỚI] TÍNH TOÁN RATING CHO TỪNG GIA SƯ TRONG DANH SÁCH (cho dashboard)
+        $giasuList->each(function ($gs) {
+            $stats = DB::table('DanhGia')
+                ->join('LopHocYeuCau', 'DanhGia.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
+                ->where('LopHocYeuCau.GiaSuID', $gs->GiaSuID)
+                ->selectRaw('ROUND(AVG(DiemSo), 1) as rating, COUNT(*) as count')
+                ->first();
+            $gs->rating_average = $stats->rating ?? 0.0;
+            $gs->rating_count = $stats->count ?? 0;
+        });
 
         $giasuList->appends(['q' => $request->q]);
 
@@ -62,22 +75,32 @@ class NguoiHocDashboardController extends Controller
     /**
      * Hiển thị trang chi tiết hồ sơ gia sư
      */
-   /**
-     * Hiển thị trang chi tiết hồ sơ gia sư
-     */
     public function show($id)
     {
         // Lấy thông tin gia sư - CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
-        $giasu = GiaSu::with(['taiKhoan', 'danhGia.taiKhoan', 'lopHocYeuCau'])
+        $giasu = GiaSu::with([
+                'taiKhoan', 
+                'lopHocYeuCau',
+                'danhGia.taiKhoan.nguoiHoc' // ĐÃ SỬA: Eager load đầy đủ cho danh sách đánh giá
+            ])
             ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
-            ->withAvg('danhGia', 'DiemSo')
-            ->withCount('danhGia')
             ->findOrFail($id);
         
-        // Fix: Laravel preserves column case in withAvg, so it's danh_gia_avg_DiemSo not danh_gia_avg_diem_so
-        $rating = round($giasu->getAttribute('danh_gia_avg_DiemSo') ?? 0, 1);
+        // <<< THAY THẾ withAvg/withCount BẰNG RAW QUERY ĐỂ ĐẢM BẢO TÍNH TOÁN ĐÚNG >>>
+        $stats = DB::table('DanhGia')
+            ->join('LopHocYeuCau', 'DanhGia.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
+            ->where('LopHocYeuCau.GiaSuID', $id)
+            ->selectRaw('ROUND(AVG(DiemSo), 1) as rating, COUNT(*) as count')
+            ->first();
+            
+        // Gán kết quả tính toán vào đối tượng $giasu
+        $giasu->rating_average = $stats->rating ?? 0.0;
+        $giasu->rating_count = $stats->count ?? 0;
+        // <<< KẾT THÚC RAW QUERY >>>
+        
         $avgHocPhi = $giasu->lopHocYeuCau->avg('HocPhi');
         $hocPhi = $avgHocPhi > 0 ? number_format($avgHocPhi, 0, ',', '.') . 'đ/buổi' : 'Thỏa thuận';
+        
         $relatedTutors = GiaSu::where('ChuyenNganh', 'LIKE', "%{$giasu->ChuyenNganh}%")
             ->where('GiaSuID', '!=', $id)
             ->where('TrangThai', 1) // CHỈ LẤY GIA SƯ ĐÃ ĐƯỢC DUYỆT
@@ -100,7 +123,7 @@ class NguoiHocDashboardController extends Controller
 
         return view('nguoihoc.tutor-profile', [
             'gs' => $giasu,
-            'rating' => $rating,
+            // Đã xóa $rating cũ vì nó được gán vào $giasu->rating_average
             'hocPhi' => $hocPhi,
             'relatedTutors' => $relatedTutors,
             'myClasses' => $myClasses // <-- Truyền biến này sang View

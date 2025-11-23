@@ -1,37 +1,13 @@
 @props(['taikhoanGiaSu'])
 
 @php
+    // Lấy đối tượng GiaSu (đã có thêm thuộc tính rating_average và rating_count)
     $gs = $taikhoanGiaSu; 
     
-    // DEBUG: Check all available attributes
-    $allKeys = array_keys($gs->getAttributes());
-    $aggregates = array_filter($allKeys, fn($k) => str_contains($k, 'danh_gia'));
+    // Sử dụng thuộc tính đã được tính toán trong Controller
+    $rating = round($gs->rating_average ?? 0, 1);
+    $reviewCount = $gs->rating_count ?? 0;
     
-    // Try all possible attribute name variations
-    $rating = round(
-        $gs->{'danh_gia_avg_DiemSo'} ?? 
-        $gs->{'danh_gia_avg_diem_so'} ?? 
-        $gs->getAttribute('danh_gia_avg_DiemSo') ?? 
-        $gs->getAttribute('danh_gia_avg_diem_so') ??
-        0, 
-    1);
-    
-    $reviewCount = 
-        $gs->{'danh_gia_count'} ?? 
-        $gs->getAttribute('danh_gia_count') ?? 
-        0;
-    
-    // DEBUG: Disabled - uncomment to debug
-    // if ($gs->GiaSuID == 15) {
-    //     dd([
-    //         'all_keys' => $allKeys,
-    //         'danh_gia_keys' => $aggregates,
-    //         'rating' => $rating,
-    //         'count' => $reviewCount,
-    //         'raw_object' => $gs->toArray(),
-    //     ]);
-    // }
-
     // 2. Xử lý Học phí
     $avgHocPhi = $gs->lopHocYeuCau->avg('HocPhi');
     
@@ -39,7 +15,7 @@
         $hienThiHocPhi = number_format($avgHocPhi, 0, ',', '.') . 'đ';
         $donVi = '/buổi';
     } else {
-        $hienThiHocPhi = 'Liên hệ';
+        $hienThiHocPhi = 'Thỏa thuận';
         $donVi = '';
     }
 
@@ -82,13 +58,28 @@
                 }}
             </p>
 
+            {{-- KHỐI HIỂN THỊ ĐIỂM TRUNG BÌNH VÀ SAO (ĐÃ SỬA) --}}
             <div class="flex items-center gap-1 mt-1">
+                {{-- Lặp 5 lần để hiển thị 5 sao --}}
+                @php
+                    $roundedRating = floor($rating); // Lấy số sao nguyên
+                @endphp
                 <div class="flex text-yellow-400">
-                    <i data-lucide="star" class="w-3.5 h-3.5 fill-current"></i>
+                    @for ($i = 1; $i <= 5; $i++)
+                        <i data-lucide="star" class="w-3.5 h-3.5 
+                        @if ($i <= $roundedRating)
+                            fill-yellow-400 text-yellow-400
+                        @else
+                            text-gray-300
+                        @endif
+                        "></i>
+                    @endfor
                 </div>
+                {{-- Hiển thị điểm số và số đánh giá --}}
                 <span class="text-gray-900 font-bold text-sm">{{ $rating > 0 ? $rating : '---' }}</span>
                 <span class="text-gray-400 text-xs">({{ $reviewCount }} đánh giá)</span>
             </div>
+            {{-- KẾT THÚC KHỐI SAO --}}
         </div>
     </div>
 
@@ -129,7 +120,7 @@
             Xem hồ sơ
         </a>    
         <button type="button" 
-                onclick="openInviteModal('{{ $gs->GiaSuID }}', '{{ $gs->HoTen }}')"
+                onclick="openInviteModal('{{ $gs->GiaSuID }}', '{{ addslashes($gs->HoTen) }}')"
                 class="py-2.5 px-4 rounded-xl text-white font-semibold bg-blue-600 hover:bg-blue-700 transition-colors text-sm shadow-md shadow-blue-200 cursor-pointer">
             Mời dạy
         </button>

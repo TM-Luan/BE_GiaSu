@@ -11,13 +11,35 @@
             <p class="text-gray-500 mt-2 text-base font-medium">Quản lý hồ sơ, thông tin cá nhân và bảo mật.</p>
         </div>
         <div class="flex items-center gap-4">
-            @if($danhGiaStats && $danhGiaStats->tong_so_danh_gia > 0)
+            
+            {{-- KHỐI HIỂN THỊ ĐIỂM SAO VÀ ĐIỂM TRUNG BÌNH (Đã kiểm tra cú pháp) --}}
+            @php
+                // Sử dụng biến được truyền từ ProfileController.php
+                $currentRating = $danhGiaStats->rating ?? 0;
+                $reviewCount = $danhGiaStats->total ?? 0;
+                $roundedRating = floor($currentRating);
+            @endphp
+            
+            @if($reviewCount > 0)
                 <div class="flex items-center gap-2 px-4 py-2 bg-yellow-50 border border-yellow-200 rounded-full">
-                    <i data-lucide="star" class="w-5 h-5 text-yellow-500 fill-yellow-400"></i>
-                    <span class="font-bold text-yellow-800">{{ $danhGiaStats->diem_trung_binh }}</span>
-                    <span class="text-yellow-600 text-sm">({{ $danhGiaStats->tong_so_danh_gia }} đánh giá)</span>
+                    {{-- Lặp sao --}}
+                    <div class="flex items-center gap-1">
+                        @for ($i = 1; $i <= 5; $i++)
+                            <i data-lucide="star" class="w-4 h-4 
+                            @if ($i <= $roundedRating)
+                                text-yellow-500 fill-yellow-400
+                            @else
+                                text-gray-300
+                            @endif
+                            "></i>
+                        @endfor
+                    </div>
+                    {{-- Điểm số --}}
+                    <span class="font-bold text-yellow-800">{{ number_format($currentRating, 1) }}</span>
+                    <span class="text-yellow-600 text-sm">({{ $reviewCount }} đánh giá)</span>
                 </div>
             @endif
+            {{-- KẾT THÚC KHỐI ĐIỂM SAO --}}
             
             @if($user->giaSu->TrangThai == 2)
                 <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-yellow-100 text-yellow-800">

@@ -10,15 +10,36 @@ class GiaSuResource extends JsonResource
 {  
     public function toArray($request)
     {
-        // Tính điểm đánh giá trung bình từ tất cả các lớp của gia sư
-        $diemTrungBinh = DanhGia::whereHas('lop', function($query) {
-            $query->where('GiaSuID', $this->GiaSuID);
-        })->avg('DiemSo');
+        // // Tính điểm đánh giá trung bình từ tất cả các lớp của gia sư
+        // $diemTrungBinh = DanhGia::whereHas('lop', function($query) {
+        //     $query->where('GiaSuID', $this->GiaSuID);
+        // })->avg('DiemSo');
 
-        // Đếm tổng số đánh giá
-        $tongSoDanhGia = DanhGia::whereHas('lop', function($query) {
+        // // Đếm tổng số đánh giá
+        // $tongSoDanhGia = DanhGia::whereHas('lop', function($query) {
+        //     $query->where('GiaSuID', $this->GiaSuID);
+        // })->count();
+
+        // Lấy tất cả đánh giá thuộc các lớp của gia sư
+        $danhGiaQuery = DanhGia::whereHas('lop', function($query) {
             $query->where('GiaSuID', $this->GiaSuID);
-        })->count();
+        });
+
+        // Tính điểm trung bình
+        $diemTrungBinh = $danhGiaQuery->avg('DiemSo');
+
+        // Tổng số đánh giá
+        $tongSoDanhGia = $danhGiaQuery->count();
+
+        // Phân bố sao 1–5
+        $phanBoSao = [
+            1 => (clone $danhGiaQuery)->where('DiemSo', 1)->count(),
+            2 => (clone $danhGiaQuery)->where('DiemSo', 2)->count(),
+            3 => (clone $danhGiaQuery)->where('DiemSo', 3)->count(),
+            4 => (clone $danhGiaQuery)->where('DiemSo', 4)->count(),
+            5 => (clone $danhGiaQuery)->where('DiemSo', 5)->count(),
+        ];
+
 
         return [
             'GiaSuID' => $this->GiaSuID,
