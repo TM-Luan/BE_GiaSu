@@ -38,8 +38,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/lop/{lopYeuCauId}/lich-hoc-lap-lai', [LichHocController::class, 'taoLichHocLapLai']);
     Route::put('/lich-hoc/{lichHocId}', [LichHocController::class, 'capNhatLichHocGiaSu']);
     Route::delete('/lich-hoc/{lichHocId}', [LichHocController::class, 'xoaLichHoc']);
-     Route::post('/lop/{lopYeuCauId}/tao-lich-theo-tuan', [LichHocController::class, 'taoNhieuLichHocTheoTuan']);
-     Route::delete('/lop/{lopYeuCauId}/xoa-tat-ca-lich', [LichHocController::class, 'xoaTatCaLichHocTheoLop']);
+    Route::post('/lop/{lopYeuCauId}/tao-lich-theo-tuan', [LichHocController::class, 'taoNhieuLichHocTheoTuan']);
+    Route::delete('/lop/{lopYeuCauId}/xoa-tat-ca-lich', [LichHocController::class, 'xoaTatCaLichHocTheoLop']);
 
 
     // LichHoc routes - Hiển thị lịch học theo tháng
@@ -67,6 +67,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // User specific routes
     Route::get('/nguoihoc/lopcuatoi', [NguoiHocController::class, 'getLopHocCuaNguoiHoc']);
+    
+    // [THÊM MỚI] Route hoàn thành lớp học
+    Route::put('/lophocyeucau/{id}/hoanthanh', [LopHocYeuCauController::class, 'hoanThanh']);
+    
     Route::put('/lophocyeucau/{id}', [LopHocYeuCauController::class, 'update']);
     Route::post('/giao-dich', [GiaoDichController::class, 'store']);
     Route::get('/notifications', [NotificationController::class, 'index']);

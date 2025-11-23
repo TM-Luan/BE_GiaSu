@@ -421,12 +421,21 @@ class YeuCauNhanLopController extends Controller
 
     public function getLopCuaGiaSu(int $giaSuId)
     {
+        // 1. Lấy danh sách lớp ĐANG DẠY (Chỉ lấy trạng thái 'DangHoc')
         $lopDangDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay'])
             ->where('GiaSuID', $giaSuId)
-            ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
+            ->where('TrangThai', 'DangHoc') // <--- SỬA: Chỉ lấy DangHoc
             ->orderByDesc('NgayTao')
             ->get();
 
+        // 2. Lấy danh sách lớp ĐÃ DẠY (Lấy 'HoanThanh' và 'DaKetThuc')
+        $lopDaDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay'])
+            ->where('GiaSuID', $giaSuId)
+            ->whereIn('TrangThai', ['HoanThanh', 'DaKetThuc']) // <--- SỬA: Lấy lớp đã xong
+            ->orderByDesc('NgayTao')
+            ->get();
+
+        // 3. Lấy danh sách lời mời/đề nghị (Giữ nguyên)
         $lopDeNghi = YeuCauNhanLop::with(['lop.monHoc', 'lop.khoiLop', 'lop.nguoiHoc', 'giaSu', 'nguoiGuiTaiKhoan'])
             ->where('GiaSuID', $giaSuId)
             ->where('TrangThai', self::STATUS_PENDING)
@@ -435,6 +444,7 @@ class YeuCauNhanLopController extends Controller
 
         return $this->respondSuccess('Lấy danh sách lớp của gia sư thành công.', [
             'lopDangDay' => LopHocYeuCauResource::collection($lopDangDay)->resolve(),
+            'lopDaDay' => LopHocYeuCauResource::collection($lopDaDay)->resolve(), // <--- TRẢ VỀ DANH SÁCH MỚI
             'lopDeNghi' => YeuCauNhanLopResource::collection($lopDeNghi)->resolve(),
         ]);
     }

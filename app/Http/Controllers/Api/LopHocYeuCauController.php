@@ -74,6 +74,24 @@ class LopHocYeuCauController extends Controller
     }
 
     /**
+     * [MỚI] Xử lý hoàn thành lớp học
+     * PUT /api/lophocyeucau/{id}/hoanthanh
+     */
+    public function hoanThanh(Request $request, $id)
+    {
+        $lopHoc = LopHocYeuCau::findOrFail($id);
+        
+        // Cập nhật trạng thái thành HoanThanh
+        $lopHoc->update(['TrangThai' => 'HoanThanh']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã hoàn thành lớp học thành công!',
+            'data' => new LopHocYeuCauResource($lopHoc)
+        ]);
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
