@@ -31,9 +31,10 @@
                 {{-- KHỐI HIỂN THỊ ĐIỂM SAO TỔNG QUAN --}}
                 <div class="flex items-center gap-1 mb-4">
                     @php
-                        // Lấy điểm trung bình từ Controller truyền sang hoặc tính toán từ quan hệ
-                        $avgRating = $gs->rating_average ?? 0;
-                        $countRating = $gs->rating_count ?? $gs->danh_gia_count ?? 0;
+                        // FIX: Lấy biến $rating được Controller truyền thẳng (đã được làm tròn)
+                        $avgRating = $rating ?? 0;
+                        // Lấy biến đếm đã được gán bởi Controller (hoặc đếm từ quan hệ nếu cần)
+                        $countRating = $gs->danh_gia_count ?? $gs->danhGia->count() ?? 0; 
                         $roundedRating = floor($avgRating);
                     @endphp
                     
@@ -62,7 +63,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Học phí tham khảo</p>
-                    <p class="font-bold text-lg text-green-600">{{ number_format($gs->HocPhi ?? 0) }}đ/buổi</p>
+                    <p class="font-bold text-lg text-green-600">{{ $hocPhi }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Trường đào tạo</p>
@@ -162,6 +163,7 @@
                     </div>
                     
                     <textarea id="rating-comment" 
+                              name="binh_luan"
                               class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                               placeholder="Chia sẻ trải nghiệm học tập của bạn với gia sư này..."
                               rows="4"
@@ -263,6 +265,7 @@
                     </button>
                 </div>
             </form>
+            
         </div>
     </div>
 
