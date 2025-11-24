@@ -61,6 +61,7 @@ class VnPayController extends Controller
             "vnp_OrderType" => $vnp_OrderType,
             "vnp_ReturnUrl" => $vnp_Returnurl,
             "vnp_TxnRef" => $vnp_TxnRef,
+            "vnp_BankCode" => "NCB",
         );
 
         ksort($inputData);
