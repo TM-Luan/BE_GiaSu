@@ -16,22 +16,19 @@ class GiaSuController extends Controller
 {
     private const GIASU_ROLE_ID = 2;
 
-    // =============================================
-    // ===== HÀM INDEX() ĐANG BỊ THIẾU CỦA BẠN =====
-    // =============================================
-    // File: app/Http/Controllers/Admin/GiaSuController.php
-
     public function index(Request $request)
     {
-        // Lấy danh sách TaiKhoan có vai trò GiaSu
+        // Lấy danh sách TaiKhoan có vai trò GiaSu VÀ hồ sơ GiaSu đã được duyệt (GiaSu.TrangThai = 1)
         $query = TaiKhoan::with('giasu', 'phanquyen')
-            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2)) // VaiTroID = 2 là Gia sư
+            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2))
+            // Chỉ lấy những gia sư có hồ sơ đã được duyệt
+            ->whereHas('giasu', fn($q) => $q->where('TrangThai', 1))
             ->orderByDesc('TaiKhoanID');
 
-        // --- LỌC THEO TRẠNG THÁI TÀI KHOẢN (1: Hoạt động, 2: Bị khóa) ---
-        if ($trangthai = $request->input('trangthai')) {
-            // Vì bảng TaiKhoan có cột TrangThai trực tiếp
-            $query->where('TrangThai', (int)$trangthai);
+        // Kiểm tra nếu parameter 'trangthai' tồn tại (cả khi = '0')
+        if ($request->has('trangthai') && $request->input('trangthai') !== '') {
+            $trangthai = (int) $request->input('trangthai');
+            $query->where('TrangThai', $trangthai);
         }
 
         // Tìm kiếm
@@ -52,13 +49,13 @@ class GiaSuController extends Controller
 
     public function pending(Request $request)
     {
-        // Lấy danh sách Gia sư có hồ sơ đang CHỜ DUYỆT (GiaSu.TrangThai = 2)
+        // Lấy danh sách Gia sư có hồ sơ CHƯA ĐƯỢC DUYỆT (GiaSu.TrangThai != 1)
         $query = TaiKhoan::with('giasu', 'phanquyen')
             ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2))
-            ->whereHas('giasu', fn($q) => $q->where('TrangThai', 2)) // Lọc theo bảng GiaSu
+            ->whereHas('giasu', fn($q) => $q->where('TrangThai', '!=', 1))
             ->orderByDesc('TaiKhoanID');
 
-        // (Giữ nguyên phần tìm kiếm giống index)...
+        // (Giữ nguyên phần tìm kiếm giống index)
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('Email', 'like', "%$search%")
@@ -69,7 +66,6 @@ class GiaSuController extends Controller
 
         $giasuList = $query->paginate(10)->withQueryString(); 
 
-        // Biến $isPending = true để View biết đây là trang duyệt
         return view('admin.giasu.index', [ 
             'giasuList' => $giasuList,
             'isPending' => true 

@@ -28,9 +28,15 @@
                 <div class="col-md-3">
                     <label class="form-label text-white 50">Trạng thái</label>
                     <div>
-                        <span class="badge rounded-pill {{ $taiKhoan->TrangThai == 1 ? 'bg-success' : 'bg-danger' }}">
-                            {{ $taiKhoan->TrangThai == 1 ? 'Hoạt động' : 'Bị khóa' }}
-                        </span>
+                        @if($taiKhoan->TrangThai == 1)
+                            <span class="badge rounded-pill bg-success">Hoạt động</span>
+                        @elseif($taiKhoan->TrangThai == 2)
+                            <span class="badge rounded-pill bg-danger">Bị khóa</span>
+                        @elseif($taiKhoan->TrangThai == 0)
+                            <span class="badge rounded-pill bg-secondary">Chờ duyệt</span>
+                        @else
+                            <span class="badge rounded-pill bg-secondary">Khác ({{ $taiKhoan->TrangThai }})</span>
+                        @endif
                     </div>
                 </div>
             </div>

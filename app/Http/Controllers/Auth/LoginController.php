@@ -43,11 +43,11 @@ class LoginController extends Controller
                 ->with('auth_panel', 'login');
         }
 
-        // 4. Kiểm tra trạng thái (Bị khóa)
-        if ($user->TrangThai == 0) {
+        // 4. Kiểm tra trạng thái (Bị khóa) — CHỈ CHẶN KHI TrangThai === 2
+        if ((int)$user->TrangThai === 2) {
             return back()
                 ->withInput($request->only('Email', 'remember'))
-                ->withErrors(['Email' => 'Tài khoản này đã bị khóa.'])
+                ->withErrors(['Email' => 'Tài khoản của bạn đã bị khóa do vi phạm tiêu chuẩn. Vui lòng liên hệ quản trị viên để được hỗ trợ.'])
                 ->with('auth_panel', 'login');
         }
 

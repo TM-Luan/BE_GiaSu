@@ -54,10 +54,13 @@
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Trạng thái (Bắt buộc)</label>
                         <select name="TrangThai" class="form-select form-select-dark @error('TrangThai') is-invalid @enderror" required>
-                            <option value="1" {{ old('TrangThai', '1') == 1 ? 'selected' : '' }}>Hoạt động</option>
-                            <option value="0" {{ old('TrangThai') == 0 ? 'selected' : '' }}>Bị khóa</option>
+                            <option value="">Chọn trạng thái...</option>
+                            <option value="1" {{ old('TrangThai', '1') == '1' ? 'selected' : '' }}>Hoạt động</option>
+                            <option value="2" {{ old('TrangThai') == '2' ? 'selected' : '' }}>Bị khóa</option>
+                            <option value="0" {{ old('TrangThai') === '0' ? 'selected' : '' }}>Chờ duyệt</option>
                         </select>
-                         @error('TrangThai')
+                        <small class="text-white-50">1: Hoạt động, 2: Bị khóa, 0: Chờ duyệt</small>
+                        @error('TrangThai')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
