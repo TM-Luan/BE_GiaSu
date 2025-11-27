@@ -149,20 +149,31 @@ class AuthController extends Controller
             ], 401);
         }
 
-        // <<< SỬA LOGIC (QUAN TRỌNG): Kiểm tra trạng thái "Khóa" là 3
-        if ($tk->TrangThai === 3) {
+        // =================================================================
+        // <<< SỬA LOGIC: ĐỒNG BỘ VỚI WEB ĐỂ CHẶN TÀI KHOẢN BỊ KHÓA >>>
+        // =================================================================
+        
+        // Nạp quan hệ giasu để kiểm tra trạng thái hồ sơ (nếu có)
+        $tk->loadMissing('giasu');
+
+        // Logic: Chặn khi TaiKhoan.TrangThai == 2 HOẶC (GiaSu tồn tại và GiaSu.TrangThai == 2)
+        if ((int)$tk->TrangThai === 2 || ($tk->giasu && (int)$tk->giasu->TrangThai === 2)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Tài khoản của bạn đã bị khóa'
+                'message' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.'
             ], 403);
         }
+        
+        // =================================================================
 
         $phanQuyen = PhanQuyen::where('TaiKhoanID', $tk->TaiKhoanID)->first();
         $vaiTro = $phanQuyen ? $phanQuyen->VaiTroID : null;
 
-        // Logic lấy HoTen từ bảng GiaSu/NguoiHoc
+        // Logic lấy HoTen từ bảng GiaSu/NguoiHoc (Giữ nguyên)
         $hoTen = null;
         if ($vaiTro == 2) {
+            // Có thể dùng luôn $tk->giasu đã load ở trên nếu muốn tối ưu, 
+            // hoặc giữ nguyên query cũ để tránh sửa nhiều.
             $giaSu = GiaSu::where('TaiKhoanID', $tk->TaiKhoanID)->first();
             if ($giaSu && $giaSu->HoTen) {
                 $hoTen = $giaSu->HoTen;
