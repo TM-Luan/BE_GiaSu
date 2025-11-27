@@ -34,8 +34,6 @@
                             <span class="badge rounded-pill bg-danger">Bị khóa</span>
                         @elseif($taiKhoan->TrangThai == 0)
                             <span class="badge rounded-pill bg-secondary">Chờ duyệt</span>
-                        @else
-                            <span class="badge rounded-pill bg-secondary">Khác ({{ $taiKhoan->TrangThai }})</span>
                         @endif
                     </div>
                 </div>

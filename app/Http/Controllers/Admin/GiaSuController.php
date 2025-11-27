@@ -18,57 +18,67 @@ class GiaSuController extends Controller
 
     public function index(Request $request)
     {
-        // Lấy danh sách TaiKhoan có vai trò GiaSu VÀ hồ sơ GiaSu đã được duyệt (GiaSu.TrangThai = 1)
-        $query = TaiKhoan::with('giasu', 'phanquyen')
-            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2))
-            // Chỉ lấy những gia sư có hồ sơ đã được duyệt
-            ->whereHas('giasu', fn($q) => $q->where('TrangThai', 1))
-            ->orderByDesc('TaiKhoanID');
+        // Lấy TaiKhoan (gia sư) bằng JOIN trực tiếp để tránh phụ thuộc tên quan hệ
+        $query = TaiKhoan::select('TaiKhoan.*')
+            ->join('PhanQuyen', 'PhanQuyen.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+            ->join('GiaSu', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+            ->where('PhanQuyen.VaiTroID', self::GIASU_ROLE_ID)
+            // Chỉ lấy những gia sư có hồ sơ đã được DUYỆT (GiaSu.TrangThai = 1)
+            ->where('GiaSu.TrangThai', 1)
+            ->with(['giasu', 'phanquyen'])
+            ->orderByDesc('TaiKhoan.TaiKhoanID');
 
-        // Kiểm tra nếu parameter 'trangthai' tồn tại (cả khi = '0')
-        if ($request->has('trangthai') && $request->input('trangthai') !== '') {
-            $trangthai = (int) $request->input('trangthai');
-            $query->where('TrangThai', $trangthai);
+        // Lọc theo trạng thái tài khoản (TaiKhoan.TrangThai) — chỉ áp khi giá trị là số (0,1,2)
+        $tt = $request->input('trangthai', null);
+        if ($tt !== null && $tt !== '') {
+            // chỉ áp filter nếu là số (tránh value như 'all' gây ra không có kết quả)
+            if (is_numeric($tt)) {
+                $query->where('TaiKhoan.TrangThai', (int)$tt);
+            }
+            // nếu không phải numeric (ví dụ 'all') => KHÔNG lọc (tương đương "Tất cả")
         }
 
-        // Tìm kiếm
+        // Tìm kiếm: Email, SoDienThoai, HoTen (bảng GiaSu)
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('Email', 'like', "%$search%")
-                ->orWhere('SoDienThoai', 'like', "%$search%")
-                ->orWhereHas('giasu', fn($q) => $q->where('HoTen', 'like', "%$search%"));
+                $q->where('TaiKhoan.Email', 'like', "%$search%")
+                  ->orWhere('TaiKhoan.SoDienThoai', 'like', "%$search%")
+                  ->orWhere('GiaSu.HoTen', 'like', "%$search%");
             });
         }
-        
-        $giasuList = $query->paginate(10)->withQueryString(); 
-        
-        return view('admin.giasu.index', [ 
-            'giasuList' => $giasuList 
+
+        $giasuList = $query->paginate(10)->withQueryString();
+
+        return view('admin.giasu.index', [
+            'giasuList' => $giasuList
         ]);
     }
 
     public function pending(Request $request)
     {
-        // Lấy danh sách Gia sư có hồ sơ CHƯA ĐƯỢC DUYỆT (GiaSu.TrangThai != 1)
-        $query = TaiKhoan::with('giasu', 'phanquyen')
-            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', 2))
-            ->whereHas('giasu', fn($q) => $q->where('TrangThai', '!=', 1))
-            ->orderByDesc('TaiKhoanID');
+        // Lấy TaiKhoan (gia sư) có hồ sơ CHƯA ĐƯỢC DUYỆT (GiaSu.TrangThai != 1)
+        $query = TaiKhoan::select('TaiKhoan.*')
+            ->join('PhanQuyen', 'PhanQuyen.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+            ->join('GiaSu', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
+            ->where('PhanQuyen.VaiTroID', self::GIASU_ROLE_ID)
+            ->where('GiaSu.TrangThai', '!=', 1)
+            ->with(['giasu', 'phanquyen'])
+            ->orderByDesc('TaiKhoan.TaiKhoanID');
 
-        // (Giữ nguyên phần tìm kiếm giống index)
+        // Tìm kiếm (giống index)
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->where('Email', 'like', "%$search%")
-                ->orWhere('SoDienThoai', 'like', "%$search%")
-                ->orWhereHas('giasu', fn($q) => $q->where('HoTen', 'like', "%$search%"));
+                $q->where('TaiKhoan.Email', 'like', "%$search%")
+                  ->orWhere('TaiKhoan.SoDienThoai', 'like', "%$search%")
+                  ->orWhere('GiaSu.HoTen', 'like', "%$search%");
             });
         }
 
-        $giasuList = $query->paginate(10)->withQueryString(); 
+        $giasuList = $query->paginate(10)->withQueryString();
 
-        return view('admin.giasu.index', [ 
+        return view('admin.giasu.index', [
             'giasuList' => $giasuList,
-            'isPending' => true 
+            'isPending' => true
         ]);
     }
 

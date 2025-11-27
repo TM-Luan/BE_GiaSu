@@ -22,24 +22,22 @@
             {{-- FORM TÌM KIẾM: Action thay đổi tùy theo trang hiện tại --}}
             <form method="GET" action="{{ isset($isPending) ? route('admin.giasu.pending') : route('admin.giasu.index') }}">
                 <div class="row g-3">
-                    <div class="col-md-{{ isset($isPending) ? '10' : '7' }}">
+                    <div class="col-md-7">
                         <input type="text" name="search" class="form-control form-control-dark" 
                             placeholder="Tìm kiếm theo email, SĐT, tên gia sư..." 
                             value="{{ request('search') }}">
                     </div>
                     
-                    {{-- FORM LỌC: Chỉ hiện ở trang Quản lý --}}
-                    @if(!isset($isPending))
+                    {{-- FORM LỌC --}}
                     <div class="col-md-3">
                         <select name="trangthai" class="form-select form-select-dark">
-                            <option value="">Tất cả Trạng thái</option>
-                            {{-- Logic Tài khoản: 1 Hoạt động, 2 Bị khóa --}}
-                            <option value="1" {{ request('trangthai') == '1' ? 'selected' : '' }}>Hoạt động</option>
-                            <option value="2" {{ request('trangthai') == '2' ? 'selected' : '' }}>Bị khóa</option>
+                            {{-- value="" tức là "Tất cả" (không gửi filter) --}}
+                            <option value="" {{ request('trangthai') === null || request('trangthai') === '' ? 'selected' : '' }}>Tất cả Trạng thái</option>
+                            <option value="1" {{ request('trangthai') === '1' ? 'selected' : '' }}>Hoạt động</option>
+                            <option value="2" {{ request('trangthai') === '2' ? 'selected' : '' }}>Bị khóa</option>
+                            <option value="0" {{ request('trangthai') === '0' ? 'selected' : '' }}>Chờ duyệt</option>
                         </select>
                     </div>
-                    @endif
-
                     <div class="col-md-2">
                         <button type="submit" class="btn btn-primary w-100">
                             <i class="fa-solid fa-filter me-2"></i> Lọc
@@ -106,9 +104,9 @@
                                         <span class="badge rounded-pill bg-danger">
                                             <i class="fa-solid fa-lock me-1"></i> Bị khóa
                                         </span>
-                                    @else
+                                    @elseif($tk->TrangThai == 0)
                                         <span class="badge rounded-pill bg-secondary">
-                                            Khác ({{ $tk->TrangThai }})
+                                            <i class="fa-regular fa-clock me-1"></i> Chờ duyệt
                                         </span>
                                     @endif
                                 @endif
