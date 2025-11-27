@@ -54,8 +54,9 @@
                     <div class="col-md-3 mb-3">
                         <label class="form-label">Trạng thái (Bắt buộc)</label>
                         <select name="TrangThai" class="form-select form-select-dark @error('TrangThai') is-invalid @enderror" required>
-                            <option value="1" {{ old('TrangThai', '1') == '1' ? 'selected' : '' }}>Hoạt động</option>
-                            <option value="2" {{ old('TrangThai') == '2' ? 'selected' : '' }}>Bị khóa</option>
+                            <option value="" {{ old('TrangThai', '') === '' ? 'selected' : '' }}>Chọn trạng thái...</option>
+                            <option value="1" {{ old('TrangThai', '1') === '1' ? 'selected' : '' }}>Hoạt động</option>
+                            <option value="2" {{ old('TrangThai') === '2' ? 'selected' : '' }}>Bị khóa</option>
                             <option value="0" {{ old('TrangThai') === '0' ? 'selected' : '' }}>Chờ duyệt</option>
                         </select>
                         <small class="text-white-50">1: Hoạt động, 2: Bị khóa, 0: Chờ duyệt</small>

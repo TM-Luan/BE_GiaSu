@@ -43,11 +43,14 @@ class LoginController extends Controller
                 ->with('auth_panel', 'login');
         }
 
-        // 4. Kiểm tra trạng thái (Bị khóa) — CHỈ CHẶN KHI TrangThai === 2
-        if ((int)$user->TrangThai === 2) {
+        // --- ĐỒNG BỘ KIỂM TRA TRẠNG THÁI AN TOÀN: XÉT CẢ TaiKhoan.TrangThai VÀ GiaSu.TrangThai ---
+        // ensure relation loaded (lazy load if needed)
+        $user->loadMissing('giasu');
+        // chặn khi account bị khóa (TaiKhoan.TrangThai == 2) HOẶC hồ sơ gia sư bị khóa (GiaSu.TrangThai == 2)
+        if ((int)$user->TrangThai === 2 || ($user->giasu && (int)$user->giasu->TrangThai === 2)) {
             return back()
                 ->withInput($request->only('Email', 'remember'))
-                ->withErrors(['Email' => 'Tài khoản của bạn đã bị khóa do vi phạm tiêu chuẩn. Vui lòng liên hệ quản trị viên để được hỗ trợ.'])
+                ->withErrors(['Email' => 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ quản trị viên để được hỗ trợ.'])
                 ->with('auth_panel', 'login');
         }
 

@@ -87,20 +87,24 @@ class GiaSuController extends Controller
         try {
             $taiKhoan = TaiKhoan::with('giasu')->findOrFail($id);
 
-            // Chỉ cập nhật bảng GiaSu từ 2 (Chờ duyệt) -> 1 (Đã duyệt)
-            if ($taiKhoan->giasu) {
-                $taiKhoan->giasu->update(['TrangThai' => 1]);
-            }
-            
-            // Tùy chọn: Nếu muốn duyệt xong tài khoản hoạt động luôn thì set TaiKhoan->TrangThai = 1
-            // $taiKhoan->update(['TrangThai' => 1]); 
+            DB::transaction(function() use ($taiKhoan) {
+                // Nếu có hồ sơ GiaSu, đưa GiaSu.TrangThai -> 1 (Đã duyệt)
+                if ($taiKhoan->giasu) {
+                    $taiKhoan->giasu->update(['TrangThai' => 1]);
+                }
+                // Đồng bộ trạng thái tài khoản sang Hoạt động (1) để tránh bất đồng bộ với mobile/web
+                $taiKhoan->update(['TrangThai' => 1]);
+            });
+             
+             // Tùy chọn: Nếu muốn duyệt xong tài khoản hoạt động luôn thì set TaiKhoan->TrangThai = 1
+             // $taiKhoan->update(['TrangThai' => 1]); 
 
-            return redirect()->route('admin.giasu.pending')
-                ->with('success', 'Đã duyệt hồ sơ gia sư thành công!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Lỗi: ' . $e->getMessage());
-        }
-    }
+             return redirect()->route('admin.giasu.pending')
+                 ->with('success', 'Đã duyệt hồ sơ gia sư thành công!');
+         } catch (\Exception $e) {
+             return back()->with('error', 'Lỗi: ' . $e->getMessage());
+         }
+     }
         // =============================================
     // =============================================
 
@@ -126,12 +130,13 @@ class GiaSuController extends Controller
             'Email' => 'required|email|max:100|unique:TaiKhoan,Email',
             // Rule::dimensions (nếu cần)
             'SoDienThoai' => [
-                'nullable', 
-                'string', 
-                'regex:/^0\d{9}$/', // Bắt lỗi SĐT VN (10 số, bắt đầu bằng 0)
+                'nullable',
+                'string',
+                'regex:/^0\d{9}$/',
                 'unique:TaiKhoan,SoDienThoai'
             ],
-            'TrangThai' => 'required|boolean',
+            // Cho phép 0 = Chờ duyệt, 1 = Hoạt động, 2 = Bị khóa
+            'TrangThai' => 'required|in:0,1,2',
             'MatKhau' => ['required', 'confirmed', Password::min(8)], // Bắt buộc khi tạo
 
             // Bảng GiaSu
@@ -241,7 +246,8 @@ class GiaSuController extends Controller
                 'regex:/^0\d{9}$/', // Bắt lỗi SĐT VN
                 Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')
             ],
-            'TrangThai' => 'required|boolean',
+            // Cho phép 0 = Chờ duyệt, 1 = Hoạt động, 2 = Bị khóa
+            'TrangThai' => 'required|in:0,1,2',
             'MatKhau' => ['nullable', 'confirmed', Password::min(8)], // Không bắt buộc khi update
 
             // Bảng GiaSu (Giống store)
@@ -445,6 +451,8 @@ class GiaSuController extends Controller
             'required' => 'Thông tin này là bắt buộc, không được để trống.',
             'string' => 'Thông tin này phải là một chuỗi ký tự.',
             'boolean' => 'Giá trị này không hợp lệ.',
+            // Thông báo cụ thể cho TrangThai khi dùng in:0,1,2
+            'TrangThai.in' => 'Trạng thái không hợp lệ. Vui lòng chọn: 0 (Chờ duyệt), 1 (Hoạt động) hoặc 2 (Bị khóa).',
             'date' => 'Không đúng định dạng ngày tháng.',
             'image' => 'File tải lên phải là hình ảnh.',
             'mimes' => 'Hình ảnh phải có định dạng: :values.',
@@ -453,6 +461,9 @@ class GiaSuController extends Controller
                 'file' => 'Dung lượng file không được vượt quá :max KB (2MB).',
             ],
             'in' => 'Giá trị được chọn không hợp lệ.',
+
+            // Thêm thông báo cụ thể cho TrangThai
+            'TrangThai.in' => 'Trạng thái không hợp lệ. Vui lòng chọn 0, 1 hoặc 2.',
 
             // Cho Email
             'Email.email' => 'Email không đúng định dạng (ví dụ: ten@gmail.com).',
