@@ -1,45 +1,19 @@
 <?php
 
 namespace App\Http\Resources;
-use App\Models\GiaSu;
 use App\Models\DanhGia;
-use App\Models\LopHocYeuCau;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class GiaSuResource extends JsonResource
 {  
     public function toArray($request)
     {
-        // // Tính điểm đánh giá trung bình từ tất cả các lớp của gia sư
-        // $diemTrungBinh = DanhGia::whereHas('lop', function($query) {
-        //     $query->where('GiaSuID', $this->GiaSuID);
-        // })->avg('DiemSo');
-
-        // // Đếm tổng số đánh giá
-        // $tongSoDanhGia = DanhGia::whereHas('lop', function($query) {
-        //     $query->where('GiaSuID', $this->GiaSuID);
-        // })->count();
-
-        // Lấy tất cả đánh giá thuộc các lớp của gia sư
+        // Logic tính điểm đánh giá giữ nguyên
         $danhGiaQuery = DanhGia::whereHas('lop', function($query) {
             $query->where('GiaSuID', $this->GiaSuID);
         });
-
-        // Tính điểm trung bình
         $diemTrungBinh = $danhGiaQuery->avg('DiemSo');
-
-        // Tổng số đánh giá
         $tongSoDanhGia = $danhGiaQuery->count();
-
-        // Phân bố sao 1–5
-        $phanBoSao = [
-            1 => (clone $danhGiaQuery)->where('DiemSo', 1)->count(),
-            2 => (clone $danhGiaQuery)->where('DiemSo', 2)->count(),
-            3 => (clone $danhGiaQuery)->where('DiemSo', 3)->count(),
-            4 => (clone $danhGiaQuery)->where('DiemSo', 4)->count(),
-            5 => (clone $danhGiaQuery)->where('DiemSo', 5)->count(),
-        ];
-
 
         return [
             'GiaSuID' => $this->GiaSuID,
@@ -50,6 +24,10 @@ class GiaSuResource extends JsonResource
             'AnhCCCD_MatTruoc' => $this->AnhCCCD_MatTruoc,
             'AnhCCCD_MatSau' => $this->AnhCCCD_MatSau,
             'BangCap' => $this->BangCap,
+            
+            // [CẬP NHẬT] Thêm trường TenMon
+            'TenMon' => $this->monHoc ? $this->monHoc->TenMon : null,
+            
             'AnhBangCap' => $this->AnhBangCap,
             'TruongDaoTao' => $this->TruongDaoTao,
             'ChuyenNganh' => $this->ChuyenNganh,
@@ -66,4 +44,3 @@ class GiaSuResource extends JsonResource
         ];
     }
 }
-

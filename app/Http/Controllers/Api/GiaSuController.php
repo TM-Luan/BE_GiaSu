@@ -11,7 +11,7 @@ class GiaSuController extends Controller
 {
     public function index()
     {
-        $tutors = GiaSu::with('taiKhoan')
+$tutors = GiaSu::with(['taiKhoan', 'monHoc'])
             ->where('TrangThai', 1)
             ->get();
 
