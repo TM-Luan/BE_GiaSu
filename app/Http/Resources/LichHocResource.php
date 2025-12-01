@@ -19,8 +19,6 @@ class LichHocResource extends JsonResource
             'IsLapLai' => $this->IsLapLai,
             'NgayTao' => optional($this->NgayTao)->format('d-m-Y H:i'),
             
-            // SỬA LẠI TOÀN BỘ PHẦN NÀY
-            // Key 'Lop' khớp với `json['Lop']` trong file lichhoc.dart
             'Lop' => $this->whenLoaded('lop', function() {
                 if (!$this->lop) {
                     return null;
@@ -31,6 +29,12 @@ class LichHocResource extends JsonResource
                     ? $this->lop->nguoiHoc->HoTen
                     : 'Chưa rõ';
                 
+                // --- THÊM PHẦN NÀY ĐỂ LẤY ĐỊA CHỈ TỪ NGƯỜI HỌC ---
+                $diaChi = ($this->lop->relationLoaded('nguoiHoc') && $this->lop->nguoiHoc)
+                    ? $this->lop->nguoiHoc->DiaChi
+                    : null;
+                // -------------------------------------------------
+                
                 $tenMon = ($this->lop->relationLoaded('monHoc') && $this->lop->monHoc)
                     ? $this->lop->monHoc->TenMon
                     : null;
@@ -40,7 +44,7 @@ class LichHocResource extends JsonResource
                     : null;
                 
                 $tenKhoiLop = ($this->lop->relationLoaded('khoiLop') && $this->lop->khoiLop)
-                    ? $this->lop->khoiLop->BacHoc // Giả sử anh muốn lấy 'BacHoc' làm 'TenKhoiLop'
+                    ? $this->lop->khoiLop->BacHoc 
                     : null;
 
                 // Trả về cấu trúc PHẲNG (flat) khớp với lophoc.dart
@@ -52,13 +56,17 @@ class LichHocResource extends JsonResource
                     'TrangThai' => $this->lop->TrangThai,
                     'MoTa' => $this->lop->MoTa,
                     
-                    // Các trường đã được làm phẳng:
-                    'TenNguoiHoc' => $tenNguoiHoc,      // <-- Sẽ hiển thị
-                    'TenMon' => $tenMon,                // <-- Sẽ hiển thị
+                    // Các trường hiển thị
+                    'TenNguoiHoc' => $tenNguoiHoc,
+                    'TenMon' => $tenMon,
                     'TenGiaSu' => $tenGiaSu,
                     'TenKhoiLop' => $tenKhoiLop,
+                    
+                    // --- QUAN TRỌNG: TRẢ VỀ ĐỊA CHỈ ---
+                    'DiaChi' => $diaChi, 
+                    // ----------------------------------
 
-                    // Các ID mà lophoc.dart cần
+                    // Các ID
                     'MonID' => $this->lop->MonID,
                     'KhoiLopID' => $this->lop->KhoiLopID,
                     'DoiTuongID' => $this->lop->DoiTuongID,
