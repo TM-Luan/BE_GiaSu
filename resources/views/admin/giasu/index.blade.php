@@ -4,7 +4,7 @@
 <div class="container-fluid">
     {{-- TIÊU ĐỀ THAY ĐỔI THEO TRANG --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-white">
+        <h3>
             <i class="fa-solid {{ isset($isPending) ? 'fa-user-check' : 'fa-chalkboard-user' }} me-2"></i> 
             {{ isset($isPending) ? 'Duyệt Hồ Sơ Gia Sư' : 'Quản lý Gia sư' }}
         </h3>
@@ -51,7 +51,7 @@
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -72,19 +72,19 @@
                                         <img src="{{ $tk->giasu->AnhDaiDien }}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
                                     @else
                                         <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                                            <i class="fa-solid fa-user text-white"></i>
+                                            <i class="fa-solid fa-user"></i>
                                         </div>
                                     @endif
                                     <div>
-                                        <div class="fw-bold text-white">{{ $tk->giasu->HoTen ?? 'Chưa cập nhật tên' }}</div>
-                                        <small class="text-white-50">Ngày tạo: {{ \Carbon\Carbon::parse($tk->NgayTao)->format('d/m/Y') }}</small>
+                                        <div class="fw-bold">{{ $tk->giasu->HoTen ?? 'Chưa cập nhật tên' }}</div>
+                                        <small class="text-muted">Ngày tạo: {{ \Carbon\Carbon::parse($tk->NgayTao)->format('d/m/Y') }}</small>
                                     </div>
                                 </div>
                             </td> 
                             <td>
                                 <div class="d-flex flex-column">
-                                    <span><i class="fa-solid fa-envelope me-2 text-white-50"></i>{{ $tk->Email }}</span>
-                                    <small class="text-white-50"><i class="fa-solid fa-phone me-2 text-white-50"></i>{{ $tk->SoDienThoai ?? '---' }}</small>
+                                    <span><i class="fa-solid fa-envelope me-2 text-muted"></i>{{ $tk->Email }}</span>
+                                    <small class="text-muted"><i class="fa-solid fa-phone me-2"></i>{{ $tk->SoDienThoai ?? '---' }}</small>
                                 </div>
                             </td>
                             <td>
@@ -148,7 +148,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5 text-white-50">
+                            <td colspan="5" class="text-center py-5 text-muted">
                                 <i class="fa-solid fa-inbox fa-3x mb-3"></i><br>
                                 {{ isset($isPending) ? 'Không có hồ sơ nào đang chờ duyệt.' : 'Không tìm thấy gia sư nào.' }}
                             </td>

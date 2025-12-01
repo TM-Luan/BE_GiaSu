@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-white">
+        <h3>
             <i class="fa-solid fa-book me-2"></i> Quản lý Khóa học
         </h3>
     </div>
@@ -47,7 +47,7 @@
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -67,13 +67,13 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $lh->nguoiHoc->HoTen ?? 'N/A' }}</span>
-                                    <small class="text-white-50">{{ $lh->nguoiHoc->taiKhoan->Email ?? '' }}</small>
+                                    <small class="text-muted">{{ $lh->nguoiHoc->taiKhoan->Email ?? '' }}</small>
                                 </div>
                             </td>
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $lh->giaSu->HoTen ?? 'Chưa có' }}</span>
-                                    <small class="text-white-50">{{ $lh->giaSu->taiKhoan->Email ?? '' }}</small>
+                                    <small class="text-muted">{{ $lh->giaSu->taiKhoan->Email ?? '' }}</small>
                                 </div>
                             </td>
                             <td>
@@ -127,8 +127,8 @@
                         @empty
                         <tr>
                             <td colspan="8" class="text-center py-4">
-                                <i class="fa-solid fa-inbox fa-3x text-white-50 mb-3 d-block"></i>
-                                <p class="text-white-50 mb-0">Không tìm thấy lớp học nào</p>
+                                <i class="fa-solid fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                                <p class="text-muted mb-0">Không tìm thấy lớp học nào</p>
                             </td>
                         </tr>
                         @endforelse

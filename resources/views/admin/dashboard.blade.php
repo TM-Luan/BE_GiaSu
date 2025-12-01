@@ -85,7 +85,7 @@
 
 @push('scripts')
 <script>
-    const chartTextColor = '#e0e0e0';
+    const chartTextColor = '#0f172a';
 
     // Dữ liệu cho Biểu đồ đường (Lấy từ PHP)
     const revenueData = {
@@ -112,7 +112,7 @@
                     x: { ticks: { color: chartTextColor, font: { size: 13 } } }
                 },
                 plugins: {
-                    legend: { labels: { color: chartTextColor, font: { size: 14 } } } 
+                    legend: { labels: { color: chartTextColor, font: { size: 14 } } }
                 }
             }
         });

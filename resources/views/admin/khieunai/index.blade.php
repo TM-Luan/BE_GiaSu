@@ -3,7 +3,7 @@
 @section('content')
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-white">
+        <h3>
             <i class="fa-solid fa-triangle-exclamation me-2"></i> Quản lý Khiếu nại
         </h3>
     </div>
@@ -39,7 +39,7 @@
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -58,15 +58,15 @@
                             <td>
                                 <div class="d-flex flex-column">
                                     <span class="fw-bold">{{ $kn->taiKhoan->Email ?? 'N/A' }}</span>
-                                    <small class="text-white 50">ID: {{ $kn->TaiKhoanID }}</small>
+                                    <small class="text-muted">ID: {{ $kn->TaiKhoanID }}</small>
                                 </div>
                             </td>
                             <td>
                                 @if($kn->lop)
                                     <small>Lớp #{{ $kn->LopYeuCauID }}</small><br>
-                                    <small class="text-white 25">{{ $kn->lop->monHoc->TenMon ?? '' }}</small>
+                                    <small class="text-muted">{{ $kn->lop->monHoc->TenMon ?? '' }}</small>
                                 @else
-                                    <span class="text-white 25">N/A</span>
+                                    <span class="text-muted">N/A</span>
                                 @endif
                             </td>
                             <td>
@@ -116,8 +116,8 @@
                         @empty
                         <tr>
                             <td colspan="7" class="text-center py-4">
-                                <i class="fa-solid fa-inbox fa-3x text-white 25 mb-3 d-block"></i>
-                                <p class="text-white 25 mb-0">Không tìm thấy khiếu nại nào</p>
+                                <i class="fa-solid fa-inbox fa-3x text-muted mb-3 d-block"></i>
+                                <p class="text-muted mb-0">Không tìm thấy khiếu nại nào</p>
                             </td>
                         </tr>
                         @endforelse

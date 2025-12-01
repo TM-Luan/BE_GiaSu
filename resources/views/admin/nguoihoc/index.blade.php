@@ -4,7 +4,7 @@
 <div class="container-fluid">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3 class="text-white">
+        <h3>
             <i class="fa-solid fa-user-graduate me-2"></i> Quản lý Người học
         </h3>
         <a href="{{ route('admin.nguoihoc.create') }}" class="btn btn-primary">
@@ -47,7 +47,7 @@
     <div class="card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-dark table-hover mb-0 align-middle">
+                <table class="table table-hover mb-0 align-middle">
                     <thead>
                         <tr>
                             <th>ID</th>

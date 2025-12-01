@@ -11,18 +11,18 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --main-bg: #111827;
-      --card-bg: #1f2937;
-      --text-color: #e0e0e0;
-      --text-muted: #9ca3af;
-      --border-color: #374151;
+      --main-bg: #ffffff;
+      --card-bg: #ffffff;
+      --text-color: #0f172a;
+      --text-muted: #6b7280;
+      --border-color: #e6eefc;
       --accent-blue: #3b82f6;
       --accent-hover: #2563eb;
-      --input-bg: #374151;
+      --input-bg: #ffffff;
     }
     
     body {
-      background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+      background: #ffffff;
       color: var(--text-color);
       font-family: 'Poppins', sans-serif;
       min-height: 100vh;
@@ -84,7 +84,7 @@
     }
     
     .login-header h2 {
-      color: white;
+      color: #ffffff;
       font-weight: 600;
       margin-bottom: 0.5rem;
       position: relative;
@@ -117,7 +117,7 @@
     
     .form-control {
       background: var(--input-bg);
-      border: 1px solid var(--border-color);
+      border: 1px solid #d1e6ff;
       color: var(--text-color);
       padding: 0.75rem 1rem;
       border-radius: 8px;
@@ -187,8 +187,8 @@
     }
     
     .alert-danger {
-      background: rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
+      background: rgba(239, 68, 68, 0.06);
+      color: #991b1b;
       border-left: 4px solid #ef4444;
     }
     

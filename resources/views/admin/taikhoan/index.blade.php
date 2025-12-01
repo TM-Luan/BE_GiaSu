@@ -25,7 +25,7 @@
                 <td>
                     @if($tk->phanquyen && $tk->phanquyen->vaitro)
                         <span class="badge 
-                            @if($tk->phanquyen->VaiTroID == 1) bg-dark
+                            @if($tk->phanquyen->VaiTroID == 1) bg-primary
                             @elseif($tk->phanquyen->VaiTroID == 2) bg-primary
                             @else bg-success
                             @endif">
