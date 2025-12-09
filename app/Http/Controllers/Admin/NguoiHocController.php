@@ -66,7 +66,7 @@ class NguoiHocController extends Controller
         $rules = [
             'Email' => 'required|email|max:100|unique:TaiKhoan,Email',
             'SoDienThoai' => ['nullable', 'string', 'regex:/^0\d{9}$/', 'unique:TaiKhoan,SoDienThoai'],
-            'TrangThai' => 'required|boolean',
+            'TrangThai' => 'required|in:0,1,2',
             'MatKhau' => ['required', 'confirmed', Password::min(8)],
             'HoTen' => 'required|string|max:150',
             'GioiTinh' => 'nullable|string|in:Nam,Nữ,Khác',
@@ -140,7 +140,7 @@ class NguoiHocController extends Controller
         $rules = [
             'Email' => ['required', 'email', 'max:100', Rule::unique('TaiKhoan', 'Email')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')],
             'SoDienThoai' => ['nullable', 'string', 'regex:/^0\d{9}$/', Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')],
-            'TrangThai' => 'required|boolean',
+            'TrangThai' => 'required|in:0,1,2',
             'MatKhau' => ['nullable', 'confirmed', Password::min(8)],
             'HoTen' => 'required|string|max:150',
             'GioiTinh' => 'nullable|string|in:Nam,Nữ,Khác',

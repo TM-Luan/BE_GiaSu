@@ -10,10 +10,41 @@ use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Support\Facades\Http;
-// XÓA: use Illuminate\Support\Facades\Log; để tránh lỗi xung đột (Đã được thay thế bằng FQN)
+use Illuminate\Support\Facades\Log; // Import Log để ghi lỗi upload nếu có
 
 class ProfileController extends Controller
 {
+    /**
+     * Hàm hỗ trợ upload ảnh lên ImgBB (Private method)
+     */
+    private function uploadToImgBB($file)
+    {
+        // Lấy API Key từ config (cần cấu hình trong services.php)
+        $apiKey = config('services.imgbb.key');
+        
+        if (!$apiKey) {
+            Log::error('ImgBB API Key chưa được cấu hình trong services.php');
+            return null;
+        }
+
+        try {
+            $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
+            $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
+                'key' => $apiKey,
+                'image' => $imageBase64
+            ]);
+
+            if ($response->successful() && isset($response->json()['data']['url'])) {
+                return $response->json()['data']['url'];
+            } else {
+                Log::error('ImgBB Upload Failed: ' . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error('ImgBB Exception: ' . $e->getMessage());
+        }
+        return null;
+    }
+
     // ===== NGƯỜI HỌC =====
     public function index()
     {
@@ -27,6 +58,7 @@ class ProfileController extends Controller
     {
         $user = Auth::user();
         $nguoiHoc = $user->nguoiHoc;
+        
         $validated = $request->validate([
             'HoTen' => 'required|string|max:150',
             'SoDienThoai' => ['required', 'string', 'max:20', Rule::unique('TaiKhoan')->ignore($user->TaiKhoanID, 'TaiKhoanID')],
@@ -35,27 +67,41 @@ class ProfileController extends Controller
             'DiaChi' => 'nullable|string|max:255',
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
+
         /** @var \App\Models\TaiKhoan $user */
-        $user->update(['SoDienThoai' => $validated['SoDienThoai'],]);
+        $user->update(['SoDienThoai' => $validated['SoDienThoai']]);
+        
         $nguoiHocData = [
             'HoTen' => $validated['HoTen'],
             'NgaySinh' => $validated['NgaySinh'],
             'GioiTinh' => $validated['GioiTinh'],
             'DiaChi' => $validated['DiaChi'],
         ];
+
+        // Xử lý upload ảnh cho Người Học (Đồng bộ dùng ImgBB hoặc Storage)
         if ($request->hasFile('AnhDaiDien')) {
-            if ($nguoiHoc->AnhDaiDien) {
-                Storage::disk('public')->delete($nguoiHoc->AnhDaiDien);
+            // Thử upload lên ImgBB trước
+            $url = $this->uploadToImgBB($request->file('AnhDaiDien'));
+            
+            if ($url) {
+                // Nếu upload ImgBB thành công
+                $nguoiHocData['AnhDaiDien'] = $url;
+            } else {
+                // Fallback: Nếu ImgBB lỗi thì lưu vào Storage local như cũ
+                if ($nguoiHoc->AnhDaiDien && !filter_var($nguoiHoc->AnhDaiDien, FILTER_VALIDATE_URL)) {
+                    Storage::disk('public')->delete($nguoiHoc->AnhDaiDien);
+                }
+                $path = $request->file('AnhDaiDien')->store('avatars', 'public');
+                $nguoiHocData['AnhDaiDien'] = $path;
             }
-            $path = $request->file('AnhDaiDien')->store('avatars', 'public');
-            $nguoiHocData['AnhDaiDien'] = $path;
         }
+
         $nguoiHoc->update($nguoiHocData);
         return back()->with('success_profile', 'Cập nhật thông tin thành công!');
     }
 
     /**
-     * Cập nhật mật khẩu người học
+     * Cập nhật mật khẩu
      */
     public function updatePassword(Request $request)
     {
@@ -82,9 +128,6 @@ class ProfileController extends Controller
     }
 
     // ===== GIA SƯ =====
-    /**
-     * Hiển thị trang thông tin cá nhân gia sư
-     */
     public function tutorProfile()
     {
         /** @var \App\Models\TaiKhoan $user */
@@ -92,10 +135,8 @@ class ProfileController extends Controller
         $user->load('giaSu');
         $gs = $user->giaSu; 
 
-        // Lấy danh sách môn học cho dropdown
         $monHocs = \App\Models\MonHoc::orderBy('TenMon')->get();
 
-        // Thống kê đánh giá
         $danhGiaStats = \App\Models\DanhGia::whereHas('lop', function ($q) use ($gs) {
             $q->where('GiaSuID', $gs->GiaSuID);
         })->selectRaw('
@@ -103,63 +144,37 @@ class ProfileController extends Controller
             COUNT(*) as total
         ')->first();
 
-        // Nếu không có đánh giá (Sử dụng tên biến mới)
         $rating = $danhGiaStats->rating ?? 0;
         $gs->danh_gia_count = $danhGiaStats->total ?? 0; 
         
-        // Học phí mẫu (tùy bạn)
         $hocPhi = number_format($gs->GiaTrungBinhMotBuoi ?? 150000, 0, ',', '.') . ' đ/buổi';
 
         return view('giasu.profile-index', compact('user', 'monHocs', 'danhGiaStats', 'gs', 'rating', 'hocPhi')); 
     }
 
-    /**
-     * Cập nhật thông tin cá nhân gia sư
-     */
     public function tutorProfileUpdate(Request $request)
     {
         $user = Auth::user();
         $giaSu = $user->giaSu;
         
-        // Kiểm tra nếu đang cập nhật mật khẩu
+        // Xử lý đổi mật khẩu
         if ($request->input('update_type') === 'password') {
-            $validated = $request->validate([
-                'current_password' => 'required|string',
-                'password' => ['required', 'string', 'confirmed', Password::min(8)],
-            ], [
-                'current_password.required' => 'Bạn phải nhập mật khẩu hiện tại.',
-                'password.confirmed' => 'Mật khẩu xác nhận không khớp.',
-                'password.min' => 'Mật khẩu mới phải có ít nhất 8 ký tự.'
-            ]);
-
-            if (!Hash::check($request->current_password, $user->MatKhauHash)) {
-                return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không chính xác.']);
-            }
-            /** @var \App\Models\TaiKhoan $user */
-            $user->update([
-                'MatKhauHash' => Hash::make($validated['password']),
-            ]);
-
-            return back()->with('success_password', 'Đổi mật khẩu thành công!');
+            return $this->updatePassword($request); // Tái sử dụng hàm updatePassword
         }
         
-        // Cập nhật thông tin profile bình thường - Đồng bộ với mobile
+        // Validate dữ liệu
         $validated = $request->validate([
             'HoTen' => 'required|string|max:150',
             'SoDienThoai' => ['required', 'string', 'max:20', Rule::unique('TaiKhoan')->ignore($user->TaiKhoanID, 'TaiKhoanID')],
             'NgaySinh' => 'nullable|date',
             'GioiTinh' => 'nullable|string|max:10',
             'DiaChi' => 'nullable|string|max:255',
-            
-            // Thông tin học vấn - Đồng bộ với mobile
             'BangCap' => 'nullable|string|max:255',
             'TruongDaoTao' => 'nullable|string|max:255',
             'ChuyenNganh' => 'nullable|string|max:255',
             'ThanhTich' => 'nullable|string|max:1000',
             'KinhNghiem' => 'nullable|string|max:255',
             'MonID' => 'nullable|integer|exists:MonHoc,MonID',
-            
-            // Upload ảnh - Đồng bộ với mobile
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -182,59 +197,15 @@ class ProfileController extends Controller
             'MonID' => $validated['MonID'] ?? null,
         ];
         
-        // ĐỒNG BỘ MOBILE: Upload ảnh lên ImgBB API
-        $apiKey = config('services.imgbb.key');
+        // Xử lý upload ảnh (Sử dụng hàm chung uploadToImgBB)
+        $imageFields = ['AnhDaiDien', 'AnhCCCD_MatTruoc', 'AnhCCCD_MatSau', 'AnhBangCap'];
         
-        $uploadToImgBB = function ($file) use ($apiKey) {
-            if (!$apiKey) {
-                return null;
-            }
-            try {
-                $imageBase64 = base64_encode(file_get_contents($file->getRealPath()));
-                $response = Http::asForm()->post('https://api.imgbb.com/1/upload', [
-                    'key' => $apiKey,
-                    'image' => $imageBase64
-                ]);
-
-                if ($response->successful() && isset($response->json()['data']['url'])) {
-                    return $response->json()['data']['url'];
+        foreach ($imageFields as $field) {
+            if ($request->hasFile($field)) {
+                $url = $this->uploadToImgBB($request->file($field));
+                if ($url) {
+                    $giaSuData[$field] = $url;
                 }
-            } catch (\Exception $e) {
-                // SỬA LỖI: Gọi Facade Log với namespace đầy đủ
-                \Illuminate\Support\Facades\Log::error('ImgBB upload failed: ' . $e->getMessage()); 
-            }
-            return null;
-        };
-        
-        // Upload ảnh đại diện - ĐỒNG BỘ MOBILE
-        if ($request->hasFile('AnhDaiDien')) {
-            $url = $uploadToImgBB($request->file('AnhDaiDien'));
-            if ($url) {
-                $giaSuData['AnhDaiDien'] = $url;
-            }
-        }
-        
-        // Upload CCCD mặt trước - ĐỒNG BỘ MOBILE
-        if ($request->hasFile('AnhCCCD_MatTruoc')) {
-            $url = $uploadToImgBB($request->file('AnhCCCD_MatTruoc'));
-            if ($url) {
-                $giaSuData['AnhCCCD_MatTruoc'] = $url;
-            }
-        }
-        
-        // Upload CCCD mặt sau - ĐỒNG BỘ MOBILE
-        if ($request->hasFile('AnhCCCD_MatSau')) {
-            $url = $uploadToImgBB($request->file('AnhCCCD_MatSau'));
-            if ($url) {
-                $giaSuData['AnhCCCD_MatSau'] = $url;
-            }
-        }
-        
-        // Upload ảnh bằng cấp - ĐỒNG BỘ MOBILE
-        if ($request->hasFile('AnhBangCap')) {
-            $url = $uploadToImgBB($request->file('AnhBangCap'));
-            if ($url) {
-                $giaSuData['AnhBangCap'] = $url;
             }
         }
         

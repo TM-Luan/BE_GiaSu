@@ -77,7 +77,7 @@ class AuthController extends Controller
                     GiaSu::create([
                         'TaiKhoanID' => $tk->TaiKhoanID,
                         'HoTen' => $request->HoTen, // HoTen này là "nguồn tin cậy"
-                        'TrangThai' => 2
+                        'TrangThai' => 0
                     ]);
                 } else if ($request->VaiTro == 3) {
                     NguoiHoc::create([

@@ -1,16 +1,29 @@
 @props(['taikhoanGiaSu'])
 
 @php
-    // Lấy đối tượng GiaSu (đã có thêm thuộc tính rating_average và rating_count)
+    // Lấy đối tượng GiaSu
     $gs = $taikhoanGiaSu; 
     
-    // Sử dụng thuộc tính đã được tính toán trong Controller
+    // 1. Xử lý logic hiển thị Ảnh đại diện (FIX LỖI HIỂN THỊ TẠI ĐÂY)
+    // Mặc định là avatar tạo từ tên
+    $avatarUrl = 'https://ui-avatars.com/api/?name='.urlencode($gs->HoTen).'&background=random&color=fff&size=96';
+    
+    if ($gs->AnhDaiDien) {
+        // Kiểm tra xem có phải là URL online (ImgBB) không
+        if (filter_var($gs->AnhDaiDien, FILTER_VALIDATE_URL)) {
+            $avatarUrl = $gs->AnhDaiDien;
+        } else {
+            // Nếu không phải URL, coi nó là đường dẫn file trong storage
+            $avatarUrl = asset('storage/' . $gs->AnhDaiDien);
+        }
+    }
+
+    // 2. Xử lý Đánh giá
     $rating = round($gs->rating_average ?? 0, 1);
     $reviewCount = $gs->rating_count ?? 0;
     
-    // 2. Xử lý Học phí
+    // 3. Xử lý Học phí
     $avgHocPhi = $gs->lopHocYeuCau->avg('HocPhi');
-    
     if($avgHocPhi > 0) {
         $hienThiHocPhi = number_format($avgHocPhi, 0, ',', '.') . 'đ';
         $donVi = '/buổi';
@@ -19,10 +32,10 @@
         $donVi = '';
     }
 
-    // 3. Xử lý Địa chỉ
+    // 4. Xử lý Địa chỉ
     $diaChi = $gs->DiaChi ?? 'Đang cập nhật';
 
-    // 4. Xử lý Xác thực
+    // 5. Xử lý Xác thực
     $isVerified = !empty($gs->AnhCCCD_MatTruoc);
 @endphp
 
@@ -32,7 +45,8 @@
 
     <div class="flex items-start gap-4 mb-3">
         <div class="relative flex-shrink-0">
-            <img src="{{ $gs->AnhDaiDien ?? 'https://ui-avatars.com/api/?name='.urlencode($gs->HoTen).'&background=random&color=fff&size=96' }}"
+            {{-- Sử dụng biến $avatarUrl đã xử lý ở trên --}}
+            <img src="{{ $avatarUrl }}"
                  alt="{{ $gs->HoTen }}"
                  class="w-16 h-16 rounded-full object-cover border-2 border-gray-100 shadow-sm">
         </div>
@@ -58,11 +72,10 @@
                 }}
             </p>
 
-            {{-- KHỐI HIỂN THỊ ĐIỂM TRUNG BÌNH VÀ SAO (ĐÃ SỬA) --}}
+            {{-- KHỐI HIỂN THỊ ĐIỂM TRUNG BÌNH VÀ SAO --}}
             <div class="flex items-center gap-1 mt-1">
-                {{-- Lặp 5 lần để hiển thị 5 sao --}}
                 @php
-                    $roundedRating = floor($rating); // Lấy số sao nguyên
+                    $roundedRating = floor($rating);
                 @endphp
                 <div class="flex text-yellow-400">
                     @for ($i = 1; $i <= 5; $i++)
@@ -75,11 +88,9 @@
                         "></i>
                     @endfor
                 </div>
-                {{-- Hiển thị điểm số và số đánh giá --}}
                 <span class="text-gray-900 font-bold text-sm">{{ $rating > 0 ? $rating : '---' }}</span>
                 <span class="text-gray-400 text-xs">({{ $reviewCount }} đánh giá)</span>
             </div>
-            {{-- KẾT THÚC KHỐI SAO --}}
         </div>
     </div>
 

@@ -1,5 +1,6 @@
 <?php
 namespace App\Http\Controllers\Admin;
+
 use App\Http\Controllers\Controller;
 use App\Models\TaiKhoan;
 use App\Models\GiaSu;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Hash;
-// Dùng cho regex validation
+use Illuminate\Support\Facades\Log; // Thêm Log để debug
 use Illuminate\Validation\Rules\Password;
 
 class GiaSuController extends Controller
@@ -18,27 +19,24 @@ class GiaSuController extends Controller
 
     public function index(Request $request)
     {
-        // Lấy TaiKhoan (gia sư) bằng JOIN trực tiếp để tránh phụ thuộc tên quan hệ
+        // Lấy TaiKhoan (gia sư) bằng JOIN trực tiếp
         $query = TaiKhoan::select('TaiKhoan.*')
             ->join('PhanQuyen', 'PhanQuyen.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
             ->join('GiaSu', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
             ->where('PhanQuyen.VaiTroID', self::GIASU_ROLE_ID)
-            // Chỉ lấy những gia sư có hồ sơ đã được DUYỆT (GiaSu.TrangThai = 1)
-            ->where('GiaSu.TrangThai', 1)
+            ->where('GiaSu.TrangThai', 1) // Chỉ lấy hồ sơ đã DUYỆT
             ->with(['giasu', 'phanquyen'])
             ->orderByDesc('TaiKhoan.TaiKhoanID');
 
-        // Lọc theo trạng thái tài khoản (TaiKhoan.TrangThai) — chỉ áp khi giá trị là số (0,1,2)
+        // Lọc theo trạng thái tài khoản
         $tt = $request->input('trangthai', null);
         if ($tt !== null && $tt !== '') {
-            // chỉ áp filter nếu là số (tránh value như 'all' gây ra không có kết quả)
             if (is_numeric($tt)) {
                 $query->where('TaiKhoan.TrangThai', (int)$tt);
             }
-            // nếu không phải numeric (ví dụ 'all') => KHÔNG lọc (tương đương "Tất cả")
         }
 
-        // Tìm kiếm: Email, SoDienThoai, HoTen (bảng GiaSu)
+        // Tìm kiếm
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('TaiKhoan.Email', 'like', "%$search%")
@@ -56,7 +54,7 @@ class GiaSuController extends Controller
 
     public function pending(Request $request)
     {
-        // Lấy TaiKhoan (gia sư) có hồ sơ CHƯA ĐƯỢC DUYỆT (GiaSu.TrangThai != 1)
+        // Lấy TaiKhoan (gia sư) có hồ sơ CHƯA DUYỆT
         $query = TaiKhoan::select('TaiKhoan.*')
             ->join('PhanQuyen', 'PhanQuyen.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
             ->join('GiaSu', 'GiaSu.TaiKhoanID', '=', 'TaiKhoan.TaiKhoanID')
@@ -65,7 +63,6 @@ class GiaSuController extends Controller
             ->with(['giasu', 'phanquyen'])
             ->orderByDesc('TaiKhoan.TaiKhoanID');
 
-        // Tìm kiếm (giống index)
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
                 $q->where('TaiKhoan.Email', 'like', "%$search%")
@@ -88,69 +85,41 @@ class GiaSuController extends Controller
             $taiKhoan = TaiKhoan::with('giasu')->findOrFail($id);
 
             DB::transaction(function() use ($taiKhoan) {
-                // Nếu có hồ sơ GiaSu, đưa GiaSu.TrangThai -> 1 (Đã duyệt)
                 if ($taiKhoan->giasu) {
                     $taiKhoan->giasu->update(['TrangThai' => 1]);
                 }
-                // Đồng bộ trạng thái tài khoản sang Hoạt động (1) để tránh bất đồng bộ với mobile/web
                 $taiKhoan->update(['TrangThai' => 1]);
             });
-             
-             // Tùy chọn: Nếu muốn duyệt xong tài khoản hoạt động luôn thì set TaiKhoan->TrangThai = 1
-             // $taiKhoan->update(['TrangThai' => 1]); 
 
              return redirect()->route('admin.giasu.pending')
                  ->with('success', 'Đã duyệt hồ sơ gia sư thành công!');
          } catch (\Exception $e) {
              return back()->with('error', 'Lỗi: ' . $e->getMessage());
          }
-     }
-        // =============================================
-    // =============================================
+    }
 
-
-    /**
-     * Hiển thị form tạo mới gia sư.
-     */
     public function create()
     {
         return view('admin.giasu.create');
     }
 
-    /**
-     * Lưu gia sư mới vào CSDL.
-     */
     public function store(Request $request)
     {
-        // --- BẮT LỖI (VIỆT HÓA) ---
         $messages = $this->getValidationMessages();
-
         $rules = [
-            // Bảng TaiKhoan
             'Email' => 'required|email|max:100|unique:TaiKhoan,Email',
-            // Rule::dimensions (nếu cần)
-            'SoDienThoai' => [
-                'nullable',
-                'string',
-                'regex:/^0\d{9}$/',
-                'unique:TaiKhoan,SoDienThoai'
-            ],
-            // Cho phép 0 = Chờ duyệt, 1 = Hoạt động, 2 = Bị khóa
+            'SoDienThoai' => ['nullable', 'string', 'regex:/^0\d{9}$/', 'unique:TaiKhoan,SoDienThoai'],
             'TrangThai' => 'required|in:0,1,2',
-            'MatKhau' => ['required', 'confirmed', Password::min(8)], // Bắt buộc khi tạo
-
-            // Bảng GiaSu
+            'MatKhau' => ['required', 'confirmed', Password::min(8)],
             'HoTen' => 'required|string|max:150',
             'GioiTinh' => 'nullable|string|in:Nam,Nữ,Khác',
-            'NgaySinh' => 'nullable|date|before:today', // Không được sinh ở tương lai
+            'NgaySinh' => 'nullable|date|before:today',
             'DiaChi' => 'nullable|string|max:255',
             'BangCap' => 'nullable|string|max:255',
             'TruongDaoTao' => 'nullable|string|max:255',
             'ChuyenNganh' => 'nullable|string|max:255',
             'KinhNghiem' => 'nullable|string|max:255',
             'ThanhTich' => 'nullable|string',
-            
-            // 4 Trường ảnh
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -158,9 +127,7 @@ class GiaSuController extends Controller
         ];
         
         $validated = $request->validate($rules, $messages);
-        // --- KẾT THÚC BẮT LỖI ---
         
-        // ... (Code tách dữ liệu và logic store của bạn) ...
         $taiKhoanData = [
             'Email' => $validated['Email'],
             'SoDienThoai' => $validated['SoDienThoai'],
@@ -169,11 +136,11 @@ class GiaSuController extends Controller
         ];
 
         $giaSuData = [
-            'HoTen' => $validated['HoTen'], // Bắt buộc, nên an toàn
+            'HoTen' => $validated['HoTen'],
             'GioiTinh' => $validated['GioiTinh'] ?? null,
             'NgaySinh' => $validated['NgaySinh'] ?? null,
             'DiaChi' => $validated['DiaChi'] ?? null,
-            'BangCap' => $validated['BangCap'] ?? null, // <-- SỬA LỖI TẠI ĐÂY
+            'BangCap' => $validated['BangCap'] ?? null,
             'TruongDaoTao' => $validated['TruongDaoTao'] ?? null,
             'ChuyenNganh' => $validated['ChuyenNganh'] ?? null,
             'KinhNghiem' => $validated['KinhNghiem'] ?? null,
@@ -183,15 +150,35 @@ class GiaSuController extends Controller
         try {
             DB::transaction(function () use ($request, $taiKhoanData, $giaSuData) {
                 
+                // --- SỬA LOGIC UPLOAD ẢNH ---
                 $apiKey = env('IMAGEBB_API_KEY');
+                if (!$apiKey) {
+                    throw new \Exception("Chưa cấu hình API Key ImgBB trong .env");
+                }
+
                 $uploadImage = function($fileKey) use ($request, $apiKey) {
                     if ($request->hasFile($fileKey)) {
-                        $response = Http::attach( 'image', file_get_contents($request->file($fileKey)), $request->file($fileKey)->getClientOriginalName())
-                                    ->post('https://api.imgbb.com/1/upload', ['key' => $apiKey]);
-                        if ($response->successful()) return $response->json()['data']['url'];
+                        $file = $request->file($fileKey);
+                        try {
+                            $response = Http::attach(
+                                'image', 
+                                file_get_contents($file), 
+                                $file->getClientOriginalName()
+                            )->post('https://api.imgbb.com/1/upload', ['key' => $apiKey]);
+
+                            if ($response->successful()) {
+                                return $response->json()['data']['url'];
+                            } else {
+                                Log::error("ImgBB Upload Error ($fileKey): " . $response->body());
+                                throw new \Exception("Không thể upload ảnh $fileKey. Lỗi API.");
+                            }
+                        } catch (\Exception $e) {
+                            throw new \Exception("Lỗi upload $fileKey: " . $e->getMessage());
+                        }
                     }
                     return null;
                 };
+                // --- KẾT THÚC SỬA ---
 
                 $giaSuData['AnhDaiDien'] = $uploadImage('AnhDaiDien');
                 $giaSuData['AnhCCCD_MatTruoc'] = $uploadImage('AnhCCCD_MatTruoc');
@@ -215,7 +202,6 @@ class GiaSuController extends Controller
         return redirect()->route('admin.giasu.index')->with('success', 'Thêm gia sư thành công!');
     }
 
-
     public function edit(string $id)
     {
         $taiKhoan = TaiKhoan::with('giasu')
@@ -224,44 +210,27 @@ class GiaSuController extends Controller
         return view('admin.giasu.edit', [ 'taiKhoan' => $taiKhoan ]);
     }
 
-    /**
-     * Cập nhật thông tin gia sư trong CSDL.
-     */
     public function update(Request $request, string $id)
     {
-        $taiKhoan = TaiKhoan::with('giasu')->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
+        $taiKhoan = TaiKhoan::with('giasu')
+            ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
             ->findOrFail($id);
 
-        // --- BẮT LỖI (VIỆT HÓA) ---
         $messages = $this->getValidationMessages();
-
         $rules = [
-            // Bảng TaiKhoan
-            'Email' => [
-                'required', 'email', 'max:100',
-                Rule::unique('TaiKhoan', 'Email')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')
-            ],
-            'SoDienThoai' => [
-                'nullable', 'string', 
-                'regex:/^0\d{9}$/', // Bắt lỗi SĐT VN
-                Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')
-            ],
-            // Cho phép 0 = Chờ duyệt, 1 = Hoạt động, 2 = Bị khóa
+            'Email' => ['required', 'email', 'max:100', Rule::unique('TaiKhoan', 'Email')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')],
+            'SoDienThoai' => ['nullable', 'string', 'regex:/^0\d{9}$/', Rule::unique('TaiKhoan', 'SoDienThoai')->ignore($taiKhoan->TaiKhoanID, 'TaiKhoanID')],
             'TrangThai' => 'required|in:0,1,2',
-            'MatKhau' => ['nullable', 'confirmed', Password::min(8)], // Không bắt buộc khi update
-
-            // Bảng GiaSu (Giống store)
+            'MatKhau' => ['nullable', 'confirmed', Password::min(8)],
             'HoTen' => 'required|string|max:150',
             'GioiTinh' => 'nullable|string|in:Nam,Nữ,Khác',
-            'NgaySinh' => 'nullable|date|before:today', // Không được sinh ở tương lai
+            'NgaySinh' => 'nullable|date|before:today',
             'DiaChi' => 'nullable|string|max:255',
             'BangCap' => 'nullable|string|max:255',
             'TruongDaoTao' => 'nullable|string|max:255',
             'ChuyenNganh' => 'nullable|string|max:255',
             'KinhNghiem' => 'nullable|string|max:255',
             'ThanhTich' => 'nullable|string',
-            
-            // 4 Trường ảnh
             'AnhDaiDien' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AnhCCCD_MatTruoc' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'AnhCCCD_MatSau' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
@@ -269,9 +238,7 @@ class GiaSuController extends Controller
         ];
 
         $validated = $request->validate($rules, $messages);
-        // --- KẾT THÚC BẮT LỖI ---
         
-        // ... (Code tách dữ liệu và logic update của bạn) ...
         $taiKhoanData = [
             'Email' => $validated['Email'],
             'SoDienThoai' => $validated['SoDienThoai'],
@@ -299,18 +266,38 @@ class GiaSuController extends Controller
                 
                 $taiKhoan->update($taiKhoanData);
 
+                // --- SỬA LOGIC UPLOAD ẢNH (BẮT LỖI) ---
                 $apiKey = env('IMAGEBB_API_KEY');
+                if (!$apiKey) {
+                    throw new \Exception("Chưa cấu hình API Key ImgBB (Kiểm tra .env hoặc config cache)");
+                }
+
                 $uploadImage = function($fileKey) use ($request, $apiKey) {
                     if ($request->hasFile($fileKey)) {
-                        $response = Http::attach( 'image', file_get_contents($request->file($fileKey)), $request->file($fileKey)->getClientOriginalName())
-                                    ->post('https://api.imgbb.com/1/upload', ['key' => $apiKey]);
-                        if ($response->successful()) return $response->json()['data']['url'];
+                        $file = $request->file($fileKey);
+                        try {
+                            $response = Http::attach(
+                                'image', 
+                                file_get_contents($file), 
+                                $file->getClientOriginalName()
+                            )->post('https://api.imgbb.com/1/upload', ['key' => $apiKey]);
+
+                            if ($response->successful()) {
+                                return $response->json()['data']['url'];
+                            } else {
+                                // Ghi log lỗi chi tiết
+                                Log::error("Upload Failed [$fileKey]: " . $response->body());
+                                // Ném lỗi để Transaction Rollback
+                                throw new \Exception("Lỗi từ ImgBB: " . ($response->json()['error']['message'] ?? 'Không xác định'));
+                            }
+                        } catch (\Exception $e) {
+                            throw $e; // Ném tiếp lỗi ra ngoài
+                        }
                     }
                     return null;
                 };
 
-                // Kiểm tra và upload 4 ảnh
-                // (Chỉ gán nếu $uploadImage trả về giá trị, nếu không sẽ giữ ảnh cũ)
+                // Chỉ cập nhật nếu upload thành công (có URL mới)
                 if ($url = $uploadImage('AnhDaiDien')) $giaSuData['AnhDaiDien'] = $url;
                 if ($url = $uploadImage('AnhCCCD_MatTruoc')) $giaSuData['AnhCCCD_MatTruoc'] = $url;
                 if ($url = $uploadImage('AnhCCCD_MatSau')) $giaSuData['AnhCCCD_MatSau'] = $url;
@@ -322,31 +309,20 @@ class GiaSuController extends Controller
                 );
             });
         } catch (\Exception $e) {
-            return back()->withInput()->with('error', 'Đã xảy ra lỗi khi cập nhật: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Lỗi cập nhật: ' . $e->getMessage());
         }
 
         return redirect()->route('admin.giasu.index')->with('success', 'Cập nhật gia sư thành công!');
     }
 
-    // =============================================
-    // ===== BỔ SUNG HÀM SHOW() VÀ DESTROY() =====
-    // =============================================
-    
-    /**
-     * Hiển thị thông tin chi tiết của gia sư.
-     */
     public function show(string $id)
     {
         $taiKhoan = TaiKhoan::with('giasu', 'phanquyen.vaitro')
             ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
             ->findOrFail($id); 
-            
         return view('admin.giasu.show', [ 'taiKhoan' => $taiKhoan ]);
     }
 
-    /**
-     * Xóa gia sư khỏi CSDL.
-     */
     public function destroy(string $id)
     {
         try {
@@ -359,18 +335,12 @@ class GiaSuController extends Controller
         }
     }
 
-    /**
-     * Duyệt hồ sơ gia sư (Kích hoạt tài khoản)
-     * API: PUT /api/admin/giasu/{id}/approve
-     */
     public function approveProfile(string $id)
     {
         try {
             $taiKhoan = TaiKhoan::with('giasu')
                 ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
                 ->findOrFail($id);
-
-            // Kích hoạt tài khoản
             $taiKhoan->update(['TrangThai' => 1]);
 
             return response()->json([
@@ -386,26 +356,15 @@ class GiaSuController extends Controller
         }
     }
 
-    /**
-     * Từ chối hồ sơ gia sư (Vô hiệu hóa tài khoản)
-     * API: PUT /api/admin/giasu/{id}/reject
-     */
     public function rejectProfile(Request $request, string $id)
     {
-        $request->validate([
-            'ly_do' => 'nullable|string|max:500',
-        ]);
+        $request->validate(['ly_do' => 'nullable|string|max:500']);
 
         try {
             $taiKhoan = TaiKhoan::with('giasu')
                 ->whereHas('phanquyen', fn($q) => $q->where('VaiTroID', self::GIASU_ROLE_ID))
                 ->findOrFail($id);
-
-            // Vô hiệu hóa tài khoản
             $taiKhoan->update(['TrangThai' => 0]);
-
-            // Có thể lưu lý do từ chối vào bảng GiaSu hoặc ghi log
-            // $taiKhoan->giasu->update(['LyDoTuChoi' => $request->ly_do]);
 
             return response()->json([
                 'success' => true,
@@ -420,10 +379,6 @@ class GiaSuController extends Controller
         }
     }
 
-    /**
-     * Danh sách gia sư chờ duyệt (TrangThai = 0)
-     * API: GET /api/admin/giasu/pending
-     */
     public function pendingList()
     {
         $pendingList = TaiKhoan::with('giasu', 'phanquyen')
@@ -437,22 +392,14 @@ class GiaSuController extends Controller
             'data' => $pendingList,
         ]);
     }
-    // =============================================
-    // =============================================
 
-
-    /**
-     * Helper function: Trả về mảng thông báo lỗi Tiếng Việt
-     */
     private function getValidationMessages()
     {
         return [
-            // Áp dụng chung
             'required' => 'Thông tin này là bắt buộc, không được để trống.',
             'string' => 'Thông tin này phải là một chuỗi ký tự.',
             'boolean' => 'Giá trị này không hợp lệ.',
-            // Thông báo cụ thể cho TrangThai khi dùng in:0,1,2
-            'TrangThai.in' => 'Trạng thái không hợp lệ. Vui lòng chọn: 0 (Chờ duyệt), 1 (Hoạt động) hoặc 2 (Bị khóa).',
+            'TrangThai.in' => 'Trạng thái không hợp lệ. Vui lòng chọn 0, 1 hoặc 2.',
             'date' => 'Không đúng định dạng ngày tháng.',
             'image' => 'File tải lên phải là hình ảnh.',
             'mimes' => 'Hình ảnh phải có định dạng: :values.',
@@ -461,23 +408,12 @@ class GiaSuController extends Controller
                 'file' => 'Dung lượng file không được vượt quá :max KB (2MB).',
             ],
             'in' => 'Giá trị được chọn không hợp lệ.',
-
-            // Thêm thông báo cụ thể cho TrangThai
-            'TrangThai.in' => 'Trạng thái không hợp lệ. Vui lòng chọn 0, 1 hoặc 2.',
-
-            // Cho Email
             'Email.email' => 'Email không đúng định dạng (ví dụ: ten@gmail.com).',
             'Email.unique' => 'Email này đã có người khác sử dụng.',
-            
-            // Cho Số điện thoại
             'SoDienThoai.regex' => 'Số điện thoại phải là 10 chữ số, bắt đầu bằng số 0.',
             'SoDienThoai.unique' => 'Số điện thoại này đã có người khác sử dụng.',
-
-            // Cho Mật khẩu
             'MatKhau.min' => 'Mật khẩu phải có ít nhất 8 ký tự.',
             'MatKhau.confirmed' => 'Xác nhận mật khẩu không khớp.',
-
-            // Cho Ngày sinh
             'NgaySinh.before' => 'Ngày sinh không thể là một ngày trong tương lai.',
         ];
     }

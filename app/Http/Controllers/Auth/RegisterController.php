@@ -84,7 +84,7 @@ class RegisterController extends Controller
                     'NgaySinh' => null,
                     'GioiTinh' => null,
                     'DiaChi' => null,
-                    'TrangThai' => 2 // Chờ admin duyệt (Đồng bộ với mobile)
+                    'TrangThai' => 0 // Chờ admin duyệt (Đồng bộ với mobile)
                 ]);
             } else {
                 // Tạo hồ sơ Người học - TrangThai = 1 (Đã kích hoạt)
