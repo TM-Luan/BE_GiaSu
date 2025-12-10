@@ -13,41 +13,45 @@ class LichHocWebController extends Controller
     /**
      * Hiển thị trang lịch học (Highlight màu chữ)
      */
-    public function index()
-    {
-        // 1. Lấy ID Người học
-        $nguoiHocId = Auth::user()->nguoiHoc->NguoiHocID;
+   public function index()
+{
+    // 1. Lấy ID Người học
+    $nguoiHocId = Auth::user()->nguoiHoc->NguoiHocID;
 
-        // 2. Lấy ID các lớp (ĐỒNG BỘ: Hiển thị tất cả lịch học có gia sư)
-        $lopHocIds = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
-                            ->whereNotNull('GiaSuID') // Chỉ lấy lớp đã có gia sư
-                            ->pluck('LopYeuCauID');
+    // 2. Lấy ID các lớp (ĐỒNG BỘ API: Chỉ lấy lớp Đang Học)
+    // API sử dụng logic: LopHocYeuCau::where('TrangThai', 'DangHoc')
+    $lopHocIds = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
+                        ->whereNotNull('GiaSuID') 
+                        ->where('TrangThai', 'DangHoc') // <--- QUAN TRỌNG: Thêm điều kiện này để khớp API
+                        ->pluck('LopYeuCauID');
 
-        // 3. Lấy các buổi học
-        $lichHocEvents = LichHoc::whereIn('LopYeuCauID', $lopHocIds)
-                            ->with('lop.monHoc', 'lop.giaSu', 'lop.khoiLop')
-                            ->get();
+    // 3. Lấy các buổi học (ĐỒNG BỘ API: Ẩn các buổi đã Hủy)
+    // API thường dùng điều kiện: where('TrangThai', '!=', 'Huy')
+    $lichHocEvents = LichHoc::whereIn('LopYeuCauID', $lopHocIds)
+                        ->where('TrangThai', '!=', 'Huy') // <--- QUAN TRỌNG: Thêm điều kiện này
+                        ->with('lop.monHoc', 'lop.giaSu', 'lop.khoiLop')
+                        ->get();
 
-        // 4. Format dữ liệu cho calendar view theo tuần
-        $scheduleData = [];
-        foreach ($lichHocEvents as $lich) {
-            $scheduleData[] = [
-                'id' => $lich->LichHocID,
-                'date' => $lich->NgayHoc->format('Y-m-d'),
-                'time' => date('H:i', strtotime($lich->ThoiGianBatDau)),
-                'subject' => $lich->lop->monHoc->TenMon ?? 'N/A',
-                'tutor' => $lich->lop->giaSu->HoTen ?? 'N/A',
-                'isOnline' => $lich->lop->HinhThuc === 'Online',
-                'link' => $lich->DuongDan,
-                'status' => $lich->TrangThai,
-                'grade' => $lich->lop->khoiLop->BacHoc ?? ''
-            ];
-        }
-
-        return view('nguoihoc.lich-hoc-calendar', [
-            'scheduleDataJson' => json_encode($scheduleData)
-        ]);
+    // 4. Format dữ liệu cho calendar view theo tuần (Giữ nguyên)
+    $scheduleData = [];
+    foreach ($lichHocEvents as $lich) {
+        $scheduleData[] = [
+            'id' => $lich->LichHocID,
+            'date' => $lich->NgayHoc->format('Y-m-d'),
+            'time' => date('H:i', strtotime($lich->ThoiGianBatDau)),
+            'subject' => $lich->lop->monHoc->TenMon ?? 'N/A',
+            'tutor' => $lich->lop->giaSu->HoTen ?? 'N/A',
+            'isOnline' => $lich->lop->HinhThuc === 'Online',
+            'link' => $lich->DuongDan,
+            'status' => $lich->TrangThai,
+            'grade' => $lich->lop->khoiLop->BacHoc ?? ''
+        ];
     }
+
+    return view('nguoihoc.lich-hoc-calendar', [
+        'scheduleDataJson' => json_encode($scheduleData)
+    ]);
+}
 
     public function showScheduleForClass($id)
     {

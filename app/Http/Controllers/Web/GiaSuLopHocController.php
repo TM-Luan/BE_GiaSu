@@ -22,7 +22,7 @@ class GiaSuLopHocController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Kiểm tra có phải gia sư không
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
         if (!$giaSu) {
@@ -62,7 +62,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             return back()->with('error', 'Bạn không có quyền thực hiện thao tác này.');
         }
@@ -101,10 +101,10 @@ class GiaSuLopHocController extends Controller
 
             // --- Tạo thông báo cho người học (giống mobile) ---
             $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($lopHoc->LopYeuCauID);
-            
+
             if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
                 $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
-                
+
                 \App\Models\Notification::create([
                     'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
                     'title' => 'Lời mời được chấp nhận',
@@ -134,7 +134,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             return back()->with('error', 'Bạn không có quyền thực hiện thao tác này.');
         }
@@ -157,10 +157,10 @@ class GiaSuLopHocController extends Controller
 
         // --- Tạo thông báo cho người học (giống mobile) ---
         $lopHocInfo = YeuCauNhanLop::with(['lop.nguoiHoc', 'lop.monHoc', 'lop.khoiLop'])->find($yeuCauId);
-        
+
         if ($lopHocInfo && $lopHocInfo->lop && $lopHocInfo->lop->nguoiHoc) {
             $tenLop = ($lopHocInfo->lop->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->lop->khoiLop->TenKhoiLop ?? '');
-            
+
             \App\Models\Notification::create([
                 'user_id' => $lopHocInfo->lop->nguoiHoc->TaiKhoanID,
                 'title' => 'Lời mời bị từ chối',
@@ -181,7 +181,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             return back()->with('error', 'Bạn không có quyền thực hiện thao tác này.');
         }
@@ -213,7 +213,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -237,7 +237,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -262,7 +262,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -288,7 +288,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -317,7 +317,7 @@ class GiaSuLopHocController extends Controller
     /**
      * Xử lý thanh toán phí nhận lớp
      */
-   public function processPayment(Request $request, $id)
+    public function processPayment(Request $request, $id)
     {
         $validated = $request->validate([
             'loai_giao_dich' => 'required|in:VNPAY,MoMo,ZaloPay,ChuyenKhoan'
@@ -325,7 +325,7 @@ class GiaSuLopHocController extends Controller
 
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -352,7 +352,7 @@ class GiaSuLopHocController extends Controller
         // Xử lý cho các phương thức khác (Giữ nguyên logic cũ hoặc phát triển thêm sau)
         try {
             DB::beginTransaction();
-            
+
             GiaoDich::create([
                 'LopYeuCauID' => $lopHoc->LopYeuCauID,
                 'TaiKhoanID' => $user->TaiKhoanID,
@@ -386,8 +386,8 @@ class GiaSuLopHocController extends Controller
         $vnp_HashSecret = env('VNP_HASH_SECRET');
         $vnp_Url = env('VNP_URL');
         // URL trả về xử lý trên Web
-        $vnp_Returnurl = route('giasu.lophoc.payment.vnpay_return'); 
-        
+        $vnp_Returnurl = route('giasu.lophoc.payment.vnpay_return');
+
         $vnp_TxnRef = time() . "_" . $user->TaiKhoanID; // Mã giao dịch
         $vnp_OrderInfo = "Thanh toan phi lop " . $lopHoc->LopYeuCauID;
         $vnp_OrderType = 'billpayment';
@@ -454,14 +454,14 @@ class GiaSuLopHocController extends Controller
     {
         $vnp_HashSecret = env('VNP_HASH_SECRET');
         $vnp_SecureHash = $request->vnp_SecureHash;
-        
+
         $inputData = array();
         foreach ($request->all() as $key => $value) {
             if (substr($key, 0, 4) == "vnp_") {
                 $inputData[$key] = $value;
             }
         }
-        
+
         unset($inputData['vnp_SecureHash']);
         ksort($inputData);
         $i = 0;
@@ -476,7 +476,7 @@ class GiaSuLopHocController extends Controller
         }
 
         $secureHash = hash_hmac('sha512', $hashdata, $vnp_HashSecret);
-        
+
         $vnp_TxnRef = $request->vnp_TxnRef;
         $vnp_ResponseCode = $request->vnp_ResponseCode;
 
@@ -490,7 +490,7 @@ class GiaSuLopHocController extends Controller
                         DB::beginTransaction();
                         try {
                             $giaoDich->update(['TrangThai' => 'ThanhCong']);
-                            
+
                             $lopHoc = LopHocYeuCau::find($giaoDich->LopYeuCauID);
                             if ($lopHoc) {
                                 $lopHoc->update(['TrangThaiThanhToan' => 'DaThanhToan']);
@@ -507,15 +507,15 @@ class GiaSuLopHocController extends Controller
                         }
                     } else {
                         // Đã xử lý trước đó rồi
-                         return redirect()->route('giasu.lophoc.schedule.create', $giaoDich->LopYeuCauID)
-                                ->with('info', 'Giao dịch đã được ghi nhận thành công.');
+                        return redirect()->route('giasu.lophoc.schedule.create', $giaoDich->LopYeuCauID)
+                            ->with('info', 'Giao dịch đã được ghi nhận thành công.');
                     }
                 } else {
                     return redirect()->route('giasu.lophoc.index')->with('error', 'Không tìm thấy giao dịch.');
                 }
             } else {
                 // --- THANH TOÁN THẤT BẠI ---
-                 // Cập nhật trạng thái thất bại nếu tìm thấy giao dịch
+                // Cập nhật trạng thái thất bại nếu tìm thấy giao dịch
                 $giaoDich = GiaoDich::where('MaGiaoDich', $vnp_TxnRef)->first();
                 if ($giaoDich) {
                     $giaoDich->update(['TrangThai' => 'ThatBai']);
@@ -536,7 +536,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -566,7 +566,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -613,16 +613,16 @@ class GiaSuLopHocController extends Controller
             foreach ($buoiHoc as $buoi) {
                 $thu = $buoi['thu']; // Web form: 1=CN, 2=T2, 3=T3,...7=T7
                 $gio = $buoi['gio'];
-                
+
                 // Chuyển đổi web form (1-7) sang mobile API (0-6)
                 // QUAN TRỌNG: 1→0 (CN), 2→1 (T2), 3→2 (T3), 4→3 (T4), 5→4 (T5), 6→5 (T6), 7→6 (T7)
                 $ngayThu = $thu - 1;
-                
+
                 // Logic CHÍNH XÁC giống mobile API (LichHocController.php line 250)
                 // startOfWeek(SUNDAY) trả về Chủ nhật đầu tuần
                 // addDays(0) = Chủ nhật, addDays(1) = Thứ 2, addDays(2) = Thứ 3...
                 $ngayDauTien = $ngayBatDau->copy()->startOfWeek(\Carbon\Carbon::SUNDAY)->addDays($ngayThu);
-                
+
                 // Nếu ngày tìm được < ngày bắt đầu → Lấy tuần sau
                 if ($ngayDauTien->isBefore($ngayBatDau, 'day')) {
                     $ngayDauTien->addWeek();
@@ -639,43 +639,46 @@ class GiaSuLopHocController extends Controller
                     // Kiểm tra trùng lịch
                     if ($this->kiemTraTrungLich($giaSu->GiaSuID, $ngayHoc->format('Y-m-d'), $thoiGianBatDau, $thoiGianKetThuc)) {
                         DB::rollBack();
-                        
+
                         // Lấy thông tin lịch trùng để hiển thị chi tiết
                         $lichTrung = DB::table('LichHoc')
                             ->join('LopHocYeuCau', 'LichHoc.LopYeuCauID', '=', 'LopHocYeuCau.LopYeuCauID')
                             ->where('LopHocYeuCau.GiaSuID', $giaSu->GiaSuID)
                             ->where('LichHoc.NgayHoc', $ngayHoc->format('Y-m-d'))
                             ->where('LichHoc.TrangThai', '!=', 'Huy')
-                            ->where(function($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
+                            ->where(function ($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
                                 $q->where('LichHoc.ThoiGianBatDau', '<', $thoiGianKetThuc)
-                                  ->where('LichHoc.ThoiGianKetThuc', '>', $thoiGianBatDau);
+                                    ->where('LichHoc.ThoiGianKetThuc', '>', $thoiGianBatDau);
                             })
                             ->select('LichHoc.ThoiGianBatDau', 'LichHoc.ThoiGianKetThuc')
                             ->first();
-                        
+
                         $thoiGianTrung = '';
                         if ($lichTrung) {
                             $batDau = \Carbon\Carbon::parse($lichTrung->ThoiGianBatDau)->format('H:i');
                             $ketThuc = \Carbon\Carbon::parse($lichTrung->ThoiGianKetThuc)->format('H:i');
                             $thoiGianTrung = $batDau . '-' . $ketThuc;
                         }
-                        
-                        return back()->with('error', 
-                            '⚠️ Trùng lịch học! Bạn đã có lịch dạy vào ngày ' . 
-                            $ngayHoc->format('d/m/Y') . 
-                            ($thoiGianTrung ? ' (khung giờ ' . $thoiGianTrung . ')' : '') . 
+
+                        return back()->with(
+                            'error',
+                            '⚠️ Trùng lịch học! Bạn đã có lịch dạy vào ngày ' .
+                            $ngayHoc->format('d/m/Y') .
+                            ($thoiGianTrung ? ' (khung giờ ' . $thoiGianTrung . ')' : '') .
                             '. Vui lòng chọn thời gian khác hoặc xóa lịch cũ trước khi tạo lịch mới.'
                         )->withInput();
                     }
 
-                    DB::table('LichHoc')->insert([
+                    LichHoc::create([
                         'LopYeuCauID' => $lopHoc->LopYeuCauID,
                         'NgayHoc' => $ngayHoc->format('Y-m-d'),
                         'ThoiGianBatDau' => $thoiGianBatDau,
                         'ThoiGianKetThuc' => $thoiGianKetThuc,
                         'DuongDan' => $duongDan,
-                        'TrangThai' => 'ChuaDienRa',
-                        'NgayTao' => now()
+                        'TrangThai' => 'SapToi', // <--- SỬA: Đồng bộ với Mobile API
+                        'NgayTao' => now(),
+                        'IsLapLai' => false,     // <--- THÊM: Để Mobile không bị lỗi null
+                        'LichHocGocID' => null   // <--- THÊM
                     ]);
                 }
             }
@@ -702,7 +705,7 @@ class GiaSuLopHocController extends Controller
 
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -732,7 +735,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -786,7 +789,7 @@ class GiaSuLopHocController extends Controller
     {
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -829,9 +832,9 @@ class GiaSuLopHocController extends Controller
             ->where('LopHocYeuCau.GiaSuID', $giasuId)
             ->where('LichHoc.NgayHoc', $ngayHoc)
             ->where('LichHoc.TrangThai', '!=', 'Huy')
-            ->where(function($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
+            ->where(function ($q) use ($thoiGianBatDau, $thoiGianKetThuc) {
                 $q->where('LichHoc.ThoiGianBatDau', '<', $thoiGianKetThuc)
-                  ->where('LichHoc.ThoiGianKetThuc', '>', $thoiGianBatDau);
+                    ->where('LichHoc.ThoiGianKetThuc', '>', $thoiGianBatDau);
             });
 
         if ($lichHocId) {
@@ -857,7 +860,7 @@ class GiaSuLopHocController extends Controller
 
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
@@ -874,7 +877,7 @@ class GiaSuLopHocController extends Controller
                 $ngayHoc = $validated['NgayHoc'] ?? $lichHoc->NgayHoc;
                 $thoiGianBatDau = ($validated['ThoiGianBatDau'] ?? substr($lichHoc->ThoiGianBatDau, 0, 5)) . ':00';
                 $thoiGianKetThuc = ($validated['ThoiGianKetThuc'] ?? substr($lichHoc->ThoiGianKetThuc, 0, 5)) . ':00';
-                
+
                 if ($this->kiemTraTrungLich($giaSu->GiaSuID, $ngayHoc, $thoiGianBatDau, $thoiGianKetThuc, $lichHocId)) {
                     return back()->with('error', '⚠️ Trùng lịch học. Vui lòng chọn thời gian khác.')->withInput();
                 }
@@ -893,8 +896,8 @@ class GiaSuLopHocController extends Controller
             $message = 'Cập nhật lịch học thành công!';
             if ($request->has('DuongDan')) {
                 $hinhThuc = $lichHoc->lopHocYeuCau->HinhThuc ?? 'Offline';
-                $message = $hinhThuc === 'Online' 
-                    ? '✅ Đã cập nhật link học online!' 
+                $message = $hinhThuc === 'Online'
+                    ? '✅ Đã cập nhật link học online!'
                     : '✅ Đã cập nhật địa chỉ học!';
             }
 
@@ -916,7 +919,7 @@ class GiaSuLopHocController extends Controller
 
         $user = Auth::user();
         $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
-        
+
         if (!$giaSu) {
             abort(403);
         }
