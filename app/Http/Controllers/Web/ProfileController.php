@@ -193,7 +193,7 @@ class ProfileController extends Controller
             'TruongDaoTao' => $validated['TruongDaoTao'] ?? null,
             'ChuyenNganh' => $validated['ChuyenNganh'] ?? null,
             'ThanhTich' => $validated['ThanhTich'] ?? null,
-            'KinhNghiem' => isset($validated['KinhNghiem']) ? $validated['KinhNghiem'] . ' năm' : null,
+            'KinhNghiem' => $validated['KinhNghiem'] ?? null,
             'MonID' => $validated['MonID'] ?? null,
         ];
         

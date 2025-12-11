@@ -315,7 +315,7 @@ if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
         return $this->respondSuccess('Đã cập nhật đề nghị.', $this->toResource($yeuCau));
     }
 
-    public function xacNhanYeuCau(Request $request, int $yeuCauId)
+   public function xacNhanYeuCau(Request $request, int $yeuCauId)
     {
         $yeuCau = YeuCauNhanLop::find($yeuCauId);
         if (!$yeuCau) {
@@ -342,47 +342,40 @@ if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
                 'TrangThai' => self::STATUS_REJECTED,
                 'NgayCapNhat' => Carbon::now(),
             ]);
+
+        // --- GỬI THÔNG BÁO ---
         if ($yeuCau->NguoiGuiTaiKhoanID) {
-            $lopHoc = $yeuCau->lopHoc; // Đảm bảo model YeuCauNhanLop có quan hệ 'lopHoc' (belongsTo LopHocYeuCau)
+            $lopHoc = $yeuCau->lopHoc;
             $tenLop = ($lopHoc->monHoc->TenMon ?? 'lớp') . ' ' . ($lopHoc->khoiLop->TenKhoiLop ?? '');
 
             $title = 'Yêu cầu được chấp nhận';
             $message = "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!";
 
-           Notification::create([
-    'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
-    'title' => 'Yêu cầu được chấp nhận',
-    'message' => "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
-    'type' => 'request_accepted',
-    'related_id' => $yeuCau->LopYeuCauID,
-    'is_read' => false,
-]);
+            // 1. Lưu thông báo vào CSDL
+            Notification::create([
+                'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
+                'title' => $title,
+                'message' => $message,
+                'type' => 'request_accepted',
+                'related_id' => $yeuCau->LopYeuCauID,
+                'is_read' => false,
+            ]);
 
-// === THÊM ĐOẠN NÀY ===
-$taiKhoanNguoiGui = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
-if ($taiKhoanNguoiGui && $taiKhoanNguoiGui->fcm_token) {
-    FCMHelper::send(
-        $taiKhoanNguoiGui->fcm_token,
-        'Yêu cầu được chấp nhận',
-        "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
-        ['type' => 'request_accepted', 'id' => $yeuCau->LopYeuCauID]
-    );
-}
-
-            // B. Gửi Push Notification
-            $taiKhoanNguoiNhan = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
-            if ($taiKhoanNguoiNhan && $taiKhoanNguoiNhan->fcm_token) {
+            // 2. Gửi Push Notification (FCM) - CHỈ GIỮ LẠI 1 LẦN NÀY
+            $taiKhoanNhan = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
+            if ($taiKhoanNhan && $taiKhoanNhan->fcm_token) {
                 FCMHelper::send(
-                    $taiKhoanNguoiNhan->fcm_token,
+                    $taiKhoanNhan->fcm_token,
                     $title,
                     $message,
                     [
                         'type' => 'request_accepted',
-                        'id' => $yeuCau->LopYeuCauID
+                        'id' => (string)$yeuCau->LopYeuCauID
                     ]
                 );
             }
         }
+        
         return $this->respondSuccess('Đã xác nhận đề nghị.', $this->toResource($yeuCau));
     }
     public function tuChoiYeuCau(Request $request, int $yeuCauId)
@@ -409,10 +402,24 @@ if ($taiKhoanNguoiGui && $taiKhoanNguoiGui->fcm_token) {
                 'related_id' => $yeuCau->LopYeuCauID,
                 'is_read' => false,
             ]);
+    // 2. [BỔ SUNG] Gửi Push Notification (FCM)
+            $taiKhoanNhan = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
+            
+            if ($taiKhoanNhan && $taiKhoanNhan->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanNhan->fcm_token,
+                    'Yêu cầu bị từ chối',
+                    'Yêu cầu kết nối lớp học của bạn đã bị từ chối.',
+                    [
+                        'type' => 'request_rejected',
+                        'id' => (string)$yeuCau->LopYeuCauID
+                    ]
+                );
+            }
         }
+        
         return $this->respondSuccess('Đã từ chối đề nghị.', $this->toResource($yeuCau));
     }
-
     public function huyYeuCau(Request $request, int $yeuCauId)
     {
         $yeuCau = YeuCauNhanLop::find($yeuCauId);

@@ -62,16 +62,25 @@
                     <input type="number" name="HocPhi" value="{{ $lopHoc->HocPhi }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
                 </div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Thời lượng (phút/buổi)</label>
-                    <input type="number" name="ThoiLuong" value="{{ $lopHoc->ThoiLuong }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
-                </div>
+              <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Thời lượng (phút/buổi)</label>
+    <select name="ThoiLuong" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+        <option value="60" {{ $lopHoc->ThoiLuong == 60 ? 'selected' : '' }}>60 phút</option>
+        <option value="90" {{ $lopHoc->ThoiLuong == 90 ? 'selected' : '' }}>90 phút</option>
+        <option value="120" {{ $lopHoc->ThoiLuong == 120 ? 'selected' : '' }}>120 phút</option>
+    </select>
+</div>
 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Số buổi / tuần</label>
-                    <input type="number" name="SoBuoiTuan" value="{{ $lopHoc->SoBuoiTuan }}" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
-                </div>
-
+<div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Số buổi / tuần</label>
+    <select name="SoBuoiTuan" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">
+        @for($i = 1; $i <= 5; $i++)
+            <option value="{{ $i }}" {{ $lopHoc->SoBuoiTuan == $i ? 'selected' : '' }}>
+                {{ $i }} buổi/tuần
+            </option>
+        @endfor
+    </select>
+</div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Lịch học mong muốn</label>
                     <input type="text" name="LichHocMongMuon" value="{{ $lopHoc->LichHocMongMuon }}" placeholder="Ví dụ: Tối thứ 2, 4, 6" class="w-full rounded-xl border-gray-200 focus:ring-blue-500 focus:border-blue-500">

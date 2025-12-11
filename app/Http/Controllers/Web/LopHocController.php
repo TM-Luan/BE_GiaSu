@@ -24,7 +24,7 @@ class LopHocController extends Controller
 
         // Khởi tạo query
         $query = LopHocYeuCau::where('NguoiHocID', $nguoiHocId)
-                            ->with('monHoc', 'khoiLop', 'giaSu','yeuCauNhanLops'); // Lấy kèm thông tin
+            ->with('monHoc', 'khoiLop', 'giaSu', 'yeuCauNhanLops'); // Lấy kèm thông tin
 
         // Lọc theo Trạng thái (Tất cả, Đang tìm, Đã có, Hoàn thành)
         if ($request->has('trangthai') && !empty($request->trangthai)) {
@@ -34,11 +34,11 @@ class LopHocController extends Controller
         // Lọc theo Từ khóa (Tìm kiếm tên lớp, môn học)
         if ($request->has('q') && !empty($request->q)) {
             $keyword = $request->q;
-            $query->whereHas('monHoc', function($q) use ($keyword) {
+            $query->whereHas('monHoc', function ($q) use ($keyword) {
                 $q->where('TenMon', 'LIKE', "%{$keyword}%");
             });
         }
-        
+
         // Sắp xếp mới nhất lên đầu
         $lopHocList = $query->orderBy('NgayTao', 'desc')->paginate(9);
 
@@ -73,8 +73,8 @@ class LopHocController extends Controller
             'DoiTuongID' => 'required|exists:DoiTuong,DoiTuongID',
             'HinhThuc' => 'required|in:Online,Offline',
             'HocPhi' => 'required|numeric|min:0',
-            'ThoiLuong' => 'required|integer|min:30', // Thời lượng (phút)
-            'SoBuoiTuan' => 'required|integer|min:1',
+            'ThoiLuong' => 'required|integer|in:60,90,120', // Thời lượng (phút)
+            'SoBuoiTuan' => 'required|integer|min:1|max:5',
             'LichHocMongMuon' => 'required|string|max:255',
             'MoTa' => 'nullable|string|max:1000',
         ]);
@@ -171,7 +171,7 @@ class LopHocController extends Controller
 
         if ($lopHocInfo && $giaSuInfo) {
             $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
-            
+
             \App\Models\Notification::create([
                 'user_id' => $giaSuInfo->TaiKhoanID,
                 'title' => 'Yêu cầu được chấp nhận',
@@ -180,6 +180,18 @@ class LopHocController extends Controller
                 'related_id' => $lopHocInfo->LopYeuCauID,
                 'is_read' => false,
             ]);
+            $taiKhoanGiaSu = \App\Models\TaiKhoan::find($giaSuInfo->TaiKhoanID);
+            if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
+                \App\Helpers\FCMHelper::send(
+                    $taiKhoanGiaSu->fcm_token,
+                    'Yêu cầu được chấp nhận',
+                    "Yêu cầu dạy lớp $tenLop đã được chấp nhận",
+                    [
+                        'type' => 'request_accepted',
+                        'id' => (string) $lopHocInfo->LopYeuCauID
+                    ]
+                );
+            }
         }
 
         return back()->with('success', 'Đã chấp nhận gia sư thành công! Lớp học đã chuyển sang trạng thái Đang học.');
@@ -208,7 +220,7 @@ class LopHocController extends Controller
 
         if ($lopHocInfo && $giaSuInfo) {
             $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
-            
+
             \App\Models\Notification::create([
                 'user_id' => $giaSuInfo->TaiKhoanID,
                 'title' => 'Yêu cầu bị từ chối',
@@ -217,7 +229,20 @@ class LopHocController extends Controller
                 'related_id' => $lopHocInfo->LopYeuCauID,
                 'is_read' => false,
             ]);
+            $taiKhoanGiaSu = \App\Models\TaiKhoan::find($giaSuInfo->TaiKhoanID);
+            if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
+                \App\Helpers\FCMHelper::send(
+                    $taiKhoanGiaSu->fcm_token,
+                    'Yêu cầu bị từ chối',
+                    "Yêu cầu dạy lớp $tenLop đã bị từ chối",
+                    [
+                        'type' => 'request_rejected',
+                        'id' => (string) $lopHocInfo->LopYeuCauID
+                    ]
+                );
+            }
         }
+
 
         return back()->with('success', 'Đã từ chối yêu cầu.');
     }
@@ -349,10 +374,10 @@ class LopHocController extends Controller
         $lopHoc = LopHocYeuCau::where('LopYeuCauID', $id)
             ->where('NguoiHocID', $nguoiHocId)
             ->with([
-                'monHoc', 
-                'khoiLop', 
+                'monHoc',
+                'khoiLop',
                 'giaSu.taiKhoan', // Lấy thông tin gia sư nếu đã có
-                'yeuCauNhanLops' => function($q) {
+                'yeuCauNhanLops' => function ($q) {
                     $q->orderBy('NgayTao', 'desc'); // Lấy lịch sử đề nghị
                 }
             ])
@@ -382,9 +407,9 @@ class LopHocController extends Controller
 
         // 3. [MỚI] Lấy danh sách khiếu nại CỦA TÔI về LỚP NÀY
         $lichSuKhieuNai = KhieuNai::where('TaiKhoanID', $taiKhoanId)
-                                  ->where('LopYeuCauID', $id)
-                                  ->orderBy('NgayTao', 'desc')
-                                  ->get();
+            ->where('LopYeuCauID', $id)
+            ->orderBy('NgayTao', 'desc')
+            ->get();
 
         // 4. Truyền biến $lichSuKhieuNai sang View
         return view('nguoihoc.lop-hoc-complaint', compact('lopHoc', 'lichSuKhieuNai'));
@@ -407,12 +432,12 @@ class LopHocController extends Controller
         $lopHoc = LopHocYeuCau::where('LopYeuCauID', $id)
             ->where('NguoiHocID', $nguoiHocId)
             ->firstOrFail();
-            
+
         // === 🛑 THÊM LOGIC CHỐNG SPAM TẠI ĐÂY ===
         // Kiểm tra xem tài khoản này đã khiếu nại lớp này chưa
         $daGui = KhieuNai::where('TaiKhoanID', $taiKhoanId)
-                        ->where('LopYeuCauID', $lopHoc->LopYeuCauID)
-                        ->exists();
+            ->where('LopYeuCauID', $lopHoc->LopYeuCauID)
+            ->exists();
 
         if ($daGui) {
             // Nếu đã gửi rồi -> Trả về thông báo lỗi
@@ -448,11 +473,11 @@ class LopHocController extends Controller
     public function updateComplaint(Request $request, $khieuNaiId)
     {
         $taiKhoanId = Auth::id();
-        
+
         // 1. Tìm khiếu nại chính chủ
         $khieuNai = KhieuNai::where('KhieuNaiID', $khieuNaiId)
-                            ->where('TaiKhoanID', $taiKhoanId)
-                            ->firstOrFail();
+            ->where('TaiKhoanID', $taiKhoanId)
+            ->firstOrFail();
 
         // 2. Kiểm tra thời gian (5 phút)
         $thoiGianTao = \Carbon\Carbon::parse($khieuNai->NgayTao);
@@ -467,7 +492,7 @@ class LopHocController extends Controller
 
         // 4. Cập nhật
         $request->validate(['NoiDung' => 'required|string|min:20|max:1000']);
-        
+
         $khieuNai->update([
             'NoiDung' => $request->NoiDung
         ]);
@@ -481,11 +506,11 @@ class LopHocController extends Controller
     public function destroyComplaint($khieuNaiId)
     {
         $taiKhoanId = Auth::id();
-        
+
         // 1. Tìm khiếu nại chính chủ
         $khieuNai = KhieuNai::where('KhieuNaiID', $khieuNaiId)
-                            ->where('TaiKhoanID', $taiKhoanId)
-                            ->firstOrFail();
+            ->where('TaiKhoanID', $taiKhoanId)
+            ->firstOrFail();
 
         // 2. Kiểm tra thời gian (5 phút)
         $thoiGianTao = \Carbon\Carbon::parse($khieuNai->NgayTao);

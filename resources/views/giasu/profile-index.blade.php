@@ -183,21 +183,35 @@
                                    placeholder="VD: Toán học, Vật lý...">
                             @error('ChuyenNganh') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
                         </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Thành tích</label>
-                            <textarea name="ThanhTich" rows="3" 
-                                      class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
-                                      placeholder="Các giải thưởng, chứng chỉ hoặc thành tích đạt được...">{{ old('ThanhTich', $user->giaSu->ThanhTich) }}</textarea>
-                            @error('ThanhTich') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Kinh nghiệm (năm)</label>
-                            <input type="number" name="KinhNghiem" value="{{ old('KinhNghiem', $user->giaSu->KinhNghiem) }}" min="0" 
-                                   class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
-                            @error('KinhNghiem') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Môn dạy</label>
+                       <div class="md:col-span-2">
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Thành tích</label>
+    <textarea name="ThanhTich" rows="3" 
+              class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all" 
+              placeholder="Các giải thưởng, chứng chỉ hoặc thành tích đạt được...">{{ old('ThanhTich', $user->giaSu->ThanhTich) }}</textarea>
+    @error('ThanhTich') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+</div>
+
+<div>
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Kinh nghiệm giảng dạy</label>
+    <select name="KinhNghiem" 
+            class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
+        @php
+            $kn = old('KinhNghiem', $user->giaSu->KinhNghiem);
+        @endphp
+        
+        <option value="Chưa có" {{ $kn == 'Chưa có' ? 'selected' : '' }}>Chưa có</option>
+        <option value="1 năm" {{ $kn == '1 năm' ? 'selected' : '' }}>1 năm</option>
+        <option value="2 năm" {{ $kn == '2 năm' ? 'selected' : '' }}>2 năm</option>
+        <option value="3 năm" {{ $kn == '3 năm' ? 'selected' : '' }}>3 năm</option>
+        <option value="4 năm" {{ $kn == '4 năm' ? 'selected' : '' }}>4 năm</option>
+        <option value="5 năm" {{ $kn == '5 năm' ? 'selected' : '' }}>5 năm</option>
+        <option value="Trên 5 năm" {{ $kn == 'Trên 5 năm' ? 'selected' : '' }}>&gt; 5 năm</option>
+    </select>
+    @error('KinhNghiem') <p class="text-sm text-red-600 mt-1">{{ $message }}</p> @enderror
+</div>
+
+<div>
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Môn dạy</label>
                             <select name="MonID" 
                                     class="w-full px-4 py-3 text-base rounded-xl border-2 border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all">
                                 <option value="">Chọn môn học</option>
