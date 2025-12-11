@@ -201,23 +201,32 @@ class AuthController extends Controller
         ], 200);
     }
 
-    public function logout(Request $request)
-    {
-        try {
-            $request->user()->currentAccessToken()->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Đã đăng xuất thành công'
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Đăng xuất thất bại'
-            ], 500);
+public function logout(Request $request)
+{
+    try {
+        $user = $request->user();
+        
+        // 1. Xóa FCM Token của user này để tránh gửi nhầm thiết bị sau này
+        if ($user) {
+            $user->fcm_token = null;
+            $user->save();
         }
+
+        // 2. Xóa token đăng nhập (code cũ)
+        $user->currentAccessToken()->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Đã đăng xuất thành công'
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Đăng xuất thất bại'
+        ], 500);
     }
+}
 
     /**
      * SỬA 2: THÊM LOGIC LẤY THÔNG TIN NGƯỜI HỌC (roleId == 3)
