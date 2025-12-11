@@ -50,8 +50,14 @@
                         <div class="mt-2">
                             <span class="inline-block h-32 w-32 rounded-full overflow-hidden bg-gray-100">
                                 <template x-if="!photoPreview">
-                                    <img src="{{ $user->nguoiHoc->AnhDaiDien ? asset('storage/' . $user->nguoiHoc->AnhDaiDien) : 'https://ui-avatars.com/api/?name=' . urlencode($user->nguoiHoc->HoTen) . '&background=random&size=128' }}" 
-                                         alt="Ảnh đại diện" class="h-full w-full object-cover">
+                                    <img src="{{ 
+    $user->nguoiHoc->AnhDaiDien 
+        ? (Str::startsWith($user->nguoiHoc->AnhDaiDien, 'http') 
+            ? $user->nguoiHoc->AnhDaiDien 
+            : asset('storage/' . $user->nguoiHoc->AnhDaiDien)) 
+        : 'https://ui-avatars.com/api/?name=' . urlencode($user->nguoiHoc->HoTen) . '&background=random&size=128' 
+    }}" 
+    alt="Ảnh đại diện" class="h-full w-full object-cover">
                                 </template>
                                 <template x-if="photoPreview">
                                     <img :src="photoPreview" class="h-full w-full object-cover">
