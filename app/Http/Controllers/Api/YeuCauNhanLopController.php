@@ -13,6 +13,9 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\Notification;
+// ... các import cũ giữ nguyên
+use App\Models\TaiKhoan; // <--- THÊM import này
+use App\Helpers\FCMHelper; // <--- THÊM import này (đảm bảo bạn đã tạo file này)
 class YeuCauNhanLopController extends Controller
 {
     private const STATUS_PENDING = 'Pending';
@@ -145,29 +148,53 @@ class YeuCauNhanLopController extends Controller
             'NgayCapNhat' => Carbon::now(),
         ]);
 
-        // --- [BẮT ĐẦU ĐOẠN CODE THÊM VÀO] ---
+      // [ĐOẠN CODE XỬ LÝ THÔNG BÁO]
         $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID);
 
         if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
             $tenGiaSu = $user->HoTen ?? 'Một gia sư';
             $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Môn học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            
+            $title = 'Yêu cầu dạy mới';
+            $message = "$tenGiaSu đã đăng ký dạy lớp: $tenLop";
 
-            Notification::create([
-                'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
-                'title' => 'Yêu cầu dạy mới',
-                'message' => "$tenGiaSu đã đăng ký dạy lớp: $tenLop", // Hiện rõ tên người và lớp
-                'type' => 'request_received',
-                'related_id' => $lopHocInfo->LopYeuCauID, // QUAN TRỌNG: Lưu ID Lớp để chuyển trang
-                'is_read' => false,
-            ]);
+           Notification::create([
+    'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
+    'title' => 'Yêu cầu dạy mới',
+    'message' => "$tenGiaSu đã đăng ký dạy lớp: $tenLop",
+    'type' => 'request_received',
+    'related_id' => $lopHocInfo->LopYeuCauID,
+    'is_read' => false,
+]);
+
+// === THÊM ĐOẠN NÀY ===
+$taiKhoanNhan = TaiKhoan::find($lopHocInfo->nguoiHoc->TaiKhoanID);
+if ($taiKhoanNhan && $taiKhoanNhan->fcm_token) {
+    FCMHelper::send(
+        $taiKhoanNhan->fcm_token,
+        'Yêu cầu dạy mới',
+        "$tenGiaSu đã đăng ký dạy lớp: $tenLop",
+        ['type' => 'request_received', 'id' => $lopHocInfo->LopYeuCauID]
+    );
+}
+            // B. Gửi Push Notification sang Firebase (PHẦN THÊM MỚI)
+            // Tìm tài khoản người học để lấy fcm_token
+            $taiKhoanNguoiHoc = TaiKhoan::find($lopHocInfo->nguoiHoc->TaiKhoanID);
+            
+            if ($taiKhoanNguoiHoc && $taiKhoanNguoiHoc->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanNguoiHoc->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'type' => 'request_received',
+                        'id' => $lopHocInfo->LopYeuCauID
+                    ]
+                );
+            }
         }
-        // --- [KẾT THÚC ĐOẠN CODE THÊM VÀO] ---
 
-        return $this->respondSuccess(
-            'Gửi đề nghị dạy thành công.',
-            $this->toResource($yeuCau),
-            201
-        );
+        return $this->respondSuccess('Gửi đề nghị dạy thành công.', $this->toResource($yeuCau), 201);
     }
 
     // ... (Các hàm còn lại của YeuCauNhanLopController giữ nguyên) ...
@@ -210,37 +237,55 @@ class YeuCauNhanLopController extends Controller
             'NgayTao' => Carbon::now(),
             'NgayCapNhat' => Carbon::now(),
         ]);
-        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID); // Thêm .taiKhoan để lấy SĐT nếu cần
-
-        $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->LopYeuCauID);
-
-        // Lấy tên người thực hiện hành động (Người học)
-        $tenNguoiGui = Auth::user()->HoTen ?? 'Người dùng';
-
-        // --- SỬA LỖI: Lấy thông tin Gia Sư để gửi thông báo ---
+      // [ĐOẠN CODE XỬ LÝ THÔNG BÁO]
+        $lopHocInfo = LopHocYeuCau::with(['monHoc', 'khoiLop'])->find($lopId);
+        $tenNguoiGui = Auth::user()->HoTen ?? 'Một phụ huynh/học viên';
         $giaSuNhan = GiaSu::find($giaSuId);
 
         if ($lopHocInfo && $giaSuNhan) {
-            // Tạo nội dung thông báo
-            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp') . ' ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+            
+            $title = 'Lời mời dạy mới';
             $message = "$tenNguoiGui đã mời bạn dạy lớp: $tenLop";
 
             Notification::create([
-                'user_id' => $giaSuNhan->TaiKhoanID, // <--- SỬA: Gửi đến Tài khoản ID của Gia Sư
-                'title' => 'Lời mời dạy mới',      // <--- SỬA: Tiêu đề rõ ràng hơn
-                'message' => $message,
-                'type' => 'invitation_received',  // <--- NÊN DÙNG: Loại riêng để FE hiển thị icon khác (nếu có) hoặc dùng 'request_received'
-                'related_id' => $lopHocInfo->LopYeuCauID,
-                'is_read' => false,
-                'created_at' => Carbon::now(), // Thêm thời gian tạo nếu model không tự động
-            ]);
+    'user_id' => $giaSuNhan->TaiKhoanID,
+    'title' => 'Lời mời dạy mới',
+    'message' => $message,
+    'type' => 'invitation_received',
+    'related_id' => $lopHocInfo->LopYeuCauID,
+    'is_read' => false,
+    'created_at' => Carbon::now(),
+]);
+
+// === THÊM ĐOẠN NÀY ===
+$taiKhoanGiaSu = TaiKhoan::find($giaSuNhan->TaiKhoanID);
+if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
+    FCMHelper::send(
+        $taiKhoanGiaSu->fcm_token,
+        'Lời mời dạy mới',
+        $message,
+        ['type' => 'invitation_received', 'id' => $lopHocInfo->LopYeuCauID]
+    );
+}
+
+            // B. Gửi Push Notification (PHẦN THÊM MỚI)
+            $taiKhoanGiaSu = TaiKhoan::find($giaSuNhan->TaiKhoanID);
+            
+            if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanGiaSu->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'type' => 'invitation_received', // Type này để Flutter bắt sự kiện click
+                        'id' => $lopHocInfo->LopYeuCauID // ID để mở màn hình chi tiết
+                    ]
+                );
+            }
         }   
 
-        return $this->respondSuccess(
-            'Đã gửi lời mời tới gia sư.',
-            $this->toResource($yeuCau),
-            201
-        );
+        return $this->respondSuccess('Đã gửi lời mời tới gia sư.', $this->toResource($yeuCau), 201);
     }
 
     public function capNhatYeuCau(Request $request, int $yeuCauId)
@@ -298,22 +343,48 @@ class YeuCauNhanLopController extends Controller
                 'NgayCapNhat' => Carbon::now(),
             ]);
         if ($yeuCau->NguoiGuiTaiKhoanID) {
-            // Lấy thông tin lớp để hiển thị trong thông báo
-            $lopHoc = $yeuCau->lopHoc;
-            $tenLop = ($lopHoc->monHoc->TenMon ?? 'lớp học') . ' ' . ($lopHoc->khoiLop->TenKhoiLop ?? '');
+            $lopHoc = $yeuCau->lopHoc; // Đảm bảo model YeuCauNhanLop có quan hệ 'lopHoc' (belongsTo LopHocYeuCau)
+            $tenLop = ($lopHoc->monHoc->TenMon ?? 'lớp') . ' ' . ($lopHoc->khoiLop->TenKhoiLop ?? '');
 
-            Notification::create([
-                'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
-                'title' => 'Yêu cầu được chấp nhận',
-                'message' => "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
-                'type' => 'request_accepted',
-                'related_id' => $yeuCau->LopYeuCauID, // Lưu ID Lớp
-                'is_read' => false,
-            ]);
+            $title = 'Yêu cầu được chấp nhận';
+            $message = "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!";
+
+           Notification::create([
+    'user_id' => $yeuCau->NguoiGuiTaiKhoanID,
+    'title' => 'Yêu cầu được chấp nhận',
+    'message' => "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
+    'type' => 'request_accepted',
+    'related_id' => $yeuCau->LopYeuCauID,
+    'is_read' => false,
+]);
+
+// === THÊM ĐOẠN NÀY ===
+$taiKhoanNguoiGui = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
+if ($taiKhoanNguoiGui && $taiKhoanNguoiGui->fcm_token) {
+    FCMHelper::send(
+        $taiKhoanNguoiGui->fcm_token,
+        'Yêu cầu được chấp nhận',
+        "Yêu cầu dạy lớp $tenLop của bạn đã được chấp nhận!",
+        ['type' => 'request_accepted', 'id' => $yeuCau->LopYeuCauID]
+    );
+}
+
+            // B. Gửi Push Notification
+            $taiKhoanNguoiNhan = TaiKhoan::find($yeuCau->NguoiGuiTaiKhoanID);
+            if ($taiKhoanNguoiNhan && $taiKhoanNguoiNhan->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanNguoiNhan->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'type' => 'request_accepted',
+                        'id' => $yeuCau->LopYeuCauID
+                    ]
+                );
+            }
         }
         return $this->respondSuccess('Đã xác nhận đề nghị.', $this->toResource($yeuCau));
     }
-
     public function tuChoiYeuCau(Request $request, int $yeuCauId)
     {
         $yeuCau = YeuCauNhanLop::find($yeuCauId);

@@ -76,6 +76,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'index']);
     
     // Đánh dấu đã đọc 1 thông báo
+    Route::post('/notifications/update-token', [NotificationController::class, 'updateDeviceToken']);
     Route::put('/notifications/{id}/read', [NotificationController::class, 'markAsRead']);
     Route::post('/vnpay/create-url', [VnPayController::class, 'createPaymentUrl']);
 });

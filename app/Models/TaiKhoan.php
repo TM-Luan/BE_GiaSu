@@ -14,7 +14,7 @@ class TaiKhoan extends Authenticatable
     public $timestamps = false; // schema dùng NgayTao default
 
     protected $fillable = [
-        'Email', 'MatKhauHash', 'SoDienThoai', 'TrangThai'
+        'Email', 'MatKhauHash', 'SoDienThoai', 'TrangThai','fcm_token'
     ];
 
     protected $hidden = [

@@ -47,4 +47,38 @@ class NotificationController extends Controller
 
         return response()->json(['success' => false, 'message' => 'Không tìm thấy thông báo'], 404);
     }
+    // app/Http/Controllers/Api/NotificationController.php
+
+// Thêm method này vào trong class NotificationController
+public function updateDeviceToken(Request $request)
+{
+    $request->validate([
+        'fcm_token' => 'required|string',
+    ]);
+
+    $user = $request->user();
+    if (!$user) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unauthorized'
+        ], 401);
+    }
+
+    try {
+        // Cập nhật token cho user hiện tại
+        // Lưu ý: User lấy từ request->user() là model TaiKhoan (do cấu hình auth)
+        $user->fcm_token = $request->fcm_token;
+        $user->save();
+
+        return response()->json([
+            'success' => true, 
+            'message' => 'Cập nhật token thiết bị thành công'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Lỗi: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

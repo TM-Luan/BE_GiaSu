@@ -9,7 +9,8 @@ use App\Models\YeuCauNhanLop;
 use App\Models\LopHocYeuCau;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB; // <<< QUAN TRỌNG: Thêm import DB
-
+use App\Helpers\FCMHelper; // <--- [1] THÊM DÒNG NÀY
+use App\Models\TaiKhoan;
 class NguoiHocDashboardController extends Controller
 {
     /**
@@ -156,7 +157,7 @@ class NguoiHocDashboardController extends Controller
         }
 
         // 3. Tạo lời mời (dựa trên CSDL sql.sql)
-        \App\Models\YeuCauNhanLop::create([
+            YeuCauNhanLop::create([
             'LopYeuCauID' => $request->lop_yeu_cau_id,
             'GiaSuID' => $request->gia_su_id,
             'NguoiGuiTaiKhoanID' => Auth::id(), 
@@ -166,26 +167,44 @@ class NguoiHocDashboardController extends Controller
             'NgayCapNhat' => now()
         ]);
 
-        // --- Tạo thông báo cho gia sư (giống mobile) ---
         $lopHocInfo = LopHocYeuCau::with(['nguoiHoc.taiKhoan', 'monHoc', 'khoiLop'])->find($request->lop_yeu_cau_id);
-        $tenNguoiGui = Auth::user()->HoTen ?? 'Người dùng';
-        $giaSuNhan = \App\Models\GiaSu::find($request->gia_su_id);
+        $giaSuNhan = GiaSu::find($request->gia_su_id);
 
         if ($lopHocInfo && $giaSuNhan) {
             $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
-            $message = "$tenNguoiGui đã mời bạn dạy lớp: $tenLop";
+            
+            // [QUAN TRỌNG] Khai báo biến $title và $message ở đây
+            $title = 'Lời mời dạy mới';
+            $message = "Bạn có lời mời dạy lớp: $tenLop";
 
+            // A. Lưu vào Database (Sử dụng biến vừa tạo)
             \App\Models\Notification::create([
                 'user_id' => $giaSuNhan->TaiKhoanID,
-                'title' => 'Lời mời dạy mới',
-                'message' => $message,
+                'title' => $title, // Dùng biến $title
+                'message' => $message, // Dùng biến $message
                 'type' => 'invitation_received',
                 'related_id' => $lopHocInfo->LopYeuCauID,
                 'is_read' => false,
                 'created_at' => now(),
             ]);
+
+            // B. Gửi Push Notification sang Firebase
+            $taiKhoanGiaSu = TaiKhoan::find($giaSuNhan->TaiKhoanID);
+            
+            if ($taiKhoanGiaSu && $taiKhoanGiaSu->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanGiaSu->fcm_token,
+                    $title,   // Biến $title đã có giá trị
+                    $message, // Biến $message đã có giá trị
+                    [
+                        'type' => 'invitation_received',
+                        'id' => (string)$lopHocInfo->LopYeuCauID
+                    ]
+                );
+            }
         }
 
         return back()->with('success', 'Đã gửi lời mời thành công!');
     }
+
 }

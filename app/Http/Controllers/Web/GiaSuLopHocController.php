@@ -11,7 +11,8 @@ use App\Models\YeuCauNhanLop;
 use App\Models\GiaSu;
 use App\Models\GiaoDich;
 use App\Models\LichHoc;
-
+use App\Helpers\FCMHelper;
+use App\Models\TaiKhoan;
 class GiaSuLopHocController extends Controller
 {
     /**
@@ -99,20 +100,38 @@ class GiaSuLopHocController extends Controller
                 ->where('TrangThai', 'Pending')
                 ->update(['TrangThai' => 'Rejected', 'NgayCapNhat' => now()]);
 
-            // --- Tạo thông báo cho người học (giống mobile) ---
+            // --- Tạo thông báo cho người học ---
             $lopHocInfo = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop'])->find($lopHoc->LopYeuCauID);
 
             if ($lopHocInfo && $lopHocInfo->nguoiHoc) {
                 $tenLop = ($lopHocInfo->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->khoiLop->TenKhoiLop ?? '');
+                
+                $title = 'Lời mời được chấp nhận';
+                $message = "Gia sư đã chấp nhận dạy lớp $tenLop";
 
+                // A. Lưu DB
                 \App\Models\Notification::create([
                     'user_id' => $lopHocInfo->nguoiHoc->TaiKhoanID,
-                    'title' => 'Lời mời được chấp nhận',
-                    'message' => "Gia sư đã chấp nhận dạy lớp $tenLop",
+                    'title' => $title,
+                    'message' => $message,
                     'type' => 'request_accepted',
                     'related_id' => $lopHocInfo->LopYeuCauID,
                     'is_read' => false,
                 ]);
+
+                // B. [THÊM MỚI] Gửi FCM cho Học viên
+                $taiKhoanHocVien = TaiKhoan::find($lopHocInfo->nguoiHoc->TaiKhoanID);
+                if ($taiKhoanHocVien && $taiKhoanHocVien->fcm_token) {
+                    FCMHelper::send(
+                        $taiKhoanHocVien->fcm_token,
+                        $title,
+                        $message,
+                        [
+                            'type' => 'request_accepted',
+                            'id' => (string)$lopHocInfo->LopYeuCauID
+                        ]
+                    );
+                }
             }
 
             DB::commit();
@@ -155,20 +174,38 @@ class GiaSuLopHocController extends Controller
         $yeuCau->NgayCapNhat = now();
         $yeuCau->save();
 
-        // --- Tạo thông báo cho người học (giống mobile) ---
+       // --- Tạo thông báo cho người học ---
         $lopHocInfo = YeuCauNhanLop::with(['lop.nguoiHoc', 'lop.monHoc', 'lop.khoiLop'])->find($yeuCauId);
 
         if ($lopHocInfo && $lopHocInfo->lop && $lopHocInfo->lop->nguoiHoc) {
             $tenLop = ($lopHocInfo->lop->monHoc->TenMon ?? 'Lớp học') . ' - ' . ($lopHocInfo->lop->khoiLop->TenKhoiLop ?? '');
+            
+            $title = 'Lời mời bị từ chối';
+            $message = "Gia sư đã từ chối dạy lớp $tenLop";
 
+            // A. Lưu DB
             \App\Models\Notification::create([
                 'user_id' => $lopHocInfo->lop->nguoiHoc->TaiKhoanID,
-                'title' => 'Lời mời bị từ chối',
-                'message' => "Gia sư đã từ chối dạy lớp $tenLop",
+                'title' => $title,
+                'message' => $message,
                 'type' => 'request_rejected',
                 'related_id' => $lopHocInfo->LopYeuCauID,
                 'is_read' => false,
             ]);
+
+            // B. [THÊM MỚI] Gửi FCM cho Học viên
+            $taiKhoanHocVien = TaiKhoan::find($lopHocInfo->lop->nguoiHoc->TaiKhoanID);
+            if ($taiKhoanHocVien && $taiKhoanHocVien->fcm_token) {
+                FCMHelper::send(
+                    $taiKhoanHocVien->fcm_token,
+                    $title,
+                    $message,
+                    [
+                        'type' => 'request_rejected',
+                        'id' => (string)$lopHocInfo->LopYeuCauID
+                    ]
+                );
+            }
         }
 
         return back()->with('success', 'Đã từ chối lời mời.');
