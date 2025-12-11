@@ -8,7 +8,8 @@ use App\Http\Requests\SearchRequest;
 use App\Http\Resources\LopHocYeuCauResource;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
-
+use Illuminate\Support\Facades\DB; // Thêm dòng này
+use App\Models\LichHoc;
 class LopHocYeuCauController extends Controller
 {
     /**
@@ -77,20 +78,33 @@ class LopHocYeuCauController extends Controller
      * [MỚI] Xử lý hoàn thành lớp học
      * PUT /api/lophocyeucau/{id}/hoanthanh
      */
-    public function hoanThanh(Request $request, $id)
+   public function hoanThanh(Request $request, $id)
     {
-        $lopHoc = LopHocYeuCau::findOrFail($id);
-        
-        // Cập nhật trạng thái thành HoanThanh
-        $lopHoc->update(['TrangThai' => 'HoanThanh']);
+        try {
+            DB::beginTransaction();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Đã hoàn thành lớp học thành công!',
-            'data' => new LopHocYeuCauResource($lopHoc)
-        ]);
+            $lopHoc = LopHocYeuCau::findOrFail($id);
+
+            // 1. Cập nhật trạng thái lớp thành HoanThanh
+            $lopHoc->update(['TrangThai' => 'HoanThanh']);
+
+            LichHoc::where('LopYeuCauID', $id)->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã hoàn thành lớp học và xóa toàn bộ lịch học liên quan!',
+                'data' => new LopHocYeuCauResource($lopHoc)
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json([
+                'success' => false,
+                'message' => 'Lỗi khi hoàn thành lớp: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
     /**
      * Remove the specified resource from storage.
      */
