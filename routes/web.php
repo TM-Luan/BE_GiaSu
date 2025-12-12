@@ -102,13 +102,15 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/lich-hoc/{lichHocId}/sua', [GiaSuLopHocController::class, 'updateSchedule'])->name('schedule.update');
             Route::patch('/lich-hoc/{lichHocId}/trang-thai', [GiaSuLopHocController::class, 'updateScheduleStatus'])->name('schedule.update-status');
             
+            // --- SỬA CÁC ROUTE SAU ĐỂ KHỚP VỚI VIEW ---
             // Chấp nhận/từ chối lời mời từ học viên
-            Route::post('/loi-moi/{yeuCauId}/chap-nhan', [GiaSuLopHocController::class, 'acceptInvitation'])->name('invitation.accept');
-            Route::post('/loi-moi/{yeuCauId}/tu-choi', [GiaSuLopHocController::class, 'rejectInvitation'])->name('invitation.reject');
+            Route::post('/loi-moi/{yeuCauId}/chap-nhan', [GiaSuLopHocController::class, 'acceptInvitation'])->name('accept_invitation');
+            Route::post('/loi-moi/{yeuCauId}/tu-choi', [GiaSuLopHocController::class, 'rejectInvitation'])->name('reject_invitation');
             
             // Hủy đề nghị đã gửi
-            Route::post('/de-nghi/{yeuCauId}/huy', [GiaSuLopHocController::class, 'cancelProposal'])->name('proposal.cancel');
-            
+            Route::post('/de-nghi/{yeuCauId}/huy', [GiaSuLopHocController::class, 'cancelProposal'])->name('cancel_proposal');
+            // -------------------------------------------
+            Route::post('/{id}/hoan-thanh', [GiaSuLopHocController::class, 'complete'])->name('complete');
             // Cập nhật ghi chú đề nghị
             Route::post('/de-nghi/{yeuCauId}/cap-nhat-ghi-chu', [GiaSuLopHocController::class, 'updateProposalNote'])->name('proposal.update-note');
             

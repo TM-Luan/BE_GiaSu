@@ -20,7 +20,7 @@ class GiaSuLopHocController extends Controller
      * - Tab 1: Đang dạy (lớp đã nhận)
      * - Tab 2: Đề nghị (yêu cầu nhận lớp: đã gửi hoặc đã nhận)
      */
-    public function index(Request $request)
+public function index(Request $request)
     {
         $user = Auth::user();
 
@@ -31,31 +31,39 @@ class GiaSuLopHocController extends Controller
         }
 
         $giaSuId = $giaSu->GiaSuID;
-        $tab = $request->get('tab', 'danghoc'); // 'danghoc' hoặc 'denghi'
+        
+        // Lấy tab hiện tại từ URL, mặc định là 'dang_day'
+        $currentTab = $request->get('tab', 'dang_day'); 
 
-        // TAB 1: LỚP ĐANG DẠY
-        // Đồng bộ với API mobile getLopCuaGiaSu - lopDangDay
+        // 1. DATA TAB: ĐANG DẠY (Chỉ lấy trạng thái DangHoc)
         $lopDangDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay'])
             ->where('GiaSuID', $giaSuId)
-            ->whereIn('TrangThai', ['DangHoc', 'HoanThanh'])
+            ->where('TrangThai', 'DangHoc') 
             ->orderByDesc('NgayTao')
-            ->paginate(12, ['*'], 'danghoc_page');
+            ->paginate(9, ['*'], 'dang_day_page');
 
-        // TAB 2: ĐỀ NGHỊ
-        // Đồng bộ với API mobile getLopCuaGiaSu - lopDeNghi
+        // 2. DATA TAB: ĐÃ DẠY (Lịch sử: Hoàn thành, Đã kết thúc)
+        $lopDaDay = LopHocYeuCau::with(['nguoiHoc', 'monHoc', 'khoiLop', 'giaSu', 'doiTuong', 'thoiGianDay'])
+            ->where('GiaSuID', $giaSuId)
+            ->whereIn('TrangThai', ['HoanThanh', 'DaKetThuc']) 
+            ->orderByDesc('NgayTao')
+            ->paginate(9, ['*'], 'da_day_page');
+
+        // 3. DATA TAB: LỜI MỜI / ĐỀ NGHỊ (Chỉ lấy Pending)
         $yeuCauDeNghi = YeuCauNhanLop::with(['lop.monHoc', 'lop.khoiLop', 'lop.nguoiHoc', 'giaSu', 'nguoiGuiTaiKhoan'])
             ->where('GiaSuID', $giaSuId)
             ->where('TrangThai', 'Pending')
             ->orderByDesc('NgayTao')
-            ->paginate(12, ['*'], 'denghi_page');
+            ->paginate(9, ['*'], 'de_nghi_page');
 
-        return view('giasu.lop-hoc-index', compact(
+        return view('giasu.my-classes', compact(
             'lopDangDay',
+            'lopDaDay',
             'yeuCauDeNghi',
-            'tab'
+            'currentTab',
+            'giaSu' // Truyền biến giaSu để dùng trong debug hoặc hiển thị
         ));
     }
-
     /**
      * Chấp nhận lời mời dạy từ học viên
      */
@@ -973,6 +981,47 @@ class GiaSuLopHocController extends Controller
             return back()->with('success', 'Cập nhật trạng thái thành công!');
 
         } catch (\Exception $e) {
+            return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
+        }
+    }
+    /**
+     * Hoàn thành lớp học (Kết thúc khóa dạy)
+     */
+    public function complete($id)
+    {
+        $user = Auth::user();
+        $giaSu = GiaSu::where('TaiKhoanID', $user->TaiKhoanID)->first();
+
+        if (!$giaSu) {
+            abort(403);
+        }
+
+        // Tìm lớp học chính chủ
+        $lopHoc = LopHocYeuCau::where('LopYeuCauID', $id)
+            ->where('GiaSuID', $giaSu->GiaSuID)
+            ->firstOrFail();
+
+        // Chỉ cho phép hoàn thành nếu đang học
+        if ($lopHoc->TrangThai !== 'DangHoc') {
+            return back()->with('error', 'Lớp học này không ở trạng thái đang dạy.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // 1. Cập nhật trạng thái lớp
+            $lopHoc->update(['TrangThai' => 'HoanThanh']);
+
+            // 2. Xóa các lịch học chưa diễn ra (để sạch dữ liệu) - Giống logic mobile
+            LichHoc::where('LopYeuCauID', $id)->delete();
+
+            DB::commit();
+
+            return redirect()->route('giasu.lophoc.index', ['tab' => 'da_day'])
+                ->with('success', 'Chúc mừng! Bạn đã hoàn thành lớp học này.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
     }
