@@ -204,7 +204,7 @@
                         </span>
                         @php
                             // Tính số lượng gia sư chờ duyệt (TrangThai = 2)
-                            $countPendingGiaSu = \App\Models\GiaSu::where('TrangThai', 2)->count();
+                            $countPendingGiaSu = \App\Models\GiaSu::where('TrangThai', 0)->count();
                         @endphp
                         @if($countPendingGiaSu > 0)
                             <span class="badge bg-danger rounded-pill">{{ $countPendingGiaSu }}</span>
